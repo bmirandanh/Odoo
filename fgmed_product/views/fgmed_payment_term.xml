@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="fgmed_payment_terms" model="ir.ui.view">
+        <field name="name">fgmed.payment.terms</field>
+        <field name="model">account.payment.term</field>
+        <field name="inherit_id" ref="account.view_payment_term_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//group/group" position="after">
+                <group>
+                    <field name="payment_term_type" />
+                    <field name="payment_term_count" />
+                </group>
+            </xpath>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+	<odoo>
+		<data>
+			<!-- Defining the Content action -->
+			<record id="fgmed_canvas_content_menu_action" model="ir.actions.act_window">
+				<field name="name">Conteúdos Canvas</field>
+				<field name="res_model">fgmed.canvas.content</field>
+				<field name="view_mode">tree,form</field>
+				<field name="domain">[]</field>
+				<field name="context"></field>
+				<field name="help" type="html">
+					<p class="oe_view_nocontent_create">Crie seu primeiro conteudo</p>
+				</field>
+			</record>
+
+
+			<!-- Defining Content tree view -->
+			<record id="fgmed_canvas_content_tree_form" model="ir.ui.view">
+				<field name="name">Lista de Conteúdos</field>
+				<field name="model">fgmed.canvas.content</field>
+				<field name="arch" type="xml">
+					<tree string="Conteúdos">
+
+						<field name="name" />
+						<field name="canvas_id" />
+						<field name="description" />
+						<field name="total_time" />
+						<field name="custom_title" />
+						<field name="thumbnail" />
+						<field name="content_type" />
+						<field name="canvas_secode" />
+						<field name="author_ids" />
+						<field name="tags_ids" />
+						
+					</tree>
+				</field>
+			</record>
+
+
+			<record id="fgmed_canvas_content_form" model="ir.ui.view">
+				<field name="name">Conteúdo Formulário</field>
+				<field name="model">fgmed.canvas.content</field>
+				<field name="arch" type="xml">
+					<form string="Criar novo conteúdo">
+						<group>
+							<group>
+								<field name="name" />
+								<field name="canvas_id" />
+								<field name="description" />
+								<field name="unique" />
+							</group>
+							<group>
+								<field name="total_time" />
+								<field name="custom_title" />
+								<field name="thumbnail" />
+								<field name="canvas_secode" />
+								<field name="content_type" />
+							</group>
+						</group>
+						<group>
+							<field name="author_ids" widget='many2many_tags'/>
+						</group>
+						<group>
+							<field name="tags_ids" widget='many2many_tags'/>
+						</group>
+					</form>
+				</field>
+			</record>
+
+
+			<menuitem id="fgmed_canvas_menu_master" name="Canvas" sequence="1" web_icon="fgmed_canvas,static/icons/canvas.png"/>
+			<menuitem id="fgmed_canvas_content_menu" parent="fgmed_canvas_menu_master" name="Conteúdos" action="fgmed_canvas_content_menu_action" />
+            <menuitem id="fgmed_canvas_content_menu_content" parent="fgmed_canvas_content_menu" name="Conteúdos Canvas" action="fgmed_canvas_content_menu_action" />
+
+		</data>
+	</odoo>

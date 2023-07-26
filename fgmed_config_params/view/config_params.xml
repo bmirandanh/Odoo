@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<odoo>
+    <record id="fgmed_config_params_action" model="ir.actions.act_window">
+        <field name="name">FGMED Config</field>
+        <field name="res_model">fgmed.config.params</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <record id="fgmed_config_params_tree" model="ir.ui.view">
+        <field name="name"> Lista de Parâmetros</field>
+        <field name="model">fgmed.config.params</field>
+        <field name="arch" type="xml">
+            <tree string="Properties">
+                <field name="chave"/>
+                <field name="valor"/>
+            </tree>
+        </field>
+    </record>
+    
+    <record id="fgmed_config_params_form" model="ir.ui.view">
+        <field name="name">Fgmed Config Form</field>
+        <field name="model">fgmed.config.params</field>
+        <field name="arch" type="xml">
+            <form string="Config Param">
+                <label for="chave" string="Chave" />
+                <field name="chave" />
+                <label for="valor" string="Valor" />
+                <field name="valor" />
+            </form>
+        </field>
+    </record>
+
+    <menuitem id="menu_fgmed_configuracoes_menu_master" name="Configurações FGMED">
+        <menuitem id="menu_fgmed_config_params_manager" action="fgmed_config_params_action"/>
+    </menuitem>
+    
+</odoo>

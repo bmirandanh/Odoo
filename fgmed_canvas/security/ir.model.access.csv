@@ -1,0 +1,11 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_fgmed_canvas_content,access.fgmed.canvas.content,model_fgmed_canvas_content,base.group_user,1,1,1,1
+access_fgmed_canvas_authors,access.fgmed.canvas.authors,model_fgmed_canvas_authors,base.group_user,1,1,1,1
+access_fgmed_canvas_content_type,access.fgmed.canvas.content.type,model_fgmed_canvas_content_type,base.group_user,1,1,1,1
+access_fgmed_canvas_content_views,access.fgmed.canvas.content.views,model_fgmed_canvas_content_views,base.group_user,1,1,1,1
+access_fgmed_canvas_courses,access.fgmed.canvas.courses,model_fgmed_canvas_courses,base.group_user,1,1,1,1
+access_fgmed_canvas_modules,access.fgmed.canvas.modules,model_fgmed_canvas_modules,base.group_user,1,1,1,1
+access_fgmed_canvas_users,access.fgmed.canvas.users,model_fgmed_canvas_users,base.group_user,1,1,1,1
+access_fgmed_canvas_content_interactions,access.fgmed.canvas.content.interactions,model_fgmed_canvas_content_interactions,base.group_user,1,1,1,1
+access_fgmed_canvas_content_times,access.fgmed.canvas.content.times,model_fgmed_canvas_content_times,base.group_user,1,1,1,1
+access_fgmed_canvas_content_tags,access.fgmed.canvas.content.tags,model_fgmed_canvas_content_tags,base.group_user,1,1,1,1

@@ -1,0 +1,25 @@
+<odoo>
+    <data>
+    
+        <record id="create_contract_view" model="ir.ui.view">
+            <field name="name">gerador_views.form</field>
+            <field name="model">gerador_views</field>
+            <field name="arch" type="xml">
+                <form string="Criar Contrato">
+                    <group>
+                        <field name="contract_name"/>
+                        <field name="contract_type"/>
+                        <field name="contract_model_id"/>
+                        <field name="article_sets" widget="many2many_tags" />
+                        <field name="article_ids" mode="tree,kanban,form"/>
+                        <field name="condition_ids" widget="many2many_tags" domain="[('type', '=', 'condição')]"/>
+                    </group>
+                    <footer>
+                        <button name="generate_contract" string="Criar" type="object" class="oe_highlight"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+    </data>
+</odoo>

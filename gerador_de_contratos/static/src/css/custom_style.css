@@ -1,0 +1,100 @@
+.custom_background {
+    background-image: url('/gerador_de_contratos/static/src/img/fundo.jpg');
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center center;
+    height: 100%;
+}
+
+.my_custom_view .o_form_buttons_edit {
+    display: none;
+}
+
+.buttons-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 40%
+
+}
+
+.image-container{
+    text-align:center; 
+    padding-top:2%;    
+}
+
+body.gerador-de-contratos{
+    background-color: #2b542c;
+    color: black;
+}
+
+.o_control_panel{
+    background-image: url('/gerador_de_contratos/static/src/img/cabecalho.jpg');
+    background-size: cover;
+    background-position: center center;   
+}
+
+.btn-green {
+    background-color: green;
+    color: white;
+    border: 5px solid #2b542c;
+    font-size: 1.5em;
+    padding: 5px 15px; /* Aumentar o preenchimento tornará o botão maior */
+    border-radius: 20px; /* Isso fará o botão arredondado */
+    box-shadow: 0 5px 5px rgba(0, 0, 0, 0.6); /* Aumentar a sombra para maior definição 3D */
+    transition: 0.3s;
+}
+
+.btn-green:hover {
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.8); /* Aumentar a sombra no hover para maior definição 3D */
+    cursor: pointer;
+}
+
+
+.title-container {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.title-container h1 {
+    font-size: 2rem;
+    color: green;
+    text-shadow: 1px 1px 2px rgba(0, 128, 0, 0.5), 2px 2px 4px rgba(0, 128, 0, 0.5);
+    font-family: 'Segoe Script', cursive;
+    display: inline-block;
+    position: relative;
+    padding: 5px;
+}
+
+.title-container h1::before,
+.title-container h1::after {
+    content: "";
+    display: block;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    background: linear-gradient(45deg, green, rgba(0, 128, 0, 0.4));
+    transform: scaleX(0.8) rotate(3deg);
+    transform-origin: 100% 100%;
+}
+
+.title-container h1::after {
+    transform: scaleX(0.8) rotate(-3deg);
+    transform-origin: 0 100%;
+}
+
+.variable-selection {
+    float: right;
+    display: flex;
+    align-items: center;
+    border: 1px solid #ddd;  /* Adiciona uma borda ao redor da caixa*/
+    padding: 10px;  /* Adiciona algum espaço interno*/
+    box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.2);  /* Adiciona um efeito de sombra para criar a ilusão de profundidade*/
+    background-color: #f9f9f9;  /* Adiciona um fundo claro para a caixa*/
+    margin-bottom: 10px;  /* Adiciona algum espaço abaixo da caixa*/
+}
+
+.variable-selection > * {
+    margin-right: 10px;  /* Adiciona algum espaço entre os elementos*/
+}

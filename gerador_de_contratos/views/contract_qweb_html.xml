@@ -1,0 +1,14 @@
+<odoo>
+    <data>
+        <template id="contract_qweb_html">
+            <div class="header">
+                <div>
+                    <h2 t-field="contract.name"/>
+                </div>
+            </div>
+            <div class="article">
+                <p t-field="contract.content"/>
+            </div>
+        </template>
+    </data>
+</odoo>

@@ -1,0 +1,31 @@
+<odoo>
+    <data>
+        <record id="view_contract_model_form" model="ir.ui.view">
+            <field name="name">contract.model.form</field>
+            <field name="model">contract.model</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <group>
+                            <label for="name" string="Nome :" style="font-weight: bold;"/>
+                            <field name="name"/>
+                            <label for="description" string="Descrição :" style="font-weight: bold;"/>
+                            <field name="description"/>
+                            <group col="4">        
+                                <div class="left-content" style="width: 700px">
+                                    <label for="content" string="Conteúdo :" style="font-weight: bold;"/>
+                                    <field name="content"/>
+                                </div>
+                                <div class="float-right variable-selection" style="width: 350px">
+                                    <label for="variable" string="Variáveis:" style="font-weight: bold;"/>
+                                    <field name="variable" widget="variable_selection"/>
+                                    <button name="insert_variable" string="Insert Variable" type="object"/>
+                                </div>
+                            </group>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+    </data>
+</odoo>

@@ -1,0 +1,5 @@
+id,account_payment_term:id,day_of_the_month,days,option,sequence,value,value_amount
+payment_term_line_15_e2281bef,payment_term_14_5054689e,0,0,day_after_invoice_date,9,percent,25.0
+payment_term_line_15_e2281bef,payment_term_14_5054689e,10,30,day_after_invoice_date,10,percent,25.0
+payment_term_line_15_e2281bef,payment_term_14_5054689e,10,60,day_after_invoice_date,11,percent,25.0
+payment_term_line_15_e2281bef,payment_term_14_5054689e,10,90,day_after_invoice_date,12,balance,0.0

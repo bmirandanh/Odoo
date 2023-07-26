@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+	<odoo>
+		<data>
+
+			<!-- Defining the Content action -->
+			<record id="fgmed_canvas_especialidades_menu_action" model="ir.actions.act_window">
+				<field name="name">Especialidades Canvas</field>
+				<field name="res_model">fgmed.canvas.courses</field>
+				<field name="view_mode">tree,form</field>
+				<field name="domain">[]</field>
+				<field name="context"></field>
+				<field name="help" type="html">
+					<p class="oe_view_nocontent_create">Crie sua primeira especialidade</p>
+				</field>
+			</record>
+
+			<record id="fgmed_canvas_modules_menu_action" model="ir.actions.act_window">
+				<field name="name">Disciplinas Canvas</field>
+				<field name="res_model">fgmed.canvas.modules</field>
+				<field name="view_mode">tree,form</field>
+				<field name="domain">[]</field>
+				<field name="context"></field>
+				<field name="help" type="html">
+					<p class="oe_view_nocontent_create">Crie sua primeira Disciplina</p>
+				</field>
+			</record>
+
+
+
+			<!-- Defining Content tree view -->
+			<record id="fgmed_canvas_especialidades_tree_form" model="ir.ui.view">
+				<field name="name">Lista de Especialidades</field>
+				<field name="model">fgmed.canvas.courses</field>
+				<field name="arch" type="xml">
+						<tree string="Especialidades">
+								<field name="name" />
+								<field name="image" />
+								<field name="disciplina_ids" />
+						</tree>
+				</field>
+			</record>
+
+			<record id="fgmed_canvas_modules_tree_form" model="ir.ui.view">
+				<field name="name">Lista de Disciplinas</field>
+				<field name="model">fgmed.canvas.modules</field>
+				<field name="arch" type="xml">
+						<tree string="Disciplinas">
+								<field name="name" />
+								<field name="image" />
+								<field name="especialidade_ids" />
+						</tree>
+				</field>
+			</record>
+
+
+			<record id="fgmed_canvas_especialidades_form" model="ir.ui.view">
+					<field name="name">Especialidades Formulário</field>
+					<field name="model">fgmed.canvas.courses</field>
+					<field name="arch" type="xml">
+							<form string="Criar nova especialidade">
+									<group>
+											<group>
+													<field name="name" />
+											</group>
+											<group>
+													<field name="image" />
+											</group>
+									</group>
+									<group>
+											<field name="disciplina_ids" widget='many2many_tags'/>
+									</group>
+							</form>
+					</field>
+			</record>
+
+			<record id="fgmed_canvas_modules_form" model="ir.ui.view">
+					<field name="name">Disciplinas Formulário</field>
+					<field name="model">fgmed.canvas.modules</field>
+					<field name="arch" type="xml">
+							<form string="Criar nova disciplinas">
+									<group>
+											<group>
+													<field name="name" />
+											</group>
+											<group>
+													<field name="image" />
+											</group>
+									</group>
+									<group>
+											<field name="especialidade_ids" widget='many2many_tags'/>
+									</group>
+							</form>
+					</field>
+			</record>
+
+            <menuitem id="fgmed_canvas_especialidades" parent="fgmed_canvas_menu_master" name="Especialidades" action="fgmed_canvas_especialidades_menu_action" />
+            <menuitem id="fgmed_canvas_especialidades_menu" parent="fgmed_canvas_especialidades" name="Especialidades" action="fgmed_canvas_especialidades_menu_action" />
+            <menuitem id="fgmed_canvas_modules_menu" parent="fgmed_canvas_especialidades" name="Disciplinas" action="fgmed_canvas_modules_menu_action" />
+
+		</data>
+	</odoo>

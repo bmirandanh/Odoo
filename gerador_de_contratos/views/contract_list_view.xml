@@ -1,0 +1,15 @@
+<odoo>
+    <data>
+        <record id="view_contract_tree" model="ir.ui.view">
+            <field name="name">contract.contract.tree</field>
+            <field name="model">contract.contract</field>
+            <field name="arch" type="xml">
+                <tree string="Contracts">
+                    <field name="name"/>
+                    <field name="content"/>
+                    <field name="contract_type"/>
+                </tree>
+            </field>
+        </record>
+    </data>
+</odoo>

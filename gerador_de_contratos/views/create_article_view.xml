@@ -1,0 +1,44 @@
+<odoo>
+    <data>
+        <record id="create_article_view_form" model="ir.ui.view">
+            <field name="name">create.article.form</field>
+            <field name="model">create.article</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="type"/>
+                                <field name="name"/>
+                                <field name="description"/>
+                            </group>
+                            <group col="4">
+                                <div class="left-content" style="width: 700px" attrs="{'invisible': [('type', '=', 'condição')]}">
+                                    <label for="content" string="Conteúdo:" style="font-weight: bold;" attrs="{'invisible': [('type', '=', 'condição')]}"/>
+                                    <field name="content" attrs="{'invisible': [('type', '=', 'condição')]}"/>
+                                </div>
+                                <div class="float-right variable-selection" style="width: 350px" attrs="{'invisible': [('type', '=', 'condição')]}">
+                                    <label for="variable" string="Variáveis:" style="font-weight: bold;" attrs="{'invisible': [('type', '=', 'condição')]}"/>
+                                    <field name="variable" widget="variable_selection" attrs="{'invisible': [('type', '=', 'condição')]}"/>
+                                    <button name="insert_variable" string="Insert Variable" type="object" attrs="{'invisible': [('type', '=', 'condição')]}"/>
+                                </div>
+                            </group>
+                            <!-- Inicio da parte para tipo de artigo condição -->
+                           <group attrs="{'invisible': [('type', '!=', 'condição')]}">
+                                <field name="condition_ids" string="Condições:" widget="many2many_tags" >
+                                    <tree>
+                                        <field name="target_model_id"/>
+                                        <field name="target_field_id"/>
+                                        <field name="logical_operator"/>
+                                        <field name="comparison_value"/>
+                                    </tree>
+                                </field>
+                            </group>
+                            <!-- Fim da parte para tipo de artigo condição -->
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+    </data>
+</odoo>

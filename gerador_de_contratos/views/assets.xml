@@ -1,0 +1,8 @@
+<odoo>
+    <template id="assets_backend" name="gerador_de_contratos assets" inherit_id="web.assets_backend">
+        <xpath expr="." position="inside">
+            <link rel="stylesheet" type="text/css" href="/gerador_de_contratos/static/src/css/custom_style.css"/>
+            <script type="text/javascript" src="/gerador_de_contratos/static/src/js/my_custom_js.js"></script>
+        </xpath>
+    </template>
+</odoo>

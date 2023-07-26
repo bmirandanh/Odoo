@@ -1,0 +1,20 @@
+<odoo>
+    <data>
+        <record id="view_form_generate_simplified_contract" model="ir.ui.view">
+            <field name="name">generate.simplified.contract.form</field>
+            <field name="model">generate.simplified.contract</field>
+            <field name="arch" type="xml">
+                <form string="Generate Simplified Contract">
+                    <sheet>
+                        <group>
+                            <field name="prompt" string=" O que deseja criar ?"/>
+                            <field name="response" string=" Contrato de resposta"/>
+                            <button name="button_generate_contract" string="Criar Contrato" type="object" class="oe_highlight"/>
+
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+    </data>
+</odoo>

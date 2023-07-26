@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+	<data>
+		<record id="fgmed_product_product" model="ir.ui.view">
+			<field name="name">fgmed.product.product</field>
+			<field name="model">product.product</field>
+			<field name="inherit_id" ref="product.product_normal_form_view" />
+			<field name="arch" type="xml">
+				<notebook position="inside">
+					<page string="Configurações de Curso" name="fgmed_product">
+						<group name="course_config">
+							<group>
+								<field name="course_modality" />
+								<field name="course_conclusion" />
+							</group>
+							<group>
+								<field name="course_base_time_id" />
+								<field name="course_itrn_time_id" />
+							</group>
+						</group>
+						<group>
+							<field name="course_payment_methods_ids" widget="many2many_tags" />
+						</group>
+					</page>
+				</notebook>
+			</field>
+		</record>
+		<record id="fgmed_product_product" model="ir.ui.view">
+			<field name="name">fgmed.product.product.kanban</field>
+			<field name="model">product.product</field>
+			<field name="inherit_id" ref="product.product_kanban_view" />
+			<field name="arch" type="xml">
+				<xpath expr="//div[@class='oe_kanban_global_click']" position="replace">
+					<div t-attf-class="#{kanban_color(record.categ_id.raw_value)} oe_kanban_global_click">
+						<div class="o_kanban_image">
+							<img t-att-src="kanban_image('product.product', 'image_128', record.id.raw_value)"
+								alt="Product" class="o_image_64_contain" />
+						</div>
+						<div class="oe_kanban_details">
+							<strong class="o_kanban_record_title">
+								<field name="name" />
+								<small t-if="record.default_code.value">[<field name="default_code" />]</small>
+							</strong>
+							<div class="o_kanban_tags_section">
+								<field name="product_template_attribute_value_ids"
+									groups="product.group_product_variant" />
+							</div>
+							<ul>
+								<li>
+									<strong>Price: <field name="lst_price" /></strong>
+								</li>
+							</ul>
+							<div name="tags" />
+							<field name="categ_id" attrs="{'invisible': 1}" />
+							<field name="color" attrs="{'invisible': 1}" />
+						</div>
+					</div>
+				</xpath>
+			</field>
+		</record>
+		<record id="product_tag_action" model="ir.actions.act_window">
+			<field name="name">Tags de Produto</field>
+			<field name="type">ir.actions.act_window</field>
+			<field name="res_model">product.tag</field>
+			<field name="view_mode">tree,form</field>
+		</record>
+		<menuitem id="menu_product_tags" name="Tags de Produto" parent="fgmed_partner_fields.menu_fgmed_configuracoes_menu_master" sequence="10" action="product_tag_action"/>
+	</data>
+</odoo>

@@ -1,0 +1,64 @@
+<odoo>
+    <data>
+
+
+        <record id="gerador_manual_view" model="ir.ui.view">
+            <field name="name">gerador.manual.form</field>
+            <field name="model">gerador_views</field>
+            <field name="arch" type="xml">
+                <form string="Gerador Manual">
+                    <header>
+                        <button name="view_article_condition"
+                                string="Condições"
+                                type="object"
+                                class="oe_highlight btn-green"/>                    
+                        <button name="view_article"
+                                string="Artigos"
+                                type="object"
+                                class="oe_highlight btn-green"/>
+                        <button name="view_article_sets"
+                                string="Cláusulas"
+                                type="object"
+                                class="oe_highlight btn-green"/>
+                        <button name="view_contract_model"
+                                string="Cabeçalho"
+                                type="object"
+                                class="oe_highlight btn-green" />
+                        <button name="view_contract"
+                                string="Contratos"
+                                type="object"
+                                class="oe_highlight btn-green" />
+                    </header>
+                </form>
+            </field>
+        </record>
+
+
+        <record id="contract_model_form_view" model="ir.ui.view">
+            <field name="name">contract.model.form</field>
+            <field name="model">contract.model</field>
+            <field name="arch" type="xml">
+                <form string="Novo Modelo de Contrato">
+                    <sheet>
+                        <group>
+                            <field name="name"/>
+                            <field name="description"/>
+                            <field name="content"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+
+        <record id="action_contract_model" model="ir.actions.act_window">
+            <field name="name">Modelo de Contrato</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">contract.model</field>
+            <field name="view_mode">form</field>
+            <field name="view_id" ref="contract_model_form_view"/>
+        </record>
+
+
+    </data>
+</odoo>

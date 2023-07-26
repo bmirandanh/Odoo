@@ -1,0 +1,45 @@
+<odoo>
+    <data>
+             
+        <!-- Form View for article.set -->
+        <record id="view_article_set_form" model="ir.ui.view">
+            <field name="name">article.set.form</field>
+            <field name="model">article.set</field>
+            <field name="arch" type="xml">
+                <form string="Conjunto de Cláusulas">
+                    <sheet>
+                        <group>
+                            <field name="name"/>
+                            <field name="articles" widget="many2many_tags"/>
+                            <field name="descricao"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- Tree View for article.set -->
+        <record id="view_article_set_tree" model="ir.ui.view">
+            <field name="name">article.set.tree</field>
+            <field name="model">article.set</field>
+            <field name="arch" type="xml">
+                <tree string="Conjunto de Cláusulas">
+                    <field name="name"/>
+                    <field name="articles"/>
+                    <field name="descricao"/>
+                </tree>
+            </field>
+        </record>
+
+        <!-- Action to open article.set views -->
+        <record id="action_article_sets" model="ir.actions.act_window">
+            <field name="name">Conjuntos de Cláusulas</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">article.set</field>
+            <field name="view_mode">tree,form</field>
+            <field name="view_id" ref="view_article_set_tree"/>
+        </record>
+
+
+    </data>
+</odoo>

@@ -1,0 +1,18 @@
+<odoo>
+    <data>
+        <record id="action_contract_generator" model="ir.actions.act_window">
+            <field name="name">Gerador de Contratos</field>
+            <field name="res_model">gerador_views</field>
+            <field name="view_id" ref="gerador_home_view"/>
+        </record>
+
+        <record id="menu_contract_generator" model="ir.ui.menu">
+            <field name="name">Gerador de Contratos</field>
+            <field name="sequence">10</field>
+            <field name="action" ref="action_contract_generator"/>
+        </record>
+
+        <!-- Adicionar este item de menu sob o menu principal de APPs -->
+        <menuitem id="fgmed_canvas_menu_master" name="Canvas" sequence="1"/>
+    </data>
+</odoo>

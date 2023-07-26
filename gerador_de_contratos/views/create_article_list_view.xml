@@ -1,0 +1,15 @@
+<odoo>
+    <data>
+        <record id="create_article_view_tree" model="ir.ui.view">
+            <field name="name">create.article.tree</field>
+            <field name="model">create.article</field>
+            <field name="arch" type="xml">
+                <tree string="Artigos">
+                    <field name="type"/>
+                    <field name="name"/>
+                    <field name="description"/>
+                </tree>
+            </field>
+        </record>
+    </data>
+</odoo>

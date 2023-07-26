@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+
+
+        <record id="view_form_create_article_condition" model="ir.ui.view">
+            <field name="name">create.article.condition.form</field>
+            <field name="model">create.article.condition</field>
+            <field name="arch" type="xml">
+                <form string="Condição de Artigo">
+                    <sheet>
+                        <group>
+                            <field name="article_ids" widget="many2many_tags"/>
+                            <field name="target_model_id"/>
+                            <field name="target_field_id"/>
+                            <field name="logical_operator"/>
+                            <field name="comparison_value"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+
+
+        <record id="view_tree_create_article_condition" model="ir.ui.view">
+            <field name="name">create.article.condition.tree</field>
+            <field name="model">create.article.condition</field>
+            <field name="arch" type="xml">
+                <tree string="Condições de Artigo">
+                    <field name="article_ids"/>
+                    <field name="target_model_id"/>
+                    <field name="target_field_id"/>
+                    <field name="logical_operator"/>
+                    <field name="comparison_value"/>
+                </tree>
+            </field>
+        </record>
+
+
+        <record id="action_create_article_condition" model="ir.actions.act_window">
+            <field name="name">Condições de Artigo</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">create.article.condition</field>
+            <field name="view_mode">form,tree</field>
+            <field name="help" type="html">
+                <p class="oe_view_nocontent_create">
+                    Clique para criar uma nova Condição de Artigo.
+                </p>
+            </field>
+        </record>
+
+
+    </data>
+</odoo>

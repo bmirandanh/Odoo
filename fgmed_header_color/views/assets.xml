@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+	<template id="assets_backend" name="meu_modulo assets" inherit_id="web.assets_backend">
+		<xpath expr="." position="inside">
+			<link rel="stylesheet" href="/meu_modulo/static/src/css/meu_css.css" />
+			<script type="text/javascript" src="/meu_modulo/static/src/js/meu_js.js"></script>
+		</xpath>
+	</template>
+</odoo>
+
+
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+	<data>
+		<template id="assets_backend" name="my_module assets" inherit_id="web.assets_backend">
+			<xpath expr="." position="inside">
+				<link rel="stylesheet" type="text/scss"
+					href="/my_module/static/src/scss/my_module_backend.scss" />
+				<script type="text/javascript" src="/my_module/static/src/js/my_module_backend.js" />
+			</xpath>
+		</template>
+	</data>
+</odoo>

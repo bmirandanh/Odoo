@@ -1,0 +1,40 @@
+<odoo>
+    <data>
+        <record id="view_contract_form" model="ir.ui.view">
+            <field name="name">contract.contract.form</field>
+            <field name="model">contract.contract</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <group>
+                            <field name="name"/>
+                            <field name="contract_type"/>
+                            <field name="product_ids"/>
+                            <field name="article_sets" mode="tree,kanban,form"/>
+                            <field name="condition_ids" domain="[('type', '=', 'condição')]" widget="many2many_tags"/>
+                            <field name="contract_model_id"/>                            
+                        </group>
+                        <group>
+                            <field name="content"/>
+                        </group>
+                        <group>
+                            <div class="buttons-container">
+                                <button name="view_article_condition" string="Condições de Artigo" type="object" class="oe_highlight btn-green"/>
+                                <button name="view_article" string="Artigos" type="object" class="oe_highlight btn-green"/>
+                                <button name="%(gerador_de_contratos.contract_report)d" class="oe_highlight btn-green" string="Imprimir Contrato" type="action"/>
+                            </div>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+        
+        <record id="action_create_article_view" model="ir.actions.act_window">
+            <field name="name">Create Article</field>
+            <field name="res_model">create.article</field>
+            <field name="view_mode">tree,form</field>
+            <field name="target">current</field>
+            <field name="view_id" ref="create_article_view_form"/>
+        </record>
+    </data>
+</odoo>

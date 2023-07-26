@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+    <odoo>
+        <record id="fgmed_contact_name" model="ir.ui.view">
+            <field name="name">fgmed.product.product.kanban</field>
+            <field name="model">crm.lead</field>
+            <field name="inherit_id" ref="crm.crm_case_kanban_view_leads" />
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='activity_ids']" position="after">
+                    <field name="contact_name"/>
+                </xpath>
+                <xpath expr="//div[@class='oe_kanban_content']" position="replace">
+                    <div class="oe_kanban_content">
+                        <div class="o_kanban_record_title">
+                            <strong><field name="name"/></strong>
+                        </div>
+                        <div class="o_kanban_record_subtitle">
+                            <t t-if="record.expected_revenue.raw_value">
+                                <field name="expected_revenue" widget="monetary" options="{'currency_field': 'company_currency'}"/>
+                                <span t-if="record.recurring_revenue and record.recurring_revenue.raw_value"> + </span>
+                            </t>
+                            <t t-if="record.recurring_revenue and record.recurring_revenue.raw_value">
+                                <field name="recurring_revenue" widget="monetary" options="{'currency_field': 'company_currency'}"/>
+                                <field name="recurring_plan"/>
+                            </t>
+                        </div>
+                        <div>
+                            <span t-if="record.partner_id.value" t-esc="record.partner_id.value"/>
+                        </div>
+                        <div>
+                            <span t-if="record.partner_id.value == ''" t-esc="record.contact_name.value"/>
+                        </div>
+                        <div>
+                            <field name="tag_ids" widget="many2many_tags" options="{'color_field': 'color'}"/>
+                        </div>
+                        <div class="o_kanban_record_bottom">
+                            <div class="oe_kanban_bottom_left">
+                                <field name="priority" widget="priority" groups="base.group_user"/>
+                                <field name="activity_ids" widget="kanban_activity"/>
+                            </div>
+                            <div class="oe_kanban_bottom_right">
+                                <field name="user_id" widget="many2one_avatar_user"/>
+                            </div>
+                        </div>
+                    </div>
+                </xpath>
+            </field>   
+        </record>    
+    </odoo>

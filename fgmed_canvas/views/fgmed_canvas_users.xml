@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+	<odoo>
+		<data>
+		    <!-- Defining the users action -->
+			<record id="fgmed_canvas_users_menu_action" model="ir.actions.act_window">
+				<field name="name">Usuários dos Conteúdos Canvas</field>
+				<field name="res_model">fgmed.canvas.users</field>
+				<field name="view_mode">tree,form</field>
+				<field name="domain">[]</field>
+				<field name="context"></field>
+				<field name="help" type="html">
+					<p class="oe_view_nocontent_create">Usuários</p>
+				</field>
+			</record>           
+
+
+			<!-- Defining users tree view -->
+			<record id="fgmed_canvas_content_type_tree_form" model="ir.ui.view">
+				<field name="name">Lista de Usuários de Interações</field>
+				<field name="model">fgmed.canvas.users</field>
+				<field name="arch" type="xml">
+					<tree string="Tags ">
+						<field name="user_id" />
+						<field name="user_uuid" />
+					</tree>
+				</field>
+			</record>
+			<!-- Defining users form view -->
+			<record id="fgmed_canvas_users_form" model="ir.ui.view">
+				<field name="name">Formulário de Usuários de Interações</field>
+				<field name="model">fgmed.canvas.users</field>
+				<field name="arch" type="xml">
+					<form string="Criar novo Usuário">
+						<group>
+							<group>
+								<field name="user_id" />
+							</group>
+							<group>
+								<field name="user_uuid" />
+							</group>
+						</group>
+					</form>
+				</field>
+			</record>
+            <!-- Defining users menu view -->
+			<menuitem id="fgmed_canvas_users_menu" parent="fgmed_canvas_menu_master" name="Usuários" action="fgmed_canvas_users_menu_action" />
+		</data>
+	</odoo>

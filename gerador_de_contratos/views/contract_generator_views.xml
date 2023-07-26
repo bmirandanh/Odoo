@@ -1,0 +1,21 @@
+<odoo>
+    <data>
+    
+        <record id="gerador_home_view" model="ir.ui.view">
+            <field name="name">contract.generator.form</field>
+            <field name="model">gerador_views</field>
+            <field name="arch" type="xml">
+                <form class="custom_background my_custom_view" string="Gerador de Contratos" create="false" edit="false">
+                    <div class="image-container" style="text-align:center;">
+                        <img src="/gerador_de_contratos/static/src/img/criarcontrato.png" alt="Criar Contrato" style="max-width:100%; height:auto;" />
+                    </div>
+                    <div class="buttons-container">
+                        <button name="generate_manual_contract" string="Manual" type="object" class="oe_highlight btn-green"  />
+                        <button name="generate_simplified_contract" string="Simplificado" type="object" class="oe_highlight btn-green" />
+                    </div>
+                </form>
+            </field>
+        </record>
+
+    </data>
+</odoo>

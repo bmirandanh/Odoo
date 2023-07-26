@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Usuário Degustação</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <!-- Adicione a tag <link> para o arquivo CSS do Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        .center-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            height: 100vh;
+            justify-content: center;
+        }
+        .img-container {
+            max-width: 70%;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    
+    <div class="center-content">
+        <div class="col-sm-12 col-md-12 col-xs-12">
+
+           <div class="row">
+                <div class="col text-center">
+                    <img class="ic-sidebar-logo__image mx-auto d-block my-auto" src="https://fgmed.org/wp-content/uploads/2023/05/logo-medflix-reto.png" style="max-width: 50%;">
+                </div>
+            </div>
+            <div id="resultado">
+                <p><b>Usuário</b>: <span id="usuario"></span><br><b>Senha</b>: <span id="senha"></span></p>
+            </div>
+            <div class="button-group">
+                <button class="btn btn-primary" onclick="gerarCredenciais()">
+                    <i class="fas fa-key"></i> Gerar
+                </button>
+                <button id="botao-copiar" class="btn btn-secondary">
+                    <i class="far fa-copy"></i> Copiar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Inclua as bibliotecas Font Awesome -->
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <script>
+        function gerarCredenciais() {
+            fetch('https://apiv2.fgmed.org/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    action: 'create_canvas_user',
+                    data: {
+                        username: '',
+                        password: ''
+                    }
+                })
+            }).then(response => {
+                return response.json();
+            }).then(data => { 
+                $("#resultado").html('<p><b>Usuário</b>: <span id="usuario">'+data.data.acessos.login_id+'</span><br><b>Senha</b>: <span id="senha">'+data.data.acessos.name+'</span></p>');
+
+                $("#botao-copiar").click(function() {
+                    var usuario = $("#usuario").text();
+                    var senha = $("#senha").text();
+                    var textoCopiado = 'Usuário: ' + usuario + '\nSenha: ' + senha;
+
+                    navigator.clipboard.writeText(textoCopiado)
+                        .then(function() {
+                            alert("Texto copiado com sucesso!");
+                        })
+                        .catch(function(error) {
+                            console.error("Erro ao copiar o texto:", error);
+                        });
+                });
+            }).catch(error => {
+                console.error('Erro na requisição:', error);
+            });
+        }
+    </script>
+</body>
+</html>

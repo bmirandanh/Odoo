@@ -1,0 +1,11 @@
+<odoo>
+    <data>
+        <record id="contract_report" model="ir.actions.report">
+            <field name="name">Contract Report</field>
+            <field name="model">contract.contract</field>
+            <field name="report_type">qweb-pdf</field>
+            <field name="report_name">gerador_de_contratos.contract_qweb</field>
+            <field name="report_file">gerador_de_contratos.contract_qweb</field>
+        </record>
+    </data>
+</odoo>

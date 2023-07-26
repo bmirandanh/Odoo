@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="UTF-8"?>
+	<odoo>
+		<data>
+
+			<!-- Defining the Content action -->
+			<record id="fgmed_canvas_content_views_menu_action" model="ir.actions.act_window">
+				<field name="name">Visualizações de conteúdos Canvas</field>
+				<field name="res_model">fgmed.canvas.content.views</field>
+				<field name="view_mode">tree,form</field>
+				<field name="domain">[]</field>
+				<field name="context"></field>
+				<field name="help" type="html">
+					<p class="oe_view_nocontent_create">Visualizações</p>
+				</field>
+			</record>
+
+			<record id="fgmed_canvas_content_interactions_menu_action" model="ir.actions.act_window">
+				<field name="name">Interações com conteúdos Canvas</field>
+				<field name="res_model">fgmed.canvas.content.interactions</field>
+				<field name="view_mode">tree,form</field>
+				<field name="domain">[]</field>
+				<field name="context"></field>
+				<field name="help" type="html">
+					<p class="oe_view_nocontent_create">Interações</p>
+				</field>
+			</record>
+
+			<!-- Defining the Times action -->
+			<record id="fgmed_canvas_content_times_menu_action" model="ir.actions.act_window">
+				<field name="name">Tempo de interação com Conteúdos Canvas</field>
+				<field name="res_model">fgmed.canvas.content.times</field>
+				<field name="view_mode">tree,form</field>
+				<field name="domain">[]</field>
+				<field name="context"></field>
+				<field name="help" type="html">
+					<p class="oe_view_nocontent_create">Tempo</p>
+				</field>
+			</record>  
+
+			<record id="fgmed_canvas_aulas_menu_action" model="ir.actions.act_window">
+				<field name="name">Aulas Canvas</field>
+				<field name="res_model">fgmed.canvas.aulas</field>
+				<field name="view_mode">tree,form</field>
+				<field name="domain">[]</field>
+				<field name="context"></field>
+				<field name="help" type="html">
+					<p class="oe_view_nocontent_create">Aulas</p>
+				</field>
+			</record>
+			<record id="fgmed_canvas_aulas_content_menu_action" model="ir.actions.act_window">
+				<field name="name">Conteudo Aulas Canvas</field>
+				<field name="res_model">fgmed.canvas.aulas.conteudos</field>
+				<field name="view_mode">tree,form</field>
+				<field name="domain">[]</field>
+				<field name="context"></field>
+				<field name="help" type="html">
+					<p class="oe_view_nocontent_create">Conteúdos das aulas</p>
+				</field>
+			</record>
+
+			<!-- Defining Content tree view -->
+			<record id="fgmed_canvas_content_views_tree_form" model="ir.ui.view">
+				<field name="name">Lista de Visualizações</field>
+				<field name="model">fgmed.canvas.content.views</field>
+				<field name="arch" type="xml">
+					<tree string="Visualizações">
+						<field name="cv_content_id" />
+						<field name="cv_user_id" />
+					</tree>
+				</field>
+			</record>
+
+
+			<record id="fgmed_canvas_content_interactions_tree_form" model="ir.ui.view">
+				<field name="name">Lista de Interações</field>
+				<field name="model">fgmed.canvas.content.interactions</field>
+				<field name="arch" type="xml">
+					<tree string="Interações">
+						<field name="cv_content_id" />
+						<field name="cv_user_id" />
+						<field name="type" />
+					</tree>
+				</field>
+			</record>
+
+			<!-- Defining Times tree view -->
+			<record id="fgmed_canvas_content_times_tree_form" model="ir.ui.view">
+				<field name="name">Lista de Tempo de Interações</field>
+				<field name="model">fgmed.canvas.content.times</field>
+				<field name="arch" type="xml">
+					<tree string="Tempo de Interações">
+						<field name="cv_content_id" />
+						<field name="cv_user_id" />
+						<field name="spent_time" />
+					</tree>
+				</field>
+			</record>
+
+			<record id="fgmed_canvas_aulas_tree_form" model="ir.ui.view">
+				<field name="name">Lista de Aulas</field>
+				<field name="model">fgmed.canvas.aulas</field>
+				<field name="arch" type="xml">
+					<tree string="Aulas">
+						<field name="name" />
+						<field name="fgmed_canvas_aulas_conteudos_ids" />
+						<field name="fgmed_disciplina_id" />						
+					</tree>
+				</field>
+			</record>
+            
+            <record id="fgmed_canvas_aulas_content_tree_form" model="ir.ui.view">
+				<field name="name">Lista de Aulas</field>
+				<field name="model">fgmed.canvas.aulas.conteudos</field>
+				<field name="arch" type="xml">
+					<tree string="Conteúdo das Aulas">
+						<field name="tipo" />
+						<field name="fgmed_canvas_aulas_ids" />
+						<field name="disciplina_ids" />
+					</tree>
+				</field>
+			</record>
+
+			<record id="fgmed_canvas_content_views_form" model="ir.ui.view">
+				<field name="name">Visualização Formulário</field>
+				<field name="model">fgmed.canvas.content.views</field>
+				<field name="arch" type="xml">
+					<form string="Criar novo conteúdo">
+						<group>
+							<group>
+								<field name="cv_content_id" />
+							</group>
+							<group>
+								<field name="cv_user_id" />
+							</group>
+						</group>
+					</form>
+				</field>
+			</record>
+
+			<record id="fgmed_canvas_content_interactions_form" model="ir.ui.view">
+				<field name="name">Interações Formulário</field>
+				<field name="model">fgmed.canvas.content.interactions</field>
+				<field name="arch" type="xml">
+					<form string="Criar nova interação">
+						<group>
+							<group>
+								<field name="cv_content_id" />
+								<field name="cv_user_id" />
+								<field name="type" />
+							</group>
+						</group>
+					</form>
+				</field>
+			</record>
+
+			<record id="fgmed_canvas_content_times_form" model="ir.ui.view">
+				<field name="name">Formulário de Tempo de Interações</field>
+				<field name="model">fgmed.canvas.content.times</field>
+				<field name="arch" type="xml">
+					<form string="Criar novo conteúdo">
+						<group>
+							<group>
+								<field name="cv_content_id" />
+							</group>
+							<group>
+								<field name="cv_user_id" />
+							</group>
+							<group>
+								<field name="spent_time" />
+							</group>
+						</group>
+					</form>
+				</field>
+			</record>
+
+			<record id="fgmed_canvas_aula_form" model="ir.ui.view">
+				<field name="name">Aula Formulário</field>
+				<field name="model">fgmed.canvas.aulas</field>
+				<field name="arch" type="xml">
+					<form string="Criar nova Aula">
+						<group>
+							<group>
+								<field name="name" />
+                            </group>
+                            <group>
+								<field name="fgmed_disciplina_id" />
+								<field name="fgmed_canvas_aulas_conteudos_ids" />
+                            </group>
+                        </group>
+					</form>
+				</field>
+			</record>
+
+			<record id="fgmed_canvas_aulas_content_form" model="ir.ui.view">
+				<field name="name">Aula Formulário</field>
+				<field name="model">fgmed.canvas.aulas.conteudos</field>
+				<field name="arch" type="xml">
+					<form string="Criar novo conteúdo Aula">
+						<group>
+							<group>
+								<field name="tipo" />
+                            </group>
+                            <group>
+								<field name="fgmed_canvas_aulas_ids" />
+                            </group>
+                            <group>
+								<field name="disciplina_ids" />
+							</group>
+                        </group>
+					</form>
+				</field>
+			</record>
+
+			<menuitem id="fgmed_canvas_content_views_menu" parent="fgmed_canvas_content_menu" name="Visualizações" action="fgmed_canvas_content_views_menu_action" />
+			<menuitem id="fgmed_canvas_content_interactions_menu" parent="fgmed_canvas_content_menu" name="Interações" action="fgmed_canvas_content_interactions_menu_action" />                  
+			<menuitem id="fgmed_canvas_content_times_menu" parent="fgmed_canvas_content_menu" name="Tempo" action="fgmed_canvas_content_times_menu_action" />
+			<menuitem id="fgmed_canvas_aulas_menu" parent="fgmed_canvas_content_menu" name="Aulas" action="fgmed_canvas_aulas_menu_action" />
+			<menuitem id="fgmed_canvas_aulas_content_menu" parent="fgmed_canvas_content_menu" name="Conteúdos das Aulas" action="fgmed_canvas_aulas_content_menu_action" />
+		</data>
+	</odoo>

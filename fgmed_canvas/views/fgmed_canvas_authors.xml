@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+
+        <!-- Definindo a ação para o menu Autores -->
+        <record id="fgmed_canvas_authors_menu_action" model="ir.actions.act_window">
+            <field name="name">Autores</field>
+            <field name="res_model">fgmed.canvas.authors</field>
+            <field name="view_mode">tree,form</field>
+            <field name="domain">[]</field>
+            <field name="context"></field>
+            <field name="help" type="html">
+                <p class="oe_view_nocontent_create">Autores</p>
+            </field>
+        </record>
+
+        <!-- Definindo a visualização em árvore para Autores -->
+        <record id="fgmed_canvas_authors_tree_form" model="ir.ui.view">
+            <field name="name">Lista de Autores</field>
+            <field name="model">fgmed.canvas.authors</field>
+            <field name="arch" type="xml">
+                <tree string="Autores">
+                    <field name="name" />
+                </tree>
+            </field>
+        </record>
+
+        <!-- Definindo a visualização de formulário para Autores -->
+        <record id="fgmed_canvas_authors_form" model="ir.ui.view">
+            <field name="name">Visualização Formulário</field>
+            <field name="model">fgmed.canvas.authors</field>
+            <field name="arch" type="xml">
+                <form string="Criar novo autor">
+                    <group>
+                        <group>
+                            <field name="name" />
+                        </group>
+                    </group>
+                </form>
+            </field>
+        </record>
+
+        <!-- Definindo o item de menu para Autores -->
+        <menuitem id="fgmed_canvas_authors_menu" parent="fgmed_canvas_menu_master" name="Autores" action="fgmed_canvas_authors_menu_action" />
+
+        <!-- Definindo a ação para criar um usuário temporário -->
+        <record id="action_criar_usuario_temporario" model="ir.actions.act_url">
+            <field name="name">Criar Usuário Temporário</field>
+            <field name="url">/fgmed_canvas/static/src/xml/criar_usuario_temporario.html</field>
+            <field name="target">new</field>
+        </record>
+
+        <!-- Definindo o item de menu para criar um usuário temporário -->
+        <menuitem id="menu_criar_usuario_temporario" parent="fgmed_canvas_menu_master" name="Criar Usuário Temporário" action="action_criar_usuario_temporario" />
+
+    </data>
+</odoo>
