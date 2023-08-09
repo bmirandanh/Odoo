@@ -3,7 +3,7 @@ import json
 import copy
 
 ODOO_URL = 'http://odooserver:8069'
-DATABASE = 'devpostgresql40'
+DATABASE = 'devpostgresql43'
 USERNAME = 'admin'
 PASSWORD = 'admin'
 

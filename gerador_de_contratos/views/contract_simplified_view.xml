@@ -1,20 +1,93 @@
 <odoo>
     <data>
+
         <record id="view_form_generate_simplified_contract" model="ir.ui.view">
             <field name="name">generate.simplified.contract.form</field>
             <field name="model">generate.simplified.contract</field>
             <field name="arch" type="xml">
-                <form string="Generate Simplified Contract">
+                    <form string="Generate Simplified Contract" class="fundo_espelhado">
+                        <sheet>
+                            <group>
+                            <field name="ia_nome" string="Nome" attrs="{'invisible': [('response', '=', False)]}"/>                            
+                            <field name="contract_model_id" string="Cabeçalhos" attrs="{'invisible': [('response', '=', False)]}"/>
+                            </group>
+                            <group>
+                                <field name="prompt" string="Que tipo de artigos quer para criação do contrato?"/>
+                                <div class="button-spacing">
+                                    <button name="button_generate_contract" string="Analisar" type="object" class="oe_highlight" />
+                                </div>
+                            </group>
+                            <field name="response" string="Contrato de resposta"/>
+                            <field name="article_ids" string="Artigos" attrs="{'invisible': [('response', '=', False)]}"/>
+                                <div class="buttons-container2 button-spacing">
+                                <group>
+                                    <field name="article_set_ids" widget="many2many_list" attrs="{'invisible': [('response', '=', False)]}"/>
+                                </group>
+                                <button name="button_create_article_sets" string="Cláusulas da IA" type="object" class="oe_highlight" attrs="{'invisible': [('response', '=', False)]}"/>
+                                </div>
+                            <label for="ia_product_ids" string="Produtos para deste contrato"/>
+                            <field name="ia_product_ids" widget="many2many_list" string="Produtos do contrato" attrs="{'invisible': [('response', '=', False)]}"/>
+                            <label for="ia_contract_type" string="Tipos do contrato"/>
+                            <field name="ia_contract_type" widget="many2many_list" string="Tipo do Contrato" attrs="{'invisible': [('response', '=', False)]}"/>
+                            <div class="buttons-container button-spacing">
+                                <button name="button_generate_contract_ia" string="Gerar contrato" type="object" class="oe_highlight" />
+                            </div>
+                        </sheet>
+                    </form>
+            </field>
+        </record>
+
+        <record id="view_contract_tree" model="ir.ui.view">
+            <field name="name">generate.simplified.contract.tree</field>
+            <field name="model">generate.simplified.contract</field>
+            <field name="arch" type="xml">
+                <tree string="Contracts_IA">
+                    <field name="ia_nome"/>
+                    <field name="prompt"/>
+                    <field name="article_ids"/>
+                    <field name="article_set_ids"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_wizard_create_article_set" model="ir.ui.view">
+            <field name="name">create.article.set.wizard.form</field>
+            <field name="model">create.article.set.wizard</field>
+            <field name="arch" type="xml">
+                <form string="Criar Conjunto de Artigos">
                     <sheet>
                         <group>
-                            <field name="prompt" string=" O que deseja criar ?"/>
-                            <field name="response" string=" Contrato de resposta"/>
-                            <button name="button_generate_contract" string="Criar Contrato" type="object" class="oe_highlight"/>
-
+                            <label for="name" string="Nome"/>
+                            <field name="name" />
+                            <label for="descricao" string="Descrição"/>
+                            <field name="descricao" />
+                            <label for="contract_id" string="Artigos Da IA"/>
+                            <field name="contract_id" />
+                            <newline/>
+                            <label for="article_ids" string="Artigos selecionados da IA"/>
+                            <field name="article_ids" >
+                                <tree editable="bottom">
+                                    <field name="selected" widget="boolean_toggle"/>
+                                    <field name="article_name"/>
+                                    <field name="article_description" widget="text" options="{'truncate': 50}"/>
+                                    <field name="article_content" widget="html" />
+                                </tree>
+                            </field>
+                            <newline/>
+                            <group>
+                                <field name="selected_articles_ids"/>
+                            </group>
                         </group>
                     </sheet>
+                    <footer>
+                    <div class="buttons-container2 button-spacing">
+                        <button name="button_create_article_set" string="Criar Conjunto de Artigos" type="object" class="oe_highlight"/>
+                        <button string="Cancelar" class="oe_highlight" special="cancel" />
+                    </div>
+                    </footer>
                 </form>
             </field>
         </record>
+
     </data>
 </odoo>

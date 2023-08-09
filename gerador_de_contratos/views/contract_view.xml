@@ -19,9 +19,9 @@
                         </group>
                         <group>
                             <div class="buttons-container">
-                                <button name="view_article_condition" string="Condições de Artigo" type="object" class="oe_highlight btn-green"/>
-                                <button name="view_article" string="Artigos" type="object" class="oe_highlight btn-green"/>
-                                <button name="%(gerador_de_contratos.contract_report)d" class="oe_highlight btn-green" string="Imprimir Contrato" type="action"/>
+                                <button name="view_article_condition" string="Condições de Artigo" type="object" class="oe_highlight"/>
+                                <button name="view_article" string="Artigos" type="object" class="oe_highlight"/>
+                                <button name="%(gerador_de_contratos.contract_report)d" class="oe_highlight" string="Imprimir Contrato" type="action"/>
                             </div>
                         </group>
                     </sheet>

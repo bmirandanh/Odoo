@@ -1,18 +1,77 @@
 <odoo>
     <data>
-        <record id="action_contract_generator" model="ir.actions.act_window">
-            <field name="name">Gerador de Contratos</field>
+        
+        <!-- Menu para GenerateSimplifiedContract -->
+        <record id="generate_simplified_contract_menu_action" model="ir.actions.act_window">
+            <field name="name">Generate Simplified Contract</field>
+            <field name="res_model">generate.simplified.contract</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+
+        <!-- Menu para ArticleSet -->
+        <record id="article_set_menu_action" model="ir.actions.act_window">
+            <field name="name">Article Set</field>
+            <field name="res_model">article.set</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+
+        <!-- Menu para ContractContract -->
+        <record id="contract_contract_menu_action" model="ir.actions.act_window">
+            <field name="name">Contract Contract</field>
+            <field name="res_model">contract.contract</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+
+        <!-- Menu para CreateArticle -->
+        <record id="create_article_menu_action" model="ir.actions.act_window">
+            <field name="name">Create Article</field>
+            <field name="res_model">create.article</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+
+        <!-- Menu para ContractModel -->
+        <record id="contract_model_menu_action" model="ir.actions.act_window">
+            <field name="name">Contract Model</field>
+            <field name="res_model">contract.model</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+       
+        <!-- Menu para GeradorViews -->
+        <record id="gerador_views_menu_action" model="ir.actions.act_window">
+            <field name="name">Gerador Views</field>
             <field name="res_model">gerador_views</field>
-            <field name="view_id" ref="gerador_home_view"/>
+            <field name="view_mode">tree,form</field>
         </record>
 
-        <record id="menu_contract_generator" model="ir.ui.menu">
-            <field name="name">Gerador de Contratos</field>
-            <field name="sequence">10</field>
-            <field name="action" ref="action_contract_generator"/>
+
+        <!-- Menu para ArticleCondition -->
+        <record id="article_condition_menu_action" model="ir.actions.act_window">
+            <field name="name">Article Condition</field>
+            <field name="res_model">create.article.condition</field>
+            <field name="view_mode">tree,form</field>
         </record>
 
-        <!-- Adicionar este item de menu sob o menu principal de APPs -->
-        <menuitem id="fgmed_canvas_menu_master" name="Canvas" sequence="1"/>
+        <!-- Menu para Contatos / histórico por cliente -->
+        <record id="contract_contacts_and_contracts_menu_action" model="ir.actions.act_window">
+            <field name="name">contract contacts and contracts</field>
+            <field name="res_model">res.partner</field>
+            <field name="view_mode">kanban,tree,form</field>
+            <field name="view_id" ref="view_res_partner_kanban"/>
+        </record>   
+
+        <!-- Aba dos Menus -->
+        <menuitem id="fgmed_contratos" name="Gerador de Contratos" sequence="1" />
+        <menuitem id="contract_model_menu" parent="fgmed_contratos" name="Cabeçalhos" action="contract_model_menu_action" />
+        <menuitem id="contract_contract_menu" parent="fgmed_contratos" name="Contratos" action="contract_contract_menu_action" />
+        <menuitem id="generate_simplified_contract_menu" parent="fgmed_contratos" name="IA Auxiliar" action="generate_simplified_contract_menu_action" />        
+        <menuitem id="article_set_menu" parent="fgmed_contratos" name="Cláusulas" action="article_set_menu_action" />
+        <menuitem id="create_article_menu" parent="fgmed_contratos" name="Artigos" action="create_article_menu_action" />
+        <menuitem id="article_condition_menu" parent="fgmed_contratos" name="Condições" action="article_condition_menu_action" />
+        <menuitem id="contract_contacts_and_contracts_menu" parent="fgmed_contratos" name="Histórico por cliente" action="contract_contacts_and_contracts_menu_action" />
     </data>
 </odoo>

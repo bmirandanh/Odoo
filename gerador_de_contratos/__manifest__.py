@@ -7,9 +7,13 @@
     
     'depends': [
         'base',
+        'sale',
+        'crm',
+        
         ],
     
     'data': [
+        'views/contract_contacts_and_contracts.xml',
         'views/contract_generator_views.xml',
         'views/contract_model_views.xml',
         'views/contract_model_list_views.xml',
