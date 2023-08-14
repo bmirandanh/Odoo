@@ -108,7 +108,7 @@ class GenerateSimplifiedContract(models.Model):
     # Função para fazer uma requisição à API GPT-3
     def make_gpt3_request(self, prompt):
         # Configurando a chave da API
-        openai.api_key = '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'
+        openai.api_key = ''
 
         try:
             # Fazendo a requisição à API
