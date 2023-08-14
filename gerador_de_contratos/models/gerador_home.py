@@ -669,6 +669,9 @@ class ContractContract(models.Model):
         for i, article_set in enumerate(self.article_sets):
             contract_content_list.append(f'<h2 style="text-align: center">{article_set.name.upper()}</h2>')
 
+            # Reinicializa a numeração das cláusulas para cada novo conjunto de artigos
+            clause_number = 1
+
             for j, article in enumerate(article_set.articles):
                 soup = BeautifulSoup(article.content, 'html.parser')
 
@@ -1055,7 +1058,7 @@ class GeradorViews(models.Model):
         # Inclui o conteúdo dos artigos nos conjuntos de artigos
         for i, article_set in enumerate(self.article_sets):
             clause_number = 1  # Reinicializando a variável de contagem de cláusula para cada conjunto de artigos
-
+            
             # Adiciona o nome do conjunto de artigos como título
             contract_content_list.append(f'<h2 style="text-align: center">{article_set.name.upper()}</h2>')
 
