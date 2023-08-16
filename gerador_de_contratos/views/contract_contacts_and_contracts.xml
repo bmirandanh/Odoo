@@ -10,18 +10,18 @@
                 <!-- Encontrando o notebook para adicionar nossa nova página -->
                 <xpath expr="//notebook" position="inside">
                     <page string="Versões do contrato" name="versao_contrato" groups="gerador_de_contratos.access_gerador_de_contratos,base.group_system">
-                    <field name="contract_version_ids" widget="one2many_list">
-                        <tree editable="bottom">
-                            <field name="version_number"/>
-                            <field name="name"/>
-                            <field name="data_contrato"/>
-                            <field name="texto_html_contrato" widget='html'/>
-                        </tree>
-                    </field>
-                </page>
-            </xpath>
-        </field>
-    </record>         
+                        <field name="contract_version_ids" widget="one2many_list">
+                            <tree editable="bottom">
+                                <field name="version_number"/>
+                                <field name="name"/>
+                                <field name="data_contrato"/>
+                                <field name="texto_html_contrato" widget='html'/>
+                            </tree>
+                        </field>
+                    </page>
+                </xpath>
+            </field>
+        </record>         
 
         <!-- Ação de Pedidos de Venda por Parceiro -->
         <record id="action_sales_order_per_partner" model="ir.actions.act_window">

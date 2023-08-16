@@ -108,7 +108,7 @@ class GenerateSimplifiedContract(models.Model):
     # Função para fazer uma requisição à API GPT-3
     def make_gpt3_request(self, prompt):
         # Configurando a chave da API
-        openai.api_key = ''
+        openai.api_key = 'sk-'
 
         try:
             # Fazendo a requisição à API
@@ -278,7 +278,6 @@ class ArticleWizardRel(models.TransientModel):
     wizard_id = fields.Many2one('create.article.set.wizard', ondelete='cascade')
     article_id = fields.Many2one('create.article')
     selected = fields.Boolean()
-
     article_name = fields.Char(related='article_id.name', string="Article Name", readonly=True)
     article_description = fields.Text(related='article_id.description', string="Article Description", readonly=True)
     article_content = fields.Html(related='article_id.content', string="Article Content", readonly=True)
@@ -480,13 +479,11 @@ class ContractContract(models.Model):
             sale_order = self.env['sale.order'].browse(sale_id)
         except Exception as e:
             _logger.error(f'Erro ao buscar a ordem de venda: {e}')
-            return "Erro interno do servidor"
+            return {"head": {'Tipo-do-Conteudo': 'application/json'}, "body": {"error": "Erro interno do servidor"}}
 
         # Verificando se a ordem de venda existe
         if not sale_order.exists():
-            head = {'Tipo-do-Conteudo': 'application/json'}
-            body = {"error": "Ordem de venda não encontrada"}
-            return {"head": head, "body": body}
+            return {"head": {'Tipo-do-Conteudo': 'application/json'}, "body": {"error": "Ordem de venda não encontrada"}}
 
         # Recuperando o id do termo de pagamento, se existir
         payment_term_id = sale_order.payment_term_id.id if sale_order.payment_term_id else None
@@ -495,39 +492,40 @@ class ContractContract(models.Model):
         product_ids = [line.product_id.id for line in sale_order.order_line if line.product_id]
 
         try:
-            contracts = self.env['contract.contract'].search([
-                ('contract_type', 'in', payment_term_id),
-                ('product_ids', 'in', product_ids)  # <-- ALTERAÇÃO AQUI
-            ])
+            contract = self.env['contract.contract'].search([
+                ('contract_type', 'in', [payment_term_id]),
+                ('product_ids', 'in', product_ids)  
+            ], limit=1)  # Adicionando limit=1 para pegar somente um contrato
         except Exception as e:
             _logger.error(f'Erro ao buscar o contrato: {e}')
-            return "Erro interno do servidor"
+            return {"head": {'Tipo-do-Conteudo': 'application/json'}, "body": {"error": "Erro interno do servidor"}}
 
         # Verificando se o contrato foi encontrado
-        if not contracts:
-            head = {'Tipo-do-Conteudo': 'application/json'}
-            body = {"error": "Contrato não encontrado"}
-            return {"head": head, "body": body}
+        if not contract:
+            return {"head": {'Tipo-do-Conteudo': 'application/json'}, "body": {"error": "Contrato não encontrado"}}
 
-        # Selecionando o primeiro contrato encontrado
-        contract = contracts[0]
-
-        # Lista para armazenar os ids dos artigos a serem removidos
-        articles_to_remove = []
+        # Se o contrato possuir o campo contract_model_id, obtenha o content
+        contract_model_content = contract.contract_model_id.content if hasattr(contract, 'contract_model_id') and contract.contract_model_id else None                      
 
         # Criando uma lista para o conteúdo do contrato modificado
         contract_content_list = []
         contract_content_list.append(f'<h1 style="text-align: center"><strong>{contract.name}</strong></h1>')
+        
+        # Se o contrato possuir o campo contract_model_id, obtenha o content
+        if hasattr(contract, 'contract_model_id') and contract.contract_model_id:
+            contract_model_content = contract.contract_model_id.content
+            contract_content_list.append(contract_model_content)
 
+        articles_to_remove = []
         # Verificando as condições do contrato e registrando os artigos que devem ser removidos
         for condition in contract.condition_ids:
             articles_to_remove.extend(condition.evaluate_condition(sale_id))
 
-        # Obtendo todos os conjuntos de artigos
-        all_article_sets = self.env['article.set'].search([])
+        # Obtendo conjuntos de artigos/cláusulas para o contrato escolhido
+        article_sets_for_contract = contract.article_sets
 
         # Construindo o conteúdo modificado do contrato
-        for i, article_set in enumerate(all_article_sets):
+        for i, article_set in enumerate(article_sets_for_contract):
             clause_number = 1  # Inicializa o número da cláusula para cada conjunto de artigos
             contract_content_list.append(f'<h2 style="text-align: center">{article_set.name.upper()}</h2>')
 
@@ -541,15 +539,14 @@ class ContractContract(models.Model):
                 # Se o id do artigo ORIGINAL estiver na lista de artigos a serem removidos, ignoramos este artigo
                 if article.id in articles_to_remove:
                     continue
-                    
-                # Este artigo deve ser incluído, então adicionamos ao conteúdo
+                        
                 soup = BeautifulSoup(article_copy.content, 'html.parser')
 
                 for tag in soup.find_all(['p', 'br', 'div']):
                     tag.replace_with(tag.get_text())
 
                 article_content = soup.get_text().strip()
-                # Formatação modificada para o formato "Cláusula nª"
+
                 if clause_number >= 2:
                     formatted_article_content = f'<p><strong>§{clause_number}º</strong> {article_content}</p>'
                     contract_content_list.append(formatted_article_content)
@@ -561,8 +558,131 @@ class ContractContract(models.Model):
 
         contract_content = "<br/>".join(contract_content_list)
 
+        ############### Obtendo valores das variáveis: ###############
+        
+        # Obtenha os valores do campo course_itrn_time_id de todos os itens de pedido
+        course_values = [line.product_id.course_itrn_time_id for line in sale_order.order_line if hasattr(line.product_id, 'course_itrn_time_id')]
+        # Obtenha os valores do campo course_base_time_id de todos os itens de pedido
+        base_course_values = [line.product_id.course_base_time_id for line in sale_order.order_line if hasattr(line.product_id, 'course_base_time_id')]
+        # Obtenha os nomes de todos os produtos do item de pedido
+        product_names = [line.product_id.name for line in sale_order.order_line if hasattr(line.product_id, 'name')]
+        
+        
+        # Obtenha o valor total da compra
+        amount_total_value = str(sale_order.amount_total)
+        # obtenha o nome do campo payment_term_id:
+        payment_term_name = sale_order.payment_term_id.name
+        # obtenha o valor do campo date_order
+        contract_date = sale_order.date_order
+        # data no formato "dd/mm/yyyy"
+        formatted_contract_date = contract_date.strftime('%d/%m/%Y')
+        # obtenha o valor do campo name de partner_id
+        client_name = sale_order.partner_id.name
+       
+       
+        # o campo partner_id da ordem de venda sendo a referência para res.partner
+        partner = sale_order.partner_id
+        # Obtendo o valor de country_origin_id
+        country_name = partner.country_origin_id.name
+        # Obtenha o valor de l10n_br_cnpj_cpf
+        cpf_value = partner.l10n_br_cnpj_cpf
+        # Obtenha os componentes do endereço
+        # CEP
+        cep = partner.zip or ""
+        # Rua
+        street = partner.street or ""
+        # Complementos
+        street2 = partner.street2 or " n/d"
+        # Número
+        number = partner.l10n_br_number or ""
+        # Bairro
+        district = partner.l10n_br_district or ""
+        # Cidade
+        city = partner.city_id.name or ""
+        # Estado
+        state = partner.state_id.name or ""
+        # País
+        country = partner.country_id.name or ""
+        # Telefone do cliente
+        mobile_contract = partner.mobile or ""
+        # Celular do cliente
+        mobile_contract = partner.mobile or ""
+        # Celular do cliente
+        phone_contract = partner.phone or ""
+        # E-mail do cliente
+        email = partner.email or ""
+
+
+        ############### Concatenando os valores das variáveis: ###############
+        
+        # Concatene os valores course_values
+        course_values_str = ", ".join(map(str, course_values))
+        # Concatene os valores de base_course_values
+        base_course_values_str = ", ".join(map(str, base_course_values))
+        # Concatene os nomes
+        product_names_str = ", ".join(product_names)
+        # Combine os componentes em uma representação de endereço
+        address_representation = f"{street} - {street2}, {number}, {district}, {city} - {state}, {country}"
+
+
+        ############### Substituindo os valores das variáveis: ###############
+        
+        # Substitua todas as ocorrências de [PESOCURSO] no contract_content pela string concatenada
+        contract_content = contract_content.replace("[PESOCURSO]", course_values_str)
+        # Substitua todas as ocorrências de [PESOCURSOB] no contract_content pela string concatenada
+        contract_content = contract_content.replace("[PESOCURSOB]", base_course_values_str)
+        #Substitua todas as ocorrências de [ALUNOCNOME] no contract_content pela string concatenada
+        contract_content = contract_content.replace("[ALUNOCNOME]", product_names_str)
+        # Substitua todas as ocorrências de [ALUNONAC] no contract_content pelo nome do país
+        contract_content = contract_content.replace("[ALUNONAC]", country_name)
+        # Substitua todas as ocorrências de [ALUNOCPF] no contract_content pelo CPF
+        contract_content = contract_content.replace("[ALUNOCPF]", cpf_value)
+        # Substitua todas as ocorrências de [ALUNOCPF] no contract_content endereço completo
+        contract_content = contract_content.replace("[ALUNOADDRESS]", address_representation)
+        # Substitua todas as ocorrências de [ALUNOCTFONE] no contract_content pelo telefone móvel
+        contract_content = contract_content.replace("[ALUNOCTFONE]", mobile_contract)
+        # Substitua todas as ocorrências de [ALUNOCTMAIL] no contract_content pelo e-mail
+        contract_content = contract_content.replace("[ALUNOCTMAIL]", email)
+        # Substitua todas as ocorrências de [ALUNOCPARC] no contract_content pelo valor total
+        contract_content = contract_content.replace("[ALUNOCPARC]", amount_total_value)
+        # Substitua todas as ocorrências de "[ALUNOCQPARC]" no contract_content pelo nome das condições de pagamento
+        contract_content = contract_content.replace("[ALUNOCQPARC]", payment_term_name)
+        # Substitua todas as ocorrências de "[DATACONTRATO]" no contract_content pela data formatada
+        contract_content = contract_content.replace("[DATACONTRATO]", formatted_contract_date)
+        # Substitua todas as ocorrências de "[DATA]" no contract_content pela data formatada
+        contract_content = contract_content.replace("[DATA]", formatted_contract_date)
+        # Substitua todas as ocorrências de "[ALUNONOME]" no contract_content pelo nome do cliente
+        contract_content = contract_content.replace("[ALUNONOME]", client_name)
+        # Substitua todas as ocorrências de [VALOR TOTAL] no contract_content pelo valor total
+        contract_content = contract_content.replace("[VALOR TOTAL]", amount_total_value)
+        # Substitua todas as ocorrências de [VALORTOTAL] no contract_content pelo valor total
+        contract_content = contract_content.replace("[VALORTOTAL]", amount_total_value)
+        # Substitua todas as ocorrências de [TOTALVALUE] no contract_content pelo valor total
+        contract_content = contract_content.replace("[TOTALVALUE]", amount_total_value)
+        # Substitua todas as ocorrências de [amount_total] no contract_content pelo valor total
+        contract_content = contract_content.replace("[amount_total]", amount_total_value)
+        # Substitua todas as ocorrências de "[payment_term_id]" no contract_content pelo nome das condições de pagamento
+        contract_content = contract_content.replace("[payment_term_id]", payment_term_name)
+        # Substitua todas as ocorrências de "[date_order]" no contract_content pela data formatada
+        contract_content = contract_content.replace("[date_order]", formatted_contract_date)
+        # Substitua todas as ocorrências de "[partner_id.name]" no contract_content pelo nome do cliente
+        contract_content = contract_content.replace("[partner_id.name]", client_name)
+        # Substitua todas as ocorrências de [partner_id.l10n_br_cnpj_cpf] no contract_content pelo CPF
+        contract_content = contract_content.replace("[partner_id.l10n_br_cnpj_cpf]", cpf_value)
+        # Substitua todas as ocorrências de [partner_id.zip] no contract_content pelo CEP
+        contract_content = contract_content.replace("[partner_id.zip]", cep)
+        # Substitua todas as ocorrências de [partner_id.email] no contract_content pelo Email
+        contract_content = contract_content.replace("[partner_id.email]", email)
+        # Substitua todas as ocorrências de [partner_id.mobile] no contract_content pelo Celular
+        contract_content = contract_content.replace("[partner_id.mobile]", mobile_contract)
+        # Substitua todas as ocorrências de [partner_id.phone] no contract_content pelo Telefone
+        contract_content = contract_content.replace("[partner_id.phone]", phone_contract)
+        # Substitua todas as ocorrências de [partner_id.street] no contract_content pela Rua
+        contract_content = contract_content.replace("[partner_id.street]", street)
+        
         # Preparando a resposta da requisição
         head = {'Tipo-do-Conteudo': 'application/json'}
+
         body = {
             'contract_id': contract.id,
             'name': contract.name,
@@ -727,8 +847,6 @@ class CreateArticle(models.Model):
     variable = fields.Selection([('amount_total', 'Total'), 
         ('payment_term_id', 'Termo de pagamento'),
         ('date_order', 'Data da ordem'),
-        ('sale_order_template_id', 'Modelo de ordem de venda'),
-        ('partner_id', 'Parceiro'),
         ('partner_id.name', 'Nome do parceiro'),
         ('partner_id.l10n_br_cnpj_cpf', 'CNPJ/CPF do parceiro'),
         ('partner_id.zip', 'CEP do parceiro'),
@@ -740,7 +858,7 @@ class CreateArticle(models.Model):
 
     def insert_variable(self):
         # Formata a variável selecionada
-        variable_tag = '{{' + self.variable + '}}'
+        variable_tag = '[' + self.variable + ']'
 
         # Adiciona a variável ao campo content
         self.content = (self.content or '') + ' ' + variable_tag
@@ -869,7 +987,7 @@ class ContractModel(models.Model):
         if self.variable in self.SPECIAL_VARS:
             variable_tag = '[' + self.variable + ']'
         else:
-            variable_tag = '{{' + self.variable + '}}'
+            variable_tag = '[' + self.variable + ']'
 
         # Adiciona a variável ao campo content
         self.content = (self.content or '') + ' ' + variable_tag
