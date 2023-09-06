@@ -65,13 +65,13 @@
         </record>   
 
         <!-- Aba dos Menus -->
-        <menuitem id="fgmed_contratos" name="Gerador de Contratos" sequence="1" />
-        <menuitem id="contract_model_menu" parent="fgmed_contratos" name="Cabeçalhos" action="contract_model_menu_action" />
-        <menuitem id="contract_contract_menu" parent="fgmed_contratos" name="Contratos" action="contract_contract_menu_action" />
-        <menuitem id="generate_simplified_contract_menu" parent="fgmed_contratos" name="IA Auxiliar" action="generate_simplified_contract_menu_action" />        
-        <menuitem id="article_set_menu" parent="fgmed_contratos" name="Cláusulas" action="article_set_menu_action" />
-        <menuitem id="create_article_menu" parent="fgmed_contratos" name="Artigos" action="create_article_menu_action" />
-        <menuitem id="article_condition_menu" parent="fgmed_contratos" name="Condições" action="article_condition_menu_action" />
+        <menuitem id="fgmed_contratos" name="Gerador de Contratos" sequence="1" groups="base.group_system,group_gerador_de_contratos"/>
+        <menuitem id="contract_model_menu" parent="fgmed_contratos" name="Cabeçalhos" action="contract_model_menu_action" groups="base.group_system,group_gerador_de_contratos"/>
+        <menuitem id="contract_contract_menu" parent="fgmed_contratos" name="Contratos" action="contract_contract_menu_action" groups="base.group_system,group_gerador_de_contratos"/>
+        <menuitem id="generate_simplified_contract_menu" parent="fgmed_contratos" name="IA Auxiliar" action="generate_simplified_contract_menu_action" groups="base.group_system,group_gerador_de_contratos"/>        
+        <menuitem id="article_set_menu" parent="fgmed_contratos" name="Cláusulas" action="article_set_menu_action" groups="base.group_system,group_gerador_de_contratos"/>
+        <menuitem id="create_article_menu" parent="fgmed_contratos" name="Artigos" action="create_article_menu_action" groups="base.group_system,group_gerador_de_contratos"/>
+        <menuitem id="article_condition_menu" parent="fgmed_contratos" name="Condições" action="article_condition_menu_action" groups="base.group_system,group_gerador_de_contratos"/>
         <menuitem id="contract_contacts_and_contracts_menu" parent="fgmed_contratos" name="Histórico por cliente" action="contract_contacts_and_contracts_menu_action" />
     </data>
 </odoo>

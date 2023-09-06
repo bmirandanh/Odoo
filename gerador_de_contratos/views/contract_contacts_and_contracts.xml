@@ -1,27 +1,36 @@
 <odoo>
     <data>
-
-        <!-- Estendendo a view form de sale.order -->
-        <record id="view_order_form_inherit" model="ir.ui.view">
-            <field name="name">sale.order.form.inherit</field>
+        <!-- Visão para os usuários com permissões especiais -->
+        <record id="view_order_form_special" model="ir.ui.view">
+            <field name="name">sale.order.form.special</field>
             <field name="model">sale.order</field>
             <field name="inherit_id" ref="sale.view_order_form"/>
             <field name="arch" type="xml">
-                <!-- Encontrando o notebook para adicionar nossa nova página -->
                 <xpath expr="//notebook" position="inside">
-                    <page string="Versões do contrato" name="versao_contrato" groups="gerador_de_contratos.access_gerador_de_contratos,base.group_system">
+                    <page string="Versões do contrato" name="versao_contrato" groups="gerador_de_contratos.group_gerador_de_contratos,base.group_system">
                         <field name="contract_version_ids" widget="one2many_list">
                             <tree editable="bottom">
                                 <field name="version_number"/>
                                 <field name="name"/>
                                 <field name="data_contrato"/>
-                                <field name="texto_html_contrato" widget='html'/>
+                                <field name="texto_html_contrato" widget="html"/>
                             </tree>
                         </field>
                     </page>
                 </xpath>
             </field>
         </record>         
+
+        <!-- Visão para todos os outros usuários -->
+        <record id="view_order_form_regular" model="ir.ui.view">
+            <field name="name">sale.order.form.regular</field>
+            <field name="model">sale.order</field>
+            <field name="inherit_id" ref="sale.view_order_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//notebook" position="inside">
+                </xpath>
+            </field>
+        </record>
 
         <!-- Ação de Pedidos de Venda por Parceiro -->
         <record id="action_sales_order_per_partner" model="ir.actions.act_window">
@@ -81,6 +90,5 @@
             <field name="view_mode">kanban,tree,form</field>
             <field name="view_id" ref="view_res_partner_kanban"/>
         </record>
-
     </data>
 </odoo>

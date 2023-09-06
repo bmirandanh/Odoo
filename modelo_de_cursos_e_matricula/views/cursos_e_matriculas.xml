@@ -1,0 +1,558 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <!-- Tree das View -->
+
+
+        <!-- CURSOS -->
+
+        <record id="view_informa_cursos_tree" model="ir.ui.view">
+            <field name="name">informa.cursos.tree</field>
+            <field name="model">informa.cursos</field>
+            <field name="arch" type="xml">
+                <tree string="Cursos">
+                    <field name="name"/>
+                    <field name="tempo_de_conclusao"/>
+                    <field name="cod_curso"/>
+                    <field name="disciplina_ids" widget="many2many_tags " context="{'default_curso_ids': active_id}" required="1"/>
+                </tree>
+            </field>
+        </record>
+
+        <!-- DISCIPLINAS -->
+
+        <record id="view_informa_disciplina_tree" model="ir.ui.view">
+            <field name="name">informa.disciplina.tree</field>
+            <field name="model">informa.disciplina</field>
+            <field name="arch" type="xml">
+                <tree string="Disciplinas">
+                    <field name="name"/>
+                    <field name="media"/>
+                    <field name="atividade_ids" widget="many2many_tags" />
+                </tree>
+            </field>
+        </record>
+
+        <!-- ATIVIDADES -->
+
+        <record id="view_informa_atividade_tree" model="ir.ui.view">
+            <field name="name">informa.atividade.tree</field>
+            <field name="model">informa.atividade</field>
+            <field name="arch" type="xml">
+                <tree string="Disciplinas">
+                    <field name="name"/>
+                    <field name="descricao"/>
+                    <field name="anexo_ids" />
+                </tree>
+            </field>
+        </record>
+
+        <!-- MATRÍCULAS -->
+
+        <record id="view_informa_matricula_tree" model="ir.ui.view">
+            <field name="name">informa.matricula.tree</field>
+            <field name="model">informa.matricula</field>
+            <field name="arch" type="xml">
+                <tree string="Matrículas">
+                    <field name="nome_do_aluno"/>
+                    <field name="curso"/>
+                    <field name="status_do_certificado"/>
+                    <field name="regiao"/>
+                    <field name="tipo_de_ingresso"/>
+                    <field name="tipo_de_cancelamento" attrs="{'invisible': [('status_do_certificado', '!=', 'MATRÍCULA CANCELADA')]}"/>
+                    <field name="inscricao_ava"/>
+                    <field name="email"/>
+                    <field name="numero_de_modulo"/>
+                    <field name="data_provavel_certificacao"/>
+                    <field name="cod_curso"/>
+                    <field name="numero_matricula" force_save="1"/>
+                    <field name="matricula_aluno" force_save="1"/>
+                </tree>
+            </field>
+        </record>
+
+
+        <!-- Tipo de Ingresso -->
+
+        <record id="view_tipo_ingresso_tree" model="ir.ui.view">
+            <field name="name">tipo.de.ingresso.tree</field>
+            <field name="model">tipo.de.ingresso</field>
+            <field name="arch" type="xml">
+                <tree string="Tipo de Ingresso">
+                    <field name="nome"/>
+                    <field name="descricao"/>
+                    <field name="color" widget="color_picker"/>
+                </tree>
+            </field>
+        </record>
+
+        <!-- Tipo de Cancelamento -->
+
+        <record id="view_tipo_cancelamento_tree" model="ir.ui.view">
+            <field name="name">tipo.de.cancelamento.tree</field>
+            <field name="model">tipo.de.cancelamento</field>
+            <field name="arch" type="xml">
+                <tree string="Tipo de Cancelamento">
+                    <field name="nome"/>
+                    <field name="descricao"/>
+                    <field name="color" widget="color_picker"/>
+                </tree>
+            </field>
+        </record>
+
+
+        <!-- Form das View -->
+
+
+        <!-- CURSOS -->
+
+        <record id="view_informa_cursos_form" model="ir.ui.view">
+            <field name="name">informa.cursos.form</field>
+            <field name="model">informa.cursos</field>
+            <field name="arch" type="xml">
+                <form string="Cursos">
+                    <sheet>
+                        <group>
+                            <field name="name"/>
+                            <field name="cod_curso"/>
+                            <field name="disciplina_ids" widget="many2many_tags" context="{'default_curso_ids': active_id}" required="1"/>
+                            <field name="tempo_de_conclusao"/>
+                        </group>
+                        <notebook>
+                        <!-- Detalhes do Curso (Alunos, Disciplinas, etc.) -->
+                        <page string="Alunos">
+                            <field name="matricula_id" options="{'no_create': True}" mode="kanban,tree">
+                                <kanban>
+                                    <templates>
+                                        <t t-name="kanban-box">
+                                            <div class="oe_kanban_global_click">
+                                                <div class="o_kanban_record_top">
+                                                    <field name="nome_do_aluno"/>
+                                                </div>
+                                                <div>
+                                                    <field name="status_do_certificado"/>
+                                                </div>
+                                                <div>
+                                                    <field name="inscricao_ava"/>
+                                                </div>
+                                                <div>
+                                                    <field name="numero_matricula" force_save="1"/>
+                                                </div>
+                                                <div>
+                                                    <field name="cod_curso"/>
+                                                </div>
+                                                <div>
+                                                    <field name="matricula_aluno" force_save="1"/>
+                                                </div>
+                                            </div>
+                                        </t>
+                                    </templates>
+                                </kanban>
+                                <tree>
+                                    <field name="nome_do_aluno"/>
+                                    <field name="status_do_certificado"/>
+                                    <field name="inscricao_ava"/>
+                                    <field name="cod_curso"/>
+                                    <field name="numero_matricula" force_save="1"/>
+                                    <field name="matricula_aluno" force_save="1"/>
+                                </tree>
+                            </field>
+                        </page>
+                    </notebook>
+                    </sheet>
+                    <!-- Chatter de menssagens de log -->
+                    <div class="oe_chatter">
+                        <field name="message_follower_ids" widget="mail_followers" groups="base.group_system"/>
+                        <field name="activity_ids" widget="mail_activity" groups="base.group_system"/>
+                        <field name="message_ids" widget="mail_thread"/>
+                    </div>
+                </form>
+            </field>
+        </record>
+
+        <!-- DISCIPLINAS -->
+
+        <record id="view_informa_disciplinas_form" model="ir.ui.view">
+            <field name="name">informa.disciplina.form</field>
+            <field name="model">informa.disciplina</field>
+            <field name="arch" type="xml">
+                <form string="Disciplinas">
+                    <sheet>
+                        <group>
+                            <field name="name"/>
+                            <field name="media"/>
+                            <field name="atividade_ids" widget="many2many_tags" />
+                        </group>
+                    </sheet>
+                    <!-- Chatter de menssagens de log -->
+                    <div class="oe_chatter">
+                        <field name="message_follower_ids" widget="mail_followers" groups="base.group_system"/>
+                        <field name="activity_ids" widget="mail_activity" groups="base.group_system"/>
+                        <field name="message_ids" widget="mail_thread"/>
+                    </div>
+                </form>
+            </field>
+        </record>
+
+        <!-- ATIVIDADES -->
+
+        <record id="view_informa_atividade_form" model="ir.ui.view">
+            <field name="name">informa.atividade.form</field>
+            <field name="model">informa.atividade</field>
+            <field name="arch" type="xml">
+                <form string="Atividades">
+                    <sheet>
+                        <group>
+                            <field name="name"/>
+                            <field name="descricao" />
+                            <field name="anexo_ids" widget="many2many_binary"/>
+                        </group>
+                    </sheet>
+                    <!-- Chatter de menssagens de log -->
+                    <div class="oe_chatter">
+                        <field name="message_follower_ids" widget="mail_followers" groups="base.group_system"/>
+                        <field name="activity_ids" widget="mail_activity" groups="base.group_system"/>
+                        <field name="message_ids" widget="mail_thread"/>
+                    </div>
+                </form>
+            </field>
+        </record>
+
+        <!-- MATRÍCULAS -->
+
+        <record id="view_informa_matricula_form" model="ir.ui.view">
+            <field name="name">informa.matricula.form</field>
+            <field name="model">informa.matricula</field>
+            <field name="arch" type="xml">
+                <form string="Matrícula">
+                    <sheet>
+                        <group>
+                            <field name="nome_do_aluno"/>
+                            <field name="curso"/>
+                            <field name="regiao"/>
+                            <field name="tipo_de_ingresso"/>
+                            <field name="tipo_de_cancelamento" attrs="{'invisible': [('status_do_certificado', '!=', 'MATRÍCULA CANCELADA')]}"/>
+                            <field name="inscricao_ava" widget='date' options="{'date_format': 'DD/MM/YYYY'}"/>
+                        </group>
+                        <group>
+                            <field name="email"/>
+                            <field name="telefone"/>
+                            <field name="numero_de_modulo"/>
+                            <field name="data_provavel_certificacao" widget='date' options="{'date_format': 'DD/MM/YYYY'}"/>
+                            <field name="prazo_exp_certf_dias"/>
+                            <field name="status_do_certificado"/>
+                            <field name="cod_curso"/>
+                            <field name="numero_matricula" force_save="1"/>
+                            <field name="matricula_aluno" force_save="1"/>
+                            <field name="justificativa_cancelamento" attrs="{'invisible': [('status_do_certificado', '!=', 'MATRÍCULA CANCELADA')]}"/>
+                        </group>
+                    </sheet>
+                    <xpath expr="//sheet" position="before">
+                        <header>
+                            <button string="Cancelar Matrícula" attrs="{'invisible': [('id', '=', False)]}" type="object" name="action_open_status_change_wizard" class="oe_highlight"/>
+                        </header>
+                    </xpath>
+                    <!-- Chatter de menssagens de log -->
+                    <div class="oe_chatter">
+                        <field name="message_follower_ids" widget="mail_followers" groups="base.group_system"/>
+                        <field name="activity_ids" widget="mail_activity" groups="base.group_system"/>
+                        <field name="message_ids" widget="mail_thread"/>
+                    </div>
+                </form>
+            </field>
+        </record>
+
+        <!-- TIPO DE INGRESSO -->
+
+        <record id="view_tipo_ingresso_form" model="ir.ui.view">
+            <field name="name">tipo.de.ingresso.form</field>
+            <field name="model">tipo.de.ingresso</field>
+            <field name="arch" type="xml">
+                <form string="Tipo de Ingresso">
+                    <sheet>
+                        <group>
+                            <field name="nome"/>
+                            <field name="descricao"/>
+                            <field name="color" widget="color_picker"/>
+                        </group>
+                    </sheet>
+                    <!-- Chatter de menssagens de log -->
+                    <div class="oe_chatter">
+                        <field name="message_follower_ids" widget="mail_followers" groups="base.group_system"/>
+                        <field name="activity_ids" widget="mail_activity" groups="base.group_system"/>
+                        <field name="message_ids" widget="mail_thread"/>
+                    </div>
+                </form>
+            </field>
+        </record>
+
+        <!-- TIPO DE CANCELAMENTO -->
+
+        <record id="view_tipo_cancelamento_form" model="ir.ui.view">
+            <field name="name">tipo.de.cancelamento.form</field>
+            <field name="model">tipo.de.cancelamento</field>
+            <field name="arch" type="xml">
+                <form string="Tipo de Cancelamento">
+                    <sheet>
+                        <group>
+                            <field name="nome"/>
+                            <field name="descricao"/>
+                            <field name="color" widget="color_picker"/>
+                        </group>
+                    </sheet>
+                    <!-- Chatter de menssagens de log -->
+                    <div class="oe_chatter">
+                        <field name="message_follower_ids" widget="mail_followers" groups="base.group_system"/>
+                        <field name="activity_ids" widget="mail_activity" groups="base.group_system"/>
+                        <field name="message_ids" widget="mail_thread"/>
+                    </div>
+                </form>
+            </field>
+        </record>
+
+        <record id="view_informa_cursos_kanban" model="ir.ui.view">
+            <field name="name">informa.cursos.kanban</field>
+            <field name="model">informa.cursos</field>
+            <field name="arch" type="xml">
+            <kanban class="o_kanban_view o_informa_cursos_kanban">
+                        <templates>
+                            <t t-name="kanban-box">
+                                <div t-attf-class="oe_kanban_card">
+                                    <!-- Nome do curso -->
+                                    <div class="o_kanban_record_top">
+                                        <field name="name"/>
+                                    </div>
+                                    <!-- Detalhes do curso -->
+                                    <div class="o_kanban_record_bottom">
+                                        <field name="tempo_de_conclusao"/>
+                                    </div>
+                                <div>
+                                    <button name="action_open_courses" type="object" string="Ver Curso" class="oe_highlight">
+                                        Visualizar disciplinas
+                                    </button>
+                                </div>
+                                </div>
+                            </t>
+                        </templates>
+                    </kanban>
+                </field>
+            </record>
+
+
+        <!-- KANBAN MATRICULA-->
+
+        <record id="view_informa_matricula_kanban" model="ir.ui.view">
+            <field name="name">informa.matricula.kanban</field>
+            <field name="model">informa.matricula</field>
+            <field name="arch" type="xml">
+                <kanban class="o_kanban_mobile" default_group_by="status_do_certificado">
+                    <field name="status_do_certificado"/>
+                    <templates>
+                        <t t-name="kanban-box">
+                            <div class="oe_kanban_global_click">
+                                <div class="o_kanban_card_content">
+                                    <div class="o_kanban_primary_left">
+                                        <div class="o_primary">
+                                            <field name="color_tipo_ingresso" widget="color_picker" />
+                                            <field name="color_tipo_cancelamento" widget="color_picker" attrs="{'invisible': [('status_do_certificado', '!=', 'MATRÍCULA CANCELADA')]}" /><br/>
+                                            <span>Aluno: </span><strong><field name="nome_do_aluno"/></strong><br/>
+                                            <span>Curso: </span><field name="curso"/><br/>
+                                            <span>E-mail: </span><field name="email" force_save="1"/><br/>
+                                            <span>Telefone: </span><field name="telefone" force_save="1"/><br/>
+                                            <span>Data de início: </span><field name="inscricao_ava"/><br/>
+                                            <span>Data de Finalização: </span><field name="prazo_exp_certf_dias"/><br/>
+                                            <span>Numero de Matrícula do curso: </span><field name="numero_matricula" force_save="1"/><br/>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </t>
+                    </templates>
+                </kanban>
+            </field>
+        </record>
+
+
+        <!-- KANBAN QUADRO DE INFORMAÇÕES-->
+
+        <!-- Kanban Cursos -->
+        <record id="view_course_kanban" model="ir.ui.view">
+            <field name="name">informa.cursos.kanban</field>
+            <field name="model">informa.cursos</field>
+            <field name="arch" type="xml">
+                <kanban class="o_kanban_view">
+                    <field name="name"/>
+                    <field name="disciplina_ids"/>
+                </kanban>
+            </field>
+        </record>
+        
+
+        <!-- Action das Views -->
+
+
+        <!-- CURSOS -->
+
+        <record id="action_informa_cursos" model="ir.actions.act_window">
+            <field name="name">Cursos</field>
+            <field name="res_model">informa.cursos</field>
+            <field name="view_mode">tree,form</field>
+            <field name="view_id" ref="view_informa_cursos_tree"/>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Crie seu primeiro curso
+                </p>
+                <p>
+                    adicione os seus cursos e seus tempos de conclusão
+                </p>
+            </field>
+        </record>
+
+        <!-- DISCIPLINAS -->
+
+        <record id="action_informa_disciplinas" model="ir.actions.act_window">
+            <field name="name">Disciplinas</field>
+            <field name="res_model">informa.disciplina</field>
+            <field name="view_mode">tree,form</field>
+            <field name="view_id" ref="view_informa_disciplina_tree"/>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Crie sua primeira Disciplinas
+                </p>
+                <p>
+                    adicione as Disciplinas de seus Cursos
+                </p>
+            </field>
+        </record>
+
+        <!-- ATIVIDADES -->
+
+        <record id="action_informa_atividade" model="ir.actions.act_window">
+            <field name="name">Atividades</field>
+            <field name="res_model">informa.atividade</field>
+            <field name="view_mode">tree,form</field>
+            <field name="view_id" ref="view_informa_atividade_tree"/>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Crie sua primeira atividade
+                </p>
+                <p>
+                    adicione as Atividades de suas Disciplinas
+                </p>
+            </field>
+        </record>
+
+
+        <!-- MATRÍCULAS -->
+
+        <record id="action_informa_matricula" model="ir.actions.act_window">
+            <field name="name">Matrículas</field>
+            <field name="res_model">informa.matricula</field>
+            <field name="view_mode">kanban,tree,form</field>
+            <field name="view_id" ref="view_informa_matricula_kanban"/>
+            <field name="context">{'group_by': 'status_do_certificado'}</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Adicione sua primeira matrícula
+                </p>
+                <p>
+                    Crie e gerencie as matrículas de alunos.
+                </p>
+            </field>
+        </record>
+
+        <!-- TIPO DE CANCELAMENTO -->
+
+        <record id="action_tipo_cancelamento" model="ir.actions.act_window">
+            <field name="name">Tipo de Cancelamento</field>
+            <field name="res_model">tipo.de.cancelamento</field>
+            <field name="view_mode">tree,form</field>
+            <field name="view_id" ref="view_tipo_cancelamento_tree"/>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Crie seu primeiro tipo de cancelamento
+                </p>
+                <p>
+                    adicione os tipos de cancelamento disponíveis
+                </p>
+            </field>
+        </record>
+
+        <!-- TIPO DE INGRESSO -->
+
+        <record id="action_tipo_ingresso" model="ir.actions.act_window">
+            <field name="name">Tipo de ingresso</field>
+            <field name="res_model">tipo.de.ingresso</field>
+            <field name="view_mode">tree,form</field>
+            <field name="view_id" ref="view_tipo_ingresso_tree"/>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Crie seu primeiro tipo de Igressso
+                </p>
+                <p>
+                    adicione os tipos de Ingressos disponíveis
+                </p>
+            </field>
+        </record>
+
+        <record id="action_info_cursos" model="ir.actions.act_window">
+            <field name="name">Cursos</field>
+            <field name="res_model">informa.cursos</field>
+            <field name="view_mode">kanban</field>
+            <field name="view_id" ref="view_informa_cursos_kanban"/>
+        </record>
+
+    <!--Quadro de informação-->
+
+    <record id="action_open_courses" model="ir.actions.act_window">
+        <field name="name">Cursos</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">informa.cursos</field>
+        <field name="view_mode">kanban, form</field>
+        <field name="view_id" ref="view_course_kanban"/>
+    </record>
+
+        <!--Cron Job de atualização dos dias, em verificação a cada hora-->
+        <record id="cron_atualizar_status_dias_passados" model="ir.cron">
+            <field name="name">Atualizar Status e Dias Passados</field>
+            <field name="model_id" ref="model_informa_matricula"/>
+            <field name="state">code</field>
+            <field name="code">model.atualizar_status_dias_passados()</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">hours</field>
+            <field name="numbercall">-1</field>
+        </record>
+
+
+        <!--Wizard dos botões de cancelamento -->
+        <record id="view_matricula_status_change_wizard_form" model="ir.ui.view">
+            <field name="name">matricula.status.change.wizard.form</field>
+            <field name="model">matricula.status.change.wizard</field>
+            <field name="arch" type="xml">
+                <form>
+                    <group>
+                        <field name="matricula_id" invisible="1"/>
+                        <field name="new_status"/>
+                        <field name="tipo_de_cancelamento" attrs="{'required': [('new_status', '=', 'MATRÍCULA CANCELADA')]}"/>
+                        <span><strong>justificativa: </strong></span><field name="justificativa" nolabel="1"/>
+                    </group>
+                    <footer>
+                        <button string="Cancelar Matrícula"  type="object" class="btn-primary" name="change_status"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+        <!-- Itens de menu das views -->
+        <menuitem id="fgmed_cursos_e_matriculas" name="Cursos e Matrículas" sequence="1" groups="base.group_system"/>
+        <menuitem id="fgmed_cursos_menu" parent="fgmed_cursos_e_matriculas" name="Cursos" action="action_informa_cursos" groups="base.group_system" />
+        <menuitem id="fgmed_disciplinas_menu" parent="fgmed_cursos_e_matriculas" name="Disciplinas" action="action_informa_disciplinas" groups="base.group_system" />
+        <menuitem id="fgmed_atividades_menu" parent="fgmed_cursos_e_matriculas" name="Atividades" action="action_informa_atividade" groups="base.group_system" />
+        <menuitem id="fgmed_matriculas" parent="fgmed_cursos_e_matriculas" name="Matrículas" action="action_informa_matricula" groups="base.group_system" />
+        <menuitem id="menu_info_cursos_menu" parent="fgmed_cursos_e_matriculas" name="Quadro de Alunos" action="action_info_cursos"  groups="base.group_system" sequence="10"/>
+        <menuitem id="fgmed_tipo_ingresso_menu" parent="fgmed_cursos_e_matriculas" name="Tipo de Ingresso" action="action_tipo_ingresso" groups="base.group_system" />
+        <menuitem id="fgmed_tipo_cancelamento_menu" parent="fgmed_cursos_e_matriculas" name="Tipo de cancelamento" action="action_tipo_cancelamento" groups="base.group_system" />
+
+    </data>
+</odoo>

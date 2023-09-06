@@ -20,6 +20,7 @@ import copy
 import openai
 import requests
 from bs4 import BeautifulSoup
+from lxml import etree
 
 _logger = logging.getLogger(__name__)
 
@@ -108,7 +109,7 @@ class GenerateSimplifiedContract(models.Model):
     # Função para fazer uma requisição à API GPT-3
     def make_gpt3_request(self, prompt):
         # Configurando a chave da API
-        openai.api_key = 'sk-'
+        openai.api_key = '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'
 
         try:
             # Fazendo a requisição à API
@@ -228,14 +229,29 @@ class ResPartner(models.Model):
     _inherit = 'res.partner'
 
     def open_action(self):
+        # Obtenha todos os pedidos de venda relacionados a este parceiro
+        sale_orders = self.env['sale.order'].search([('partner_id', '=', self.id)])
+        
+        # Atualize o campo rest_contract para True para todos esses pedidos de venda
+        sale_orders.write({'rest_contract': True})
+
+        # Determinar qual visão usar com base no grupo de usuários
+        user = self.env.user
+        if user.has_group('gerador_de_contratos.access_gerador_de_contratos') or user.has_group('base.group_system'):
+            form_view_id = self.env.ref('gerador_de_contratos.view_order_form_special').id
+        else:
+            form_view_id = self.env.ref('gerador_de_contratos.view_order_form_regular').id
+
         self.ensure_one()
         return {
             'name': _('Sales Orders'),
             'type': 'ir.actions.act_window',
             'res_model': 'sale.order',
             'view_mode': 'tree,form',
-            'views': [(self.env.ref('sale.view_order_tree').id, 'tree'), (False, 'form')],
+            'views': [(self.env.ref('sale.view_order_tree').id, 'tree'), (form_view_id, 'form')],
             'domain': [('partner_id', '=', self.id)],
+            'context': {'search_default_partner_id': self.id, 'default_partner_id': self.id, 'edit': True, 'create': False},
+            'target': 'current'
         }
 
 class SaleOrder(models.Model):
@@ -245,6 +261,9 @@ class SaleOrder(models.Model):
     contract_version_ids = fields.One2many(
         'sale.order.contract.version', 'sale_order_id', string='Versões do Contrato'
     )
+    rest_contract = fields.Boolean(string="Rest Contract", default=False)
+    show_contract_versions = fields.Boolean(string="Mostrar versões do contrato", default=False)
+    
 
 class SaleOrderContractVersion(models.Model):
     _name = 'sale.order.contract.version'
@@ -271,6 +290,7 @@ class SaleOrderContractVersion(models.Model):
             last_version = max(sale_order.contract_version_ids.mapped('version_number'), default=0)
             vals['version_number'] = last_version + 1
         return super(SaleOrderContractVersion, self).create(vals_list)
+    
         
 class ArticleWizardRel(models.TransientModel):
     _name = 'article.wizard.rel'
@@ -578,6 +598,19 @@ class ContractContract(models.Model):
         formatted_contract_date = contract_date.strftime('%d/%m/%Y')
         # obtenha o valor do campo name de partner_id
         client_name = sale_order.partner_id.name
+        
+        
+        ## Taxa de Matrícula
+        # Definindo os códigos padrão a serem pesquisados
+        default_codes_to_search = ['MATRICULA', 'MATRICULA-BOLETO', 'MATRICULA-PIX']
+        # Procurando a linha do pedido de venda que corresponde a um dos códigos padrão
+        matriculation_line = self.env['sale.order.line'].search([
+            ('order_id', '=', sale_order.id), 
+            ('product_id.default_code', 'in', default_codes_to_search)], 
+            limit=1  # Busca apenas a primeira correspondência
+        )
+        # Obtendo o valor do campo price_unit se a linha correspondente for encontrada
+        tax_mat = matriculation_line.price_unit if matriculation_line else 0
        
        
         # o campo partner_id da ordem de venda sendo a referência para res.partner
@@ -611,6 +644,7 @@ class ContractContract(models.Model):
         phone_contract = partner.phone or ""
         # E-mail do cliente
         email = partner.email or ""
+        
 
 
         ############### Concatenando os valores das variáveis: ###############
@@ -679,6 +713,8 @@ class ContractContract(models.Model):
         contract_content = contract_content.replace("[partner_id.phone]", phone_contract)
         # Substitua todas as ocorrências de [partner_id.street] no contract_content pela Rua
         contract_content = contract_content.replace("[partner_id.street]", street)
+        # Substitua todas as ocorrências de [ALUNOCTMAT] no contract_content pela Taxa de matrícula
+        contract_content = contract_content.replace("[ALUNOCTMAT]", str(tax_mat))
         
         # Preparando a resposta da requisição
         head = {'Tipo-do-Conteudo': 'application/json'}

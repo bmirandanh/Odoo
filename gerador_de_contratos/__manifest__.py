@@ -20,6 +20,7 @@
         'views/create_article_view.xml',
         'views/create_article_list_view.xml',
         'security/ir.model.access.xml',
+        'security/ir.model.access.csv',
         'views/gerador_manual_views.xml',
         'views/create_contract_view.xml',
         'views/contract_list_view.xml',
