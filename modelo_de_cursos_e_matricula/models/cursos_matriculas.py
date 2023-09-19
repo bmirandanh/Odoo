@@ -2,29 +2,28 @@ from odoo import api, fields, models, _
 from dateutil.relativedelta import relativedelta
 from datetime import date
 import random
+from odoo import tools
+import logging
 from odoo.exceptions import UserError
 from odoo.exceptions import ValidationError
 
-class InformaCursos(models.TransientModel):
+_logger = logging.getLogger(__name__)
+
+
+class InformaCursos(models.Model):
     _name = 'informa.cursos'
     _inherit = ["mail.thread", "mail.activity.mixin"]
     _description = 'Cursos'
 
     name = fields.Char(string='Nome do curso',  required=True, tracking=True, domain=[('aluno', '=', True)])
-    disciplina_ids = fields.Many2many('informa.disciplina', 'curso_ids', string='Disciplinas')
     status_do_certificado = fields.Selection(related='matricula_id.status_do_certificado', readonly=True)
     numero_matricula = fields.Char(related='matricula_id.numero_matricula', readonly=True)
-    matricula_id = fields.One2many('informa.matricula', 'curso', string="Matrículas", readonly=True)
+    matricula_id = fields.Many2many('informa.matricula', 'curso', string="Matrículas", readonly=True)
     cod_curso = fields.Char(string='Código do Curso', tracking=True)
-    tempo_de_conclusao = fields.Selection(
-        [('03M/90D', '03M/90D'), 
-        ('06M', '06M'),
-        ('12M', '12M'),
-        ('24M', '24M'),
-        ('36M', '36M'),
-        ('48M', '48M'),
-        ], string="Tempo de conclusão", required=True, tracking=True)
-    
+    grupo_disciplina_id = fields.Many2many('informa.grupo_disciplina', string='Grupo de Disciplina')
+    disciplina_ids = fields.Many2many('informa.disciplina', string='Disciplinas')
+    tempo_de_conclusao = fields.Selection([('03M/90D', '03M/90D'), ('06M', '06M'), ('12M', '12M'), ('24M', '24M'), ('36M', '36M'), ('48M', '48M')], string="Tempo de conclusão", required=True, tracking=True)
+
     
     def action_open_courses(self):
         # Buscar o registro pelo nome
@@ -48,23 +47,43 @@ class InformaCursos(models.TransientModel):
                     'message': "Curso não encontrado!"
                 }
             }
+
+class GrupoDisciplina(models.Model):
+    _name = 'informa.grupo_disciplina'
+    _description = 'Grupo de Disciplinas'
+
+    name = fields.Char(string='Nome do Grupo: ', required=True)
+    disciplina_ids = fields.Many2many('informa.disciplina', string="Disciplinas")
+
+class Sequencia(models.Model):
+    _name = 'informa.sequencia'
+    _description = 'Sequencia de Disciplinas'
+    _order = 'sequence'  # Para garantir que eles sejam buscados na ordem correta
+
+    name = fields.Char('Nome da Sequencia')
+    sequence = fields.Integer('Sequência')
+    grupo_disciplina_id = fields.Many2one('informa.grupo_disciplina', string='Grupo de Disciplina')
+    curso_id = fields.Many2one('informa.cursos', string="Curso Relacionado")
     
-class InformaMatricula(models.TransientModel):
+class InformaMatricula(models.Model):
     _name = 'informa.matricula'
     _inherit = ["mail.thread", "mail.activity.mixin"]
     _description = 'Matriculas'
     
     status_do_certificado = fields.Selection(
-    [('CURSANDO','CURSANDO'),
-     ('EM FINALIZAÇÃO','EM FINALIZAÇÃO'),
-     ('EM PRAZO EXCEDIDO','EM PRAZO EXCEDIDO'),
-     ('EXPEDIDO','EXPEDIDO'),
-     ('MATRÍCULA CANCELADA','MATRÍCULA CANCELADA'),
-    ], required=True, default="CURSANDO", readonly=True, tracking=True)
-    regiao = fields.Selection(
-    [('AVA','AVA'),
-     ('PRESENCIAL','PRESENCIAL'),
-    ] , required=True, tracking=True)
+        [('CURSANDO','CURSANDO'),
+        ('EM FINALIZAÇÃO','EM FINALIZAÇÃO'),
+        ('FINALIZADO','FINALIZADO'),
+        ('EM PRAZO EXCEDIDO','EM PRAZO EXCEDIDO'),
+        ('EXPEDIDO','EXPEDIDO'),
+        ('MATRÍCULA CANCELADA','MATRÍCULA CANCELADA'),
+        ],
+        compute='_compute_status_certificado', default="CURSANDO", store=True, tracking=True
+    )
+    regiao = fields.Selection([
+        ('AVA','AVA'),
+        ('PRESENCIAL','PRESENCIAL'),
+        ] , required=True, tracking=True)
     justificativa_cancelamento = fields.Text(string="Justificativa de Cancelamento", tracking=True)
     inscricao_ava = fields.Date(string='Inscrição Ava', required=True, tracking=True)
     email = fields.Char(string="Email", tracking=True)
@@ -78,11 +97,74 @@ class InformaMatricula(models.TransientModel):
     tipo_de_cancelamento = fields.Many2one('tipo.de.cancelamento', string="Tipo de Cancelamento", tracking=True)
     color_tipo_ingresso = fields.Integer(related='tipo_de_ingresso.color', string='Color Index from Tipo de Ingresso')
     color_tipo_cancelamento = fields.Integer(related='tipo_de_cancelamento.color', string='Color Index from Tipo de Cancelamento')
-    aluno_ids = fields.Many2many('res.partner', string="Alunos Matriculados")
     numero_matricula = fields.Char(string="Número de Matrícula", readonly=True)
     matricula_aluno = fields.Char(related='nome_do_aluno.matricula_aluno', string="Matrícula do Aluno", readonly=True)
     cod_curso = fields.Char(compute='_compute_cod_curso', string="Código do Curso", tracking=True, store=True)
+    grupo_disciplina_id = fields.Many2one('informa.grupo_disciplina', string='Grupo de Disciplina')
+    disciplina_ids = fields.Many2many('informa.registro_disciplina', string='Disciplinas')
     
+    def atualizar_status_matricula(self):
+        for matricula in self:
+            registros_disciplina = self.env['informa.registro_disciplina'].search([('matricula_id', '=', matricula.id)])
+            if all(record.status == 'aprovado' for record in registros_disciplina):
+                matricula.status_do_certificado = 'FINALIZADO'
+        
+    @api.model
+    def create(self, vals):
+        # Primeiro, verifique se o aluno já tem uma matrícula no curso especificado.
+        aluno_id = vals.get('nome_do_aluno')
+        curso_id = vals.get('curso')
+        existing_matricula = self.search([('nome_do_aluno', '=', aluno_id), ('curso', '=', curso_id)])
+
+        if existing_matricula:
+            raise UserError(_('O aluno já possui uma matrícula neste curso!'))
+
+        # Se não houver matrícula existente, crie a nova matrícula.
+        matricula_record = super(InformaMatricula, self).create(vals)
+        
+        # Pegue as disciplinas permitidas para o curso associado à matrícula.
+        allowed_disciplinas = self.compute_allowed_disciplinas(matricula_record.curso)
+        
+        # Para cada disciplina permitida, crie um novo registro de 'RegistroDisciplina'.
+        for disciplina in allowed_disciplinas:
+            if disciplina.id:
+                self.env['informa.registro_disciplina'].create({
+                    'aluno_id': matricula_record.nome_do_aluno.id,
+                    'curso_id': matricula_record.curso.id,
+                    'matricula_id': matricula_record.id,
+                    'disciplina_id': disciplina.id
+                })
+
+        return matricula_record
+    
+    def compute_allowed_disciplinas(self, curso_id):
+        # Buscar todas as disciplinas associadas aos grupos de disciplinas do curso selecionado
+        disciplinas = self.env['informa.disciplina']
+        for grupo in curso_id.grupo_disciplina_id:
+            disciplinas |= grupo.disciplina_ids
+        return disciplinas
+
+    def show_student_disciplines(self):
+        self.ensure_one()
+
+        domain = [
+            ('aluno_id', '=', self.nome_do_aluno.id),
+            ('curso_id', '=', self.curso.id)
+        ]
+
+        return {
+            'name': 'Disciplinas de ' + str(self.nome_do_aluno.name),
+            'type': 'ir.actions.act_window',
+            'res_model': 'informa.registro_disciplina',
+            'view_mode': 'tree',
+            'view_id': self.env.ref('modelo_de_cursos_e_matricula.view_registro_disciplina_tree').id,
+            'domain': domain,
+            'context': {
+                'default_aluno_id': self.nome_do_aluno.id,
+                'default_curso_id': self.curso.id
+            }
+        }
+                
     @api.onchange('nome_do_aluno')
     def _onchange_nome_do_aluno(self):
     # Se o campo nome_do_aluno não estiver definido, apenas retorne.
@@ -157,33 +239,28 @@ class InformaMatricula(models.TransientModel):
                 record.prazo_exp_certf_dias = "Expedido"
             elif record.status_do_certificado == 'MATRÍCULA CANCELADA':
                 record.prazo_exp_certf_dias = "Matrícula Cancelada"
+            elif record.status_do_certificado == 'FINALIZADO':
+                record.prazo_exp_certf_dias = "Curso Finalizado"
             else:
                 if record.inscricao_ava and record.data_provavel_certificacao:
-                    dias_passados = ( record.data_provavel_certificacao - date.today()).days
+                    dias_passados = (record.data_provavel_certificacao - date.today()).days
                     record.prazo_exp_certf_dias = str(dias_passados) + _(" dias")
                     
-                    # Aqui verificamos e alteramos o status baseado no valor de dias_passados
+                    # Alteração do status baseado no valor de dias_passados
                     if dias_passados <= 0:
                         record.status_do_certificado = 'EM PRAZO EXCEDIDO'
                     elif dias_passados <= 10:
                         record.status_do_certificado = 'EM FINALIZAÇÃO'
-                    elif dias_passados > 10:
+                    else:
                         record.status_do_certificado = 'CURSANDO'
                 else:
                     record.prazo_exp_certf_dias = _("Data de provável certificação não definida")
+
     
     def atualizar_status_dias_passados(self):
         records = self.search([])
         for record in records:
-            if record.inscricao_ava and record.data_provavel_certificacao:
-                dias_passados = (record.data_provavel_certificacao - date.today()).days
-                record.prazo_exp_certf_dias = str(dias_passados) + _(" dias")
-                
-                # Alteração do status baseado no valor de dias_passados
-                if dias_passados <= 0:
-                    record.status_do_certificado = 'EM PRAZO EXCEDIDO'
-                elif dias_passados <= 10:
-                    record.status_do_certificado = 'EM FINALIZAÇÃO'
+            record._compute_prazo_exp_certf_dias()
 
 
     def action_open_status_change_wizard(self):
@@ -199,7 +276,7 @@ class InformaMatricula(models.TransientModel):
             'context': context,
         }           
 
-class TipoIngresso(models.TransientModel):
+class TipoIngresso(models.Model):
     _name = 'tipo.de.ingresso'
     _inherit = ["mail.thread", "mail.activity.mixin"]
     _description = 'Tipo de Ingresso'
@@ -209,7 +286,7 @@ class TipoIngresso(models.TransientModel):
     descricao = fields.Char(string="descrição", required=True, tracking=True)
     color = fields.Integer(string='Color Index')
     
-class TipoCancelamento(models.TransientModel):
+class TipoCancelamento(models.Model):
     _name = 'tipo.de.cancelamento'
     _inherit = ["mail.thread", "mail.activity.mixin"]
     _description = 'Tipo de Cancelamento'
@@ -221,7 +298,7 @@ class TipoCancelamento(models.TransientModel):
     
             
             
-class MatriculaStatusChangeWizard(models.TransientModel):
+class MatriculaStatusChangeWizard(models.Model):
     _name = 'matricula.status.change.wizard'
     _description = 'Assistente para Alteração de Status da Matrícula'
 
@@ -269,55 +346,83 @@ class Disciplina(models.Model):
     _description = 'Disciplina'
     _inherit = ["mail.thread", "mail.activity.mixin"]
 
-    name = fields.Char(string='Nome da Disciplina', required=True, tracking=True)
-    atividade_ids = fields.Many2many('informa.atividade', 'disciplina_id', string='Atividades')
-    nota = fields.Float(string='Nota Total', compute='_compute_nota_total', store=True)
+    name = fields.Char(string='Nome da Disciplina', required=True)
     media = fields.Float(string='Média para Aprovação')
-    status = fields.Selection([('aprovado', 'Aprovado'), ('reprovado', 'Reprovado')], string='Status', compute='_compute_status', store=True)
+    grupo_disciplina_id = fields.Many2one('informa.grupo_disciplina', string='Grupo de Disciplinas')
     
-    
-    @api.constrains('nota')
+
+    @api.constrains('media')
     def _check_media(self):
         for record in self:
-            if record.media < 0 or record.media > 10: # Assumindo que as notas variem de 0 a 10.
-                raise ValidationError(_("A media deve estar entre 0 e 10."))
-                
-    @api.depends('atividade_ids.nota')
-    def _compute_nota_total(self):
-        for record in self:
-            record.nota = sum(atividade.nota for atividade in record.atividade_ids)
+            if record.media < 0 or record.media > 10:
+                raise ValidationError(_("A média deve estar entre 0 e 10."))
+            
+            
+class RegistroDisciplina(models.Model):
+    _name = 'informa.registro_disciplina'
+    _description = 'Registro de Disciplina do Aluno'
+    _inherit = ["mail.thread", "mail.activity.mixin"]
 
-    @api.depends('nota', 'media')
+    aluno_id = fields.Many2one('res.partner', string='Aluno', readonly=True, domain=[('is_student', '=', True)])
+    curso_id = fields.Many2one('informa.cursos', readonly=True,  string="Curso Relacionado")
+    matricula_id = fields.Many2one('informa.matricula', string='Matricula')
+    disciplina_id = fields.Many2one('informa.disciplina', string='Disciplina', domain="[('id', 'in', allowed_disciplinas.ids)]")
+    disciplina_media = fields.Float(related='disciplina_id.media', string='Média da Disciplina')
+    nota = fields.Float(string='Nota do Aluno', store=True)
+    status = fields.Selection([('aprovado', 'Aprovado'), ('reprovado', 'Reprovado')], string='Status', compute='_compute_status')
+    allowed_disciplinas = fields.Many2many('informa.disciplina', compute='_compute_allowed_disciplinas')
+    
+
+    @api.depends('curso_id')
+    def _compute_allowed_disciplinas(self):
+        for record in self:
+            # Buscar todas as disciplinas associadas aos grupos de disciplinas do curso selecionado
+            disciplinas = self.env['informa.disciplina']
+            for grupo in record.curso_id.grupo_disciplina_id:
+                disciplinas |= grupo.disciplina_ids
+            
+            record.allowed_disciplinas = disciplinas
+            
+            # Log para ajudar na depuração
+            tools.logging.info("Curso: %s", record.curso_id.name)
+            tools.logging.info("Grupos de disciplina: %s", record.curso_id.grupo_disciplina_id.mapped('name'))
+            tools.logging.info("Disciplinas permitidas: %s", record.allowed_disciplinas.mapped('name'))
+        
+
+    @api.depends('nota', 'disciplina_media')
     def _compute_status(self):
         for record in self:
-            if record.nota >= record.media:
+            if record.nota >= record.disciplina_id.media:
                 record.status = 'aprovado'
             else:
                 record.status = 'reprovado'
-
-
-class Atividade(models.Model):
-    _name = 'informa.atividade'
-    _description = 'Atividade'
-    _inherit = ["mail.thread", "mail.activity.mixin"]
-
-    name = fields.Char(string='Nome da Atividade', required=True, tracking=True)
-    descricao = fields.Text(string='Descrição', required=True, tracking=True)
-    data = fields.Date(string='Data da Atividade', tracking=True)
-    nota = fields.Float(string='Nota', tracking=True)
-    anexo_ids = fields.Many2many('ir.attachment', string='Anexos')
     
     @api.constrains('nota')
     def _check_nota(self):
         for record in self:
-            if record.nota < 0 or record.nota > 10: # Assumindo que as notas variem de 0 a 10.
+            if record.nota < 0 or record.nota > 10:
                 raise ValidationError(_("A nota deve estar entre 0 e 10."))
+
+
+    @api.model
+    def create(self, vals):
+        result = super(RegistroDisciplina, self).create(vals)
+        result.matricula_id.atualizar_status_matricula()
+        return result
+
+    def write(self, vals):
+        result = super(RegistroDisciplina, self).write(vals)
+        for record in self:
+            record.matricula_id.atualizar_status_matricula()
+        return result
 
 class ResPartner(models.Model):
     _inherit = 'res.partner'
     
     aluno = fields.Boolean(string="Aluno ?", default=False) 
     matricula_aluno = fields.Char(string="Matrícula do Aluno", readonly=True)
+    curso_id = fields.Many2one('informa.curso', string='Curso Atual')
+    
     
     @api.onchange('aluno')
     def _onchange_aluno(self):

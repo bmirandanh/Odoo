@@ -15,7 +15,7 @@
                     <field name="name"/>
                     <field name="tempo_de_conclusao"/>
                     <field name="cod_curso"/>
-                    <field name="disciplina_ids" widget="many2many_tags " context="{'default_curso_ids': active_id}" required="1"/>
+                    <field name="grupo_disciplina_id" widget="many2many_tags" context="{'default_curso_ids': active_id}" required="1"/>
                 </tree>
             </field>
         </record>
@@ -23,27 +23,57 @@
         <!-- DISCIPLINAS -->
 
         <record id="view_informa_disciplina_tree" model="ir.ui.view">
-            <field name="name">informa.disciplina.tree</field>
+            <field name="name">informa.disciplina.tree.simple</field>
             <field name="model">informa.disciplina</field>
             <field name="arch" type="xml">
-                <tree string="Disciplinas">
-                    <field name="name"/>
-                    <field name="media"/>
-                    <field name="atividade_ids" widget="many2many_tags" />
+                <tree string="Notas dos Alunos">
+                    <field name="name" string="Nome da Disciplina"/>
+                    <field name="media" string="Média da Disciplina" widget="related_field" options="{'field': 'media'}"/>
                 </tree>
             </field>
         </record>
 
-        <!-- ATIVIDADES -->
+        <!-- DISCIPLINAS E NOTAS -->
 
-        <record id="view_informa_atividade_tree" model="ir.ui.view">
-            <field name="name">informa.atividade.tree</field>
-            <field name="model">informa.atividade</field>
+        <record id="view_registro_disciplina_tree" model="ir.ui.view">
+            <field name="name">informa.registro_disciplina.tree.full</field>
+            <field name="model">informa.registro_disciplina</field>
             <field name="arch" type="xml">
-                <tree string="Disciplinas">
+                <tree string="Notas do Aluno" editable="top">
+                    <field name="aluno_id" string="Aluno" invisible="1"/>
+                    <field name="curso_id" string="Curso" invisible="1"/>
+                    <field name="allowed_disciplinas" invisible="1"/>
+                    <field name="disciplina_id" string="Disciplina" domain="[('id', 'in', allowed_disciplinas)]"/>
+                    <field name="disciplina_media" string="Média para Aprovação"/>
+                    <field name="nota" string="Nota do Aluno"/>
+                    <field name="status" string="Status"/>
+                </tree>
+            </field>
+        </record>
+
+        <!-- GRUPO DE DISCIPLINAS -->
+        
+        <record id="view_grupo_disciplina_tree" model="ir.ui.view">
+            <field name="name">informa.grupo_disciplina.tree</field>
+            <field name="model">informa.grupo_disciplina</field>
+            <field name="arch" type="xml">
+                <tree string="Grupos de Disciplinas">
                     <field name="name"/>
-                    <field name="descricao"/>
-                    <field name="anexo_ids" />
+                    <field name="disciplina_ids" widget="many2many_tags"/>
+                </tree>
+            </field>
+        </record>
+
+        <!-- SEQUÊNCIA DE DISCIPLINAS -->
+        
+        <record id="view_sequencia_tree" model="ir.ui.view">
+            <field name="name">informa.sequencia.tree</field>
+            <field name="model">informa.sequencia</field>
+            <field name="arch" type="xml">
+                <tree string="Sequências de Disciplinas">
+                    <field name="name"/>
+                    <field name="sequence"/>
+                    <field name="grupo_disciplina_id"/>
                 </tree>
             </field>
         </record>
@@ -116,7 +146,7 @@
                         <group>
                             <field name="name"/>
                             <field name="cod_curso"/>
-                            <field name="disciplina_ids" widget="many2many_tags" context="{'default_curso_ids': active_id}" required="1"/>
+                            <field name="grupo_disciplina_id" widget="many2many_tags" context="{'default_curso_ids': active_id}" required="1"/>
                             <field name="tempo_de_conclusao"/>
                         </group>
                         <notebook>
@@ -182,7 +212,6 @@
                         <group>
                             <field name="name"/>
                             <field name="media"/>
-                            <field name="atividade_ids" widget="many2many_tags" />
                         </group>
                     </sheet>
                     <!-- Chatter de menssagens de log -->
@@ -195,29 +224,37 @@
             </field>
         </record>
 
-        <!-- ATIVIDADES -->
+        <!-- GRUPO DE DISCIPLINAS -->
 
-        <record id="view_informa_atividade_form" model="ir.ui.view">
-            <field name="name">informa.atividade.form</field>
-            <field name="model">informa.atividade</field>
+        <record id="view_grupo_disciplina_form" model="ir.ui.view">
+            <field name="name">informa.grupo_disciplina.form</field>
+            <field name="model">informa.grupo_disciplina</field>
             <field name="arch" type="xml">
-                <form string="Atividades">
-                    <sheet>
-                        <group>
-                            <field name="name"/>
-                            <field name="descricao" />
-                            <field name="anexo_ids" widget="many2many_binary"/>
-                        </group>
-                    </sheet>
-                    <!-- Chatter de menssagens de log -->
-                    <div class="oe_chatter">
-                        <field name="message_follower_ids" widget="mail_followers" groups="base.group_system"/>
-                        <field name="activity_ids" widget="mail_activity" groups="base.group_system"/>
-                        <field name="message_ids" widget="mail_thread"/>
-                    </div>
+                <form string="Grupo de Disciplinas">
+                    <group>
+                        <field name="name"/>
+                        <span><strong>Disciplinas:  </strong></span><field name="disciplina_ids" widget="Many2many_tags" nolabel="1"/>
+                    </group>
                 </form>
             </field>
         </record>
+
+        <!-- SEQUÊNCIA DE DISCIPLINAS -->
+
+        <record id="view_sequencia_form" model="ir.ui.view">
+            <field name="name">informa.sequencia.form</field>
+            <field name="model">informa.sequencia</field>
+            <field name="arch" type="xml">
+                <form string="Sequência de Disciplinas">
+                    <group>
+                        <field name="name"/>
+                        <field name="sequence"/>
+                        <field name="grupo_disciplina_id"/>
+                        <span><strong>Curso Relacionado </strong></span><field name="curso_id" widget="one2many_list" nolabel="1"/>
+                    </group>
+                </form>
+            </field>
+        </record>                   
 
         <!-- MATRÍCULAS -->
 
@@ -376,21 +413,45 @@
 
         <!-- KANBAN QUADRO DE INFORMAÇÕES-->
 
-        <!-- Kanban Cursos -->
-        <record id="view_course_kanban" model="ir.ui.view">
-            <field name="name">informa.cursos.kanban</field>
-            <field name="model">informa.cursos</field>
+        <record id="view_matricula_kanban" model="ir.ui.view">
+            <field name="name">informa.matricula.kanban</field>
+            <field name="model">informa.matricula</field>
             <field name="arch" type="xml">
-                <kanban class="o_kanban_view">
-                    <field name="name"/>
-                    <field name="disciplina_ids"/>
+                <kanban class="o_kanban_mobile" records_draggable="0" default_group_by="curso" fields="nome_do_aluno,inscricao_ava,status_do_certificado,disciplina_ids,numero_matricula,matricula_aluno">
+                    <templates>
+                        <t t-name="kanban-box">
+                            <div t-attf-class="oe_kanban_card">
+                                <div class="oe_kanban_global_click">
+                                    <div class="o_kanban_record_top">
+                                        <div><span><strong>Nome do Aluno:</strong></span> <field name="nome_do_aluno"/></div>
+                                    </div>
+                                        <span> - </span>
+                                    <div>
+                                    </div>
+                                    <div class="o_kanban_record_middle mt4">
+                                        <div class="o_kanban_record_subtitle">
+                                            <div><span><strong>Status do certificado: </strong></span> <field name="status_do_certificado"/></div>
+                                            <div><span>Matrícula Aluno: </span> <field name="matricula_aluno"/></div>
+                                            <div><span>Matrícula no curso: </span> <field name="numero_matricula"/></div>
+                                            <div><span>Data de entrada: </span> <field name="inscricao_ava"/></div>
+                                        <div>
+                                            <span> - </span>
+                                        </div>                    
+                                            <div><span><strong>Disciplinas: </strong></span> <field name="disciplina_ids"/></div>
+                                        </div>
+                                        <div>
+                                            <div><button name="show_student_disciplines" string="Ver Disciplinas" type="object" class="oe_highlight">Notas das disciplinas</button></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </t>
+                    </templates>
                 </kanban>
             </field>
         </record>
-        
 
         <!-- Action das Views -->
-
 
         <!-- CURSOS -->
 
@@ -412,6 +473,7 @@
         <!-- DISCIPLINAS -->
 
         <record id="action_informa_disciplinas" model="ir.actions.act_window">
+            <field name="context">{'from_specific_menu': False}</field>
             <field name="name">Disciplinas</field>
             <field name="res_model">informa.disciplina</field>
             <field name="view_mode">tree,form</field>
@@ -424,25 +486,37 @@
                     adicione as Disciplinas de seus Cursos
                 </p>
             </field>
-        </record>
+        </record>        
 
-        <!-- ATIVIDADES -->
+        <!-- GRUPO DE DISCIPLINAS -->
 
-        <record id="action_informa_atividade" model="ir.actions.act_window">
-            <field name="name">Atividades</field>
-            <field name="res_model">informa.atividade</field>
+        <record id="action_grupo_disciplina" model="ir.actions.act_window">
+            <field name="name">Grupos de Disciplinas</field>
+            <field name="res_model">informa.grupo_disciplina</field>
             <field name="view_mode">tree,form</field>
-            <field name="view_id" ref="view_informa_atividade_tree"/>
             <field name="help" type="html">
-                <p class="o_view_nocontent_smiling_face">
-                    Crie sua primeira atividade
-                </p>
-                <p>
-                    adicione as Atividades de suas Disciplinas
-                </p>
+                <p class="oe_view_nocontent_create">Clique para adicionar um novo Grupo de Disciplinas.</p>
             </field>
         </record>
 
+        <!-- SEQUÊNCIA DE DISCIPLINAS -->
+
+        <record id="action_sequencia" model="ir.actions.act_window">
+            <field name="name">Sequências de Disciplinas</field>
+            <field name="res_model">informa.sequencia</field>
+            <field name="view_mode">tree,form</field>
+            <field name="help" type="html">
+                <p class="oe_view_nocontent_create">Clique para adicionar uma nova Sequência de Disciplinas.</p>
+            </field>
+        </record>
+
+        <!--NOTAS E DISCIPLINAS-->
+
+        <record id="action_registros_disciplina" model="ir.actions.act_window">
+            <field name="name">Registros de Disciplina</field>
+            <field name="res_model">informa.registro_disciplina</field>
+            <field name="view_mode">tree</field>
+        </record>
 
         <!-- MATRÍCULAS -->
 
@@ -496,22 +570,16 @@
             </field>
         </record>
 
+        <!--Quadro de informação-->
+
         <record id="action_info_cursos" model="ir.actions.act_window">
-            <field name="name">Cursos</field>
-            <field name="res_model">informa.cursos</field>
-            <field name="view_mode">kanban</field>
-            <field name="view_id" ref="view_informa_cursos_kanban"/>
+            <field name="name">Quadro de Alunos</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">informa.matricula</field>
+            <field name="context">{'group_by': 'curso', 'default_from_specific_menu': True}</field>
+            <field name="view_mode">kanban,tree,form</field>
+            <field name="view_id" ref="view_matricula_kanban"/>
         </record>
-
-    <!--Quadro de informação-->
-
-    <record id="action_open_courses" model="ir.actions.act_window">
-        <field name="name">Cursos</field>
-        <field name="type">ir.actions.act_window</field>
-        <field name="res_model">informa.cursos</field>
-        <field name="view_mode">kanban, form</field>
-        <field name="view_id" ref="view_course_kanban"/>
-    </record>
 
         <!--Cron Job de atualização dos dias, em verificação a cada hora-->
         <record id="cron_atualizar_status_dias_passados" model="ir.cron">
@@ -547,12 +615,11 @@
         <!-- Itens de menu das views -->
         <menuitem id="fgmed_cursos_e_matriculas" name="Cursos e Matrículas" sequence="1" groups="base.group_system"/>
         <menuitem id="fgmed_cursos_menu" parent="fgmed_cursos_e_matriculas" name="Cursos" action="action_informa_cursos" groups="base.group_system" />
-        <menuitem id="fgmed_disciplinas_menu" parent="fgmed_cursos_e_matriculas" name="Disciplinas" action="action_informa_disciplinas" groups="base.group_system" />
-        <menuitem id="fgmed_atividades_menu" parent="fgmed_cursos_e_matriculas" name="Atividades" action="action_informa_atividade" groups="base.group_system" />
-        <menuitem id="fgmed_matriculas" parent="fgmed_cursos_e_matriculas" name="Matrículas" action="action_informa_matricula" groups="base.group_system" />
+        <menuitem id="fgmed_disciplinas_menu" parent="fgmed_cursos_e_matriculas" name="Disciplinas" action="action_informa_disciplinas" groups="base.group_system" />        <menuitem id="fgmed_matriculas" parent="fgmed_cursos_e_matriculas" name="Matrículas" action="action_informa_matricula" groups="base.group_system" />
         <menuitem id="menu_info_cursos_menu" parent="fgmed_cursos_e_matriculas" name="Quadro de Alunos" action="action_info_cursos"  groups="base.group_system" sequence="10"/>
         <menuitem id="fgmed_tipo_ingresso_menu" parent="fgmed_cursos_e_matriculas" name="Tipo de Ingresso" action="action_tipo_ingresso" groups="base.group_system" />
         <menuitem id="fgmed_tipo_cancelamento_menu" parent="fgmed_cursos_e_matriculas" name="Tipo de cancelamento" action="action_tipo_cancelamento" groups="base.group_system" />
-
+        <menuitem id="fgmed_grupo_disciplina" parent="fgmed_cursos_e_matriculas" name="Grupo de disciplinas" action="action_grupo_disciplina" groups="base.group_system" />
+        <menuitem id="fgmed_sequencia" parent="fgmed_cursos_e_matriculas" name="Sequencia dos Cursos" action="action_sequencia" groups="base.group_system" />
     </data>
 </odoo>
