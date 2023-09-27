@@ -33,20 +33,20 @@
             </field>
         </record>
 
-        <!-- DISCIPLINAS E NOTAS -->
+        <!-- NOTAS E DISCIPLINAS -->
 
         <record id="view_registro_disciplina_tree" model="ir.ui.view">
-            <field name="name">informa.registro_disciplina.tree.full</field>
+            <field name="name">registro.disciplina.tree</field>
             <field name="model">informa.registro_disciplina</field>
             <field name="arch" type="xml">
-                <tree string="Notas do Aluno" editable="top">
-                    <field name="aluno_id" string="Aluno" invisible="1"/>
-                    <field name="curso_id" string="Curso" invisible="1"/>
-                    <field name="allowed_disciplinas" invisible="1"/>
-                    <field name="disciplina_id" string="Disciplina" domain="[('id', 'in', allowed_disciplinas)]"/>
-                    <field name="disciplina_media" string="Média para Aprovação"/>
-                    <field name="nota" string="Nota do Aluno"/>
-                    <field name="status" string="Status"/>
+                <tree string="Registro Auxiliar de Disciplina" editable="bottom">
+                    <field name="aluno_id" readonly="1"/>
+                    <field name="curso_id" readonly="1"/>
+                    <field name="disciplina_id" readonly="1"/>
+                    <field name="nota" avg="Média de Notas"/>
+                    <field name="status" readonly="1"/>
+                    <field name="disciplina_media" readonly="1"/>
+                    <field name="sequencia_disciplina" readonly="1"/>
                 </tree>
             </field>
         </record>
@@ -64,19 +64,6 @@
             </field>
         </record>
 
-        <!-- SEQUÊNCIA DE DISCIPLINAS -->
-        
-        <record id="view_sequencia_tree" model="ir.ui.view">
-            <field name="name">informa.sequencia.tree</field>
-            <field name="model">informa.sequencia</field>
-            <field name="arch" type="xml">
-                <tree string="Sequências de Disciplinas">
-                    <field name="name"/>
-                    <field name="sequence"/>
-                    <field name="grupo_disciplina_id"/>
-                </tree>
-            </field>
-        </record>
 
         <!-- MATRÍCULAS -->
 
@@ -233,28 +220,13 @@
                 <form string="Grupo de Disciplinas">
                     <group>
                         <field name="name"/>
+                        <field name="sequence"/>
                         <span><strong>Disciplinas:  </strong></span><field name="disciplina_ids" widget="Many2many_tags" nolabel="1"/>
                     </group>
                 </form>
             </field>
         </record>
-
-        <!-- SEQUÊNCIA DE DISCIPLINAS -->
-
-        <record id="view_sequencia_form" model="ir.ui.view">
-            <field name="name">informa.sequencia.form</field>
-            <field name="model">informa.sequencia</field>
-            <field name="arch" type="xml">
-                <form string="Sequência de Disciplinas">
-                    <group>
-                        <field name="name"/>
-                        <field name="sequence"/>
-                        <field name="grupo_disciplina_id"/>
-                        <span><strong>Curso Relacionado </strong></span><field name="curso_id" widget="one2many_list" nolabel="1"/>
-                    </group>
-                </form>
-            </field>
-        </record>                   
+                 
 
         <!-- MATRÍCULAS -->
 
@@ -348,6 +320,47 @@
             </field>
         </record>
 
+        <!-- TIPO DE RE-INGRESSO -->
+
+        <record id="view_matricula_reingresso_wizard_form" model="ir.ui.view">
+            <field name="name">matricula.reingresso.wizard.form</field>
+            <field name="model">matricula.reingresso.wizard</field>
+            <field name="arch" type="xml">
+                <form>
+                    <group>
+                        <field name="matricula_id"/>
+                        <field name="data_inscricao" />
+                        <field name="tipo_de_ingresso"/>
+                        <field name="justificativa"/>
+                    </group>
+                    <footer>
+                        <button string="Confirmar" type="object" name="confirm_reingresso" class="btn-primary"/>
+                        <button string="Cancelar" class="btn-secondary" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+        <!-- TIPO DE CANCELAMENTO -->
+
+        <record id="view_matricula_reingresso_wizard_form" model="ir.ui.view">
+            <field name="name">matricula.reingresso.wizard.form</field>
+            <field name="model">matricula.reingresso.wizard</field>
+            <field name="arch" type="xml">
+                <form>
+                    <group>
+                        <field name="matricula_id"/>
+                        <field name="tipo_de_ingresso"/>
+                        <field name="justificativa"/>
+                    </group>
+                    <footer>
+                        <button string="Confirmar" type="object" name="confirm_reingresso" class="btn-primary"/>
+                        <button string="Cancelar" class="btn-secondary" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
         <record id="view_informa_cursos_kanban" model="ir.ui.view">
             <field name="name">informa.cursos.kanban</field>
             <field name="model">informa.cursos</field>
@@ -364,11 +377,11 @@
                                     <div class="o_kanban_record_bottom">
                                         <field name="tempo_de_conclusao"/>
                                     </div>
-                                <div>
-                                    <button name="action_open_courses" type="object" string="Ver Curso" class="oe_highlight">
-                                        Visualizar disciplinas
-                                    </button>
-                                </div>
+                                    <div>
+                                        <button name="action_open_courses" type="object" string="Ver Curso" class="oe_highlight">
+                                            Visualizar disciplinas
+                                        </button>
+                                    </div>
                                 </div>
                             </t>
                         </templates>
@@ -435,12 +448,27 @@
                                             <div><span>Matrícula no curso: </span> <field name="numero_matricula"/></div>
                                             <div><span>Data de entrada: </span> <field name="inscricao_ava"/></div>
                                         <div>
-                                            <span> - </span>
                                         </div>                    
-                                            <div><span><strong>Disciplinas: </strong></span> <field name="disciplina_ids"/></div>
+                                        <div>
                                         </div>
                                         <div>
-                                            <div><button name="show_student_disciplines" string="Ver Disciplinas" type="object" class="oe_highlight">Notas das disciplinas</button></div>
+                                            <span> - </span>
+                                        </div>
+                                        <div>
+                                            <button name="reingressar_matricula_wizard" 
+                                                    string="Reingressar Matrícula" 
+                                                    type="object" 
+                                                    class="oe_highlight" 
+                                                    attrs="{'invisible': [('status_do_certificado', 'not in', ['MATRÍCULA CANCELADA', 'FINALIZADO', 'EXPEDIDO'])]}">
+                                            Reingressar Matrícula
+                                            </button>
+                                        </div>                                        
+                                        <div>
+                                            <span> - </span>
+                                        </div>    
+                                            <div><button name="show_student_disciplines"
+                                             string="Notas das Disciplinas"
+                                            type="object" class="oe_highlight">Notas das disciplinas</button></div>
                                         </div>
                                     </div>
                                 </div>
@@ -499,25 +527,17 @@
             </field>
         </record>
 
-        <!-- SEQUÊNCIA DE DISCIPLINAS -->
-
-        <record id="action_sequencia" model="ir.actions.act_window">
-            <field name="name">Sequências de Disciplinas</field>
-            <field name="res_model">informa.sequencia</field>
-            <field name="view_mode">tree,form</field>
-            <field name="help" type="html">
-                <p class="oe_view_nocontent_create">Clique para adicionar uma nova Sequência de Disciplinas.</p>
-            </field>
-        </record>
-
         <!--NOTAS E DISCIPLINAS-->
 
-        <record id="action_registros_disciplina" model="ir.actions.act_window">
-            <field name="name">Registros de Disciplina</field>
+        <!-- Action to Open the Tree & Form View -->
+        <record id="action_registro_disciplina" model="ir.actions.act_window">
+            <field name="name">Registro Auxiliar de Disciplina</field>
+            <field name="type">ir.actions.act_window</field>
             <field name="res_model">informa.registro_disciplina</field>
             <field name="view_mode">tree</field>
+            <field name="view_id" ref="view_registro_disciplina_tree"/>
         </record>
-
+        
         <!-- MATRÍCULAS -->
 
         <record id="action_informa_matricula" model="ir.actions.act_window">
@@ -619,7 +639,6 @@
         <menuitem id="menu_info_cursos_menu" parent="fgmed_cursos_e_matriculas" name="Quadro de Alunos" action="action_info_cursos"  groups="base.group_system" sequence="10"/>
         <menuitem id="fgmed_tipo_ingresso_menu" parent="fgmed_cursos_e_matriculas" name="Tipo de Ingresso" action="action_tipo_ingresso" groups="base.group_system" />
         <menuitem id="fgmed_tipo_cancelamento_menu" parent="fgmed_cursos_e_matriculas" name="Tipo de cancelamento" action="action_tipo_cancelamento" groups="base.group_system" />
-        <menuitem id="fgmed_grupo_disciplina" parent="fgmed_cursos_e_matriculas" name="Grupo de disciplinas" action="action_grupo_disciplina" groups="base.group_system" />
-        <menuitem id="fgmed_sequencia" parent="fgmed_cursos_e_matriculas" name="Sequencia dos Cursos" action="action_sequencia" groups="base.group_system" />
+        <menuitem id="fgmed_grupo_disciplina" parent="fgmed_cursos_e_matriculas" name="Grupo de disciplinas" action="action_grupo_disciplina" groups="base.group_system" />    
     </data>
 </odoo>
