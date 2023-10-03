@@ -6,11 +6,11 @@
     'category': 'CRM',
     'author': 'Bmiranda',
     'depends': [
-    'base', 
-    'crm',
-    'sale',
-    'account',
-     ],
+        'base', 
+        'crm',
+        'sale',
+        'account',
+    ],
     'data': [
         'views/cursos_e_matriculas.xml',
         'views/campo_aluno.xml',

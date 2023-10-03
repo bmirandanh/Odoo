@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <data>
-        <record model="ir.ui.view" id="view_contact_form_inherit">
-            <field name="name">contact.form.inherit</field>
+        <!-- Herança para adicionar os campos aluno e matricula_aluno -->
+        <record model="ir.ui.view" id="view_contact_form_inherit_fields">
+            <field name="name">contact.form.inherit.fields</field>
             <field name="model">res.partner</field>
-             <field name="inherit_id" ref="base.view_partner_form"/>
+            <field name="inherit_id" ref="base.view_partner_form"/>
             <field name="arch" type="xml">
                 <xpath expr="//field[@name='function']" position="after">
                     <field name="aluno" string="É aluno?"/>
@@ -12,5 +13,32 @@
                 </xpath>
             </field>
         </record>
+
+        <!-- Herança para adicionar o notebook com as matrículas do aluno -->
+        <record model="ir.ui.view" id="view_contact_form_inherit_notebook">
+            <field name="name">contact.form.inherit.notebook</field>
+            <field name="model">res.partner</field>
+            <field name="inherit_id" ref="base.view_partner_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//notebook" position="inside">
+                    <page string="Matrículas do Aluno" attrs="{'invisible': [('aluno', '!=', True)]}">
+                        <field name="matriculas_ids" options="{'no_create': True}" mode="tree">
+                            <tree>
+                                <field name="cod_curso"/>
+                                <field name="curso" string="Nome do Curso"/>
+                                <field name="data_provavel_certificacao" string="Data Provável de Certificação"/>
+                                <field name="status_do_certificado"/>
+                            </tree>
+                        </field>
+                    </page>
+                </xpath>
+            </field>
+        </record>
     </data>
 </odoo>
+
+
+
+
+
+

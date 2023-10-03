@@ -1,15 +1,17 @@
 from odoo import api, fields, models, _
 from dateutil.relativedelta import relativedelta
-from datetime import date
+from datetime import date, timedelta
 import random
 from odoo import tools
 import logging
 from odoo.exceptions import UserError
 from odoo.exceptions import ValidationError
+from odoo import http
+import requests
 
+IS_TEST_ENVIRONMENT = True
 _logger = logging.getLogger(__name__)
-
-
+        
 class InformaCursos(models.Model):
     _name = 'informa.cursos'
     _inherit = ["mail.thread", "mail.activity.mixin"]
@@ -18,12 +20,15 @@ class InformaCursos(models.Model):
     name = fields.Char(string='Nome do curso',  required=True, tracking=True, domain=[('aluno', '=', True)])
     status_do_certificado = fields.Selection(related='matricula_id.status_do_certificado', readonly=True)
     numero_matricula = fields.Char(related='matricula_id.numero_matricula', readonly=True)
-    matricula_id = fields.Many2many('informa.matricula', 'curso', string="Matrículas", readonly=True)
+    matricula_id = fields.One2many('informa.matricula', 'curso', string="Matrículas", readonly=True)
     cod_curso = fields.Char(string='Código do Curso', tracking=True)
     grupo_disciplina_id = fields.Many2many('informa.grupo_disciplina', string='Grupo de Disciplina')
     disciplina_ids = fields.Many2many('informa.disciplina', string='Disciplinas')
     tempo_de_conclusao = fields.Selection([('03M/90D', '03M/90D'), ('06M', '06M'), ('12M', '12M'), ('24M', '24M'), ('36M', '36M'), ('48M', '48M')], string="Tempo de conclusão", required=True, tracking=True)
-
+    formato_nota = fields.Selection([
+    ('normal', '0-10'),
+    ('porcentagem', '0-100 (%)')
+    ], string='Formato da Nota', default='normal', tracking=True, required=True)
     
     def action_open_courses(self):
         # Buscar o registro pelo nome
@@ -56,7 +61,35 @@ class GrupoDisciplina(models.Model):
     name = fields.Char(string='Nome do Grupo: ', required=True)
     sequence = fields.Integer(string='Sequência', help="Determina a ordem de exibição dos grupos.")
     disciplina_ids = fields.Many2many('informa.disciplina', string="Disciplinas")
+    cod_grup_disciplina = fields.Char(string='Código único do grupo de disciplina: ', required=True)
+    next_release_date = fields.Date(string="Próxima Data de Liberação", compute="_compute_next_release_date", store=True)
+    days_to_release = fields.Integer(string="Dias para Liberação", default=7, help="Número de dias para liberar as disciplinas deste grupo.")
+    current_sequence = fields.Integer(string="Sequência Atual", default=0, help="Armazena a sequência do grupo de disciplinas atualmente sendo liberado.")
+    
+    _sql_constraints = [
+        ('cod_grup_disciplina_unique', 'UNIQUE(cod_grup_disciplina)', 'O código do grupo de disciplina deve ser único!')
+    ]
 
+    def decrement_days_to_release(self):
+        for record in self.search([]):
+            if record.days_to_release > 0:
+                record.days_to_release -= 1
+
+    def release_next_group(self):
+        # Busque o grupo de disciplinas pela sequência atual
+        current_group = self.env['informa.grupo_disciplina'].search([('sequence', '=', self.current_sequence)], limit=1)
+
+        # Se não encontrou um grupo ou já liberou todas as sequências, retorne
+        if not current_group:
+            return []
+
+        # Se a data atual for maior ou igual a next_release_date, avance para o próximo grupo
+        if fields.Date.today() >= current_group.next_release_date:
+            self.current_sequence += 1
+            return current_group
+
+        return []
+    
 class Disciplina(models.Model):
     _name = 'informa.disciplina'
     _description = 'Disciplina'
@@ -65,13 +98,68 @@ class Disciplina(models.Model):
     name = fields.Char(string='Nome da Disciplina', required=True)
     media = fields.Float(string='Média para Aprovação')
     grupo_disciplina_id = fields.Many2one('informa.grupo_disciplina', string='Grupo de Disciplinas')
+    cod_disciplina = fields.Char(string='Código único de disciplina: ', required=True)
     
-
+    _sql_constraints = [
+        ('cod_disciplina_unique', 'UNIQUE(cod_disciplina)', 'O código da disciplina deve ser único!')
+    ]    
     @api.constrains('media')
     def _check_media(self):
         for record in self:
             if record.media < 0 or record.media > 10:
                 raise ValidationError(_("A média deve estar entre 0 e 10."))
+            
+    @api.model
+    def create(self, vals):
+        disciplina = super().create(vals)
+        
+        if not self._check_if_exists_in_moodle(disciplina.cod_disciplina):
+            self._send_to_moodle(disciplina)
+
+        return disciplina
+
+    def _check_if_exists_in_moodle(self, cod_disciplina):
+        if IS_TEST_ENVIRONMENT:
+            return "Envio realizado (simulado)"
+        
+        moodle_url = "https://YOUR_MOODLE_URL/api/YOUR_MOODLE_ENDPOINT_TO_CHECK_COURSE"
+        moodle_token = "YOUR_MOODLE_API_TOKEN"
+
+        params = {
+            'shortname': cod_disciplina
+        }
+
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {moodle_token}"
+        }
+
+        response = requests.get(moodle_url, params=params, headers=headers)
+        if response.status_code == 200 and response.json():
+            return True  # Disciplina já existe no Moodle
+
+        return False
+
+    def _send_to_moodle(self, disciplina):
+        if IS_TEST_ENVIRONMENT:
+            return "Envio realizado (simulado)"
+        
+        moodle_url = "https://YOUR_MOODLE_URL/api/YOUR_MOODLE_ENDPOINT_TO_CREATE_COURSE"
+        moodle_token = "YOUR_MOODLE_API_TOKEN"
+
+        data_to_send = {
+            'shortname': disciplina.cod_disciplina,
+            'fullname': disciplina.name
+        }
+
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {moodle_token}"
+        }
+
+        response = requests.post(moodle_url, json=data_to_send, headers=headers)
+        if response.status_code != 200:
+            _logger.error(f'Erro ao enviar disciplina para o Moodle. Resposta: {response.text}')
             
             
 class RegistroDisciplina(models.Model):
@@ -83,12 +171,44 @@ class RegistroDisciplina(models.Model):
     curso_id = fields.Many2one('informa.cursos', readonly=True,  string="Curso Relacionado")
     matricula_id = fields.Many2one('informa.matricula', string='Matricula')
     disciplina_id = fields.Many2one('informa.disciplina', string='Disciplina')
-    disciplina_media = fields.Float(related='disciplina_id.media', string='Média da Disciplina')
+    disciplina_media = fields.Float(compute='_compute_disciplina_media', string='Média da Disciplina')
     nota = fields.Float(string='Nota')
     status = fields.Selection([('aprovado', 'Aprovado'), ('reprovado', 'Reprovado')], string='Status', compute='_compute_status', store=True)
     allowed_disciplinas = fields.Many2many('informa.disciplina', compute='_compute_allowed_disciplinas')
     sequencia_disciplina = fields.Integer(string='Sequência', compute='_compute_sequencia_disciplina')
     todas_notas_dadas = fields.Boolean(string='Todas Notas Dadas', compute='_compute_todas_notas_dadas')
+    formato_nota = fields.Selection([
+    ('normal', '0-10'),
+    ('porcentagem', '0-100 (%)')
+    ], string='Formato da Nota', default='normal')
+    
+    @api.model
+    def auto_release_disciplines(self):
+        # Pegue todas as matrículas que estão cursando
+        matriculas = self.search([('status_do_certificado', '=', 'CURSANDO')])
+
+        for matricula in matriculas:
+            # A lógica de liberação das disciplinas será semelhante à nossa função anterior
+            current_group = self.env['informa.grupo_disciplina'].search([('sequence', '=', matricula.grupo_disciplina_id.current_sequence)], limit=1)
+
+            # Se não encontrou um grupo ou já liberou todas as sequências, retorne
+            if not current_group:
+                continue
+
+            # Se não tiver uma data de início ou o número de dias desde a data de início for maior ou igual a days_to_release, avance para o próximo grupo
+            if not matricula.inscricao_ava or (date.today() - matricula.inscricao_ava).days >= current_group.days_to_release:
+                matricula.grupo_disciplina_id.last_release_date = date.today()
+                matricula.grupo_disciplina_id.current_sequence += 1
+                # Aqui, você pode adicionar as disciplinas liberadas para o estudante
+                matricula.disciplina_ids |= current_group.disciplina_ids
+    
+    def _validate_nota(self, nota):
+        for record in self:
+            formato_nota_curso = record.curso_id.formato_nota
+            if formato_nota_curso == 'normal' and not (0 <= nota <= 10):
+                raise ValidationError(_("A nota deve estar entre 0 e 10."))
+            elif formato_nota_curso == 'porcentagem' and not (0 <= nota <= 100):
+                raise ValidationError(_("A nota em porcentagem deve estar entre 0 e 100."))
     
     @api.onchange('curso_id', 'aluno_id')
     def _onchange_curso_or_aluno(self):
@@ -103,6 +223,15 @@ class RegistroDisciplina(models.Model):
             # Verifique se todas as notas foram fornecidas. 
             # Você pode ajustar essa lógica conforme necessário.
             record.todas_notas_dadas = bool(record.nota)
+
+    @api.depends('disciplina_id.media', 'curso_id.formato_nota')
+    def _compute_disciplina_media(self):
+        for record in self:
+            formato_nota_curso = record.curso_id.formato_nota
+            if formato_nota_curso == 'normal':
+                record.disciplina_media = record.disciplina_id.media
+            elif formato_nota_curso == 'porcentagem':
+                record.disciplina_media = record.disciplina_id.media * 10
     
     @api.model
     def create(self, vals):
@@ -143,10 +272,14 @@ class RegistroDisciplina(models.Model):
     def _get_student_status(self, nota, media):
         return 'aprovado' if nota >= media else 'reprovado'
 
-    def _validate_nota(self, nota):
-        if not 0 <= nota <= 10:
-            raise ValidationError(_("A nota deve estar entre 0 e 10."))
-
+    def _get_student_status(self, nota, media):
+        for record in self:
+            formato_nota_curso = record.curso_id.formato_nota
+            if formato_nota_curso == 'normal':
+                return 'aprovado' if nota >= media else 'reprovado'
+            elif formato_nota_curso == 'porcentagem':
+                media_percent = media
+                return 'aprovado' if nota >= media_percent else 'reprovado'
 
     # Retorna disciplinas permitidas para um determinado registro
     def _get_allowed_disciplinas(self, record):
@@ -213,16 +346,111 @@ class InformaMatricula(models.Model):
     disciplina_ids = fields.Many2many('informa.disciplina', string='Disciplinas')
     disciplina_nomes = fields.Char(compute='_compute_disciplina_nomes', string='Nome das Disciplinas')
     
+    def execute_for_all(self):
+        # Filtrar todas as matrículas com os status desejados
+        matriculas = self.env['informa.matricula'].search([
+            ('status_do_certificado', 'in', ['CURSANDO', 'EM FINALIZAÇÃO', 'EM PRAZO EXCEDIDO'])
+        ])
+        for matricula in matriculas:
+            self.get_released_groups(matricula.id)
+        return True
+    
+    def get_released_groups(self, matricula_id):
+        matricula = self.env['informa.matricula'].browse(matricula_id)
+
+        if not matricula:
+            return {'error': 'Matrícula não encontrada.'}
+
+        aluno_name = matricula.nome_do_aluno.name
+        curso = matricula.curso
+        if not curso:
+            return {'error': 'Curso não associado à matrícula.'}
+
+        # Ordena os grupos de disciplina pelo sequence
+        grupos = curso.grupo_disciplina_id.sorted(key=lambda g: g.sequence)
+
+        current_sequence = matricula.grupo_disciplina_id.current_sequence if matricula.grupo_disciplina_id.current_sequence else 0
+
+        if current_sequence == 0:
+            # Para a sequência 0, apenas verificamos o days_to_release
+            if grupos[current_sequence].days_to_release <= 0:
+                if current_sequence + 1 < len(grupos):
+                    current_sequence += 1
+                    grupos[current_sequence].days_to_release = grupos[current_sequence].default_days_to_release
+                    matricula.grupo_disciplina_id.current_sequence = current_sequence
+                else:
+                    return {'error': 'Todas as disciplinas já foram liberadas.'}
+        else:
+            # Para outras sequências, ambas as verificações devem ser verdadeiras
+            disciplinas_anteriores = grupos[current_sequence - 1].disciplina_ids
+            registros_disciplinas = self.env['informa.registro_disciplina'].search([('matricula_id', '=', matricula_id), ('disciplina_id', 'in', disciplinas_anteriores.ids)])
+            
+            if all(record.status == 'aprovado' for record in registros_disciplinas):
+                if grupos[current_sequence].days_to_release <= 0:
+                    if current_sequence + 1 < len(grupos):
+                        current_sequence += 1
+                        grupos[current_sequence].days_to_release = grupos[current_sequence].default_days_to_release
+                        matricula.grupo_disciplina_id.current_sequence = current_sequence
+                    else:
+                        return {'error': 'Todas as disciplinas já foram liberadas.'}
+            else:
+                return {'error': 'Nem todas as disciplinas da sequência anterior estão com status de aprovado.'}
+
+        disciplinas_data = []
+
+        # Iterando sobre disciplinas do grupo atual
+        for disciplina in grupos[current_sequence].disciplina_ids:
+            disciplina_info = {
+                'shortname': disciplina.cod_disciplina,  # Nome curto no Moodle = Código da disciplina no Odoo
+                'fullname': disciplina.name  # Nome completo no Moodle = Nome da disciplina no Odoo
+            }
+            disciplinas_data.append(disciplina_info)
+
+        data_to_send = {
+            'aluno_name': aluno_name,
+            'disciplinas': disciplinas_data
+        }
+        
+        if IS_TEST_ENVIRONMENT:
+            return {
+                'message': 'Envio realizado (simulado)',
+                'data': data_to_send
+            }
+
+        moodle_url = "https://YOUR_MOODLE_URL/api/YOUR_MOODLE_ENDPOINT"
+        moodle_token = "YOUR_MOODLE_API_TOKEN"
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {moodle_token}"
+        }
+
+        response = requests.post(moodle_url, json=data_to_send, headers=headers)
+        if response.status_code != 200:
+            return {
+                'error': f'Erro ao enviar dados para o Moodle. Resposta: {response.text}'
+            }
+
+        return data_to_send
+    
     def show_student_disciplines(self):
         self.ensure_one()
-        
+
+        domain = [
+            ('aluno_id', '=', self.nome_do_aluno.id),
+            ('curso_id', '=', self.curso.id)
+        ]
+
         return {
-            'name': _('Notas das Disciplinas'),
+            'name': 'Disciplinas de ' + str(self.nome_do_aluno.name),
             'type': 'ir.actions.act_window',
             'res_model': 'informa.registro_disciplina',
             'view_mode': 'tree',
             'view_id': self.env.ref('modelo_de_cursos_e_matricula.view_registro_disciplina_tree').id,
-            'domain': [('aluno_id', '=', self.nome_do_aluno.id)],
+            'domain': domain,
+            'context': {
+                'default_aluno_id': self.nome_do_aluno.id,
+                'default_curso_id': self.curso.id
+            }
         }
         
     def reingressar_matricula_wizard(self):
@@ -283,6 +511,9 @@ class InformaMatricula(models.Model):
                 
         if not self._context.get('skip_status_update'):
             matricula_record.with_context(skip_status_update=True).atualizar_status_matricula()
+            
+       # Método para levar as informações para o moodle 
+        self._register_student_in_moodle(matricula_record)
         
         return matricula_record
 
@@ -292,6 +523,57 @@ class InformaMatricula(models.Model):
             self.with_context(skip_status_update=True).atualizar_status_matricula()
 
         return result
+
+    def _register_student_in_moodle(self, matricula):
+        base_url = "https://YOUR_MOODLE_URL"
+        token = "YOUR_MOODLE_API_TOKEN"
+        headers = {
+            "Content-Type": "application/x-www-form-urlencoded"
+        }
+
+        # Divida o nome completo no primeiro espaço
+        names = matricula.nome_do_aluno.name.split(' ', 1)
+        firstname = names[0]
+        lastname = names[1] if len(names) > 1 else firstname
+        cpf = matricula.nome_do_aluno.l10n_br_cnpj_cpf
+
+        if IS_TEST_ENVIRONMENT:
+            # Se estivermos em um ambiente de teste, simplesmente logue a simulação e retorne.
+            _logger.info('Envio simulado para o Moodle. Nome do aluno: %s, CPF: %s', matricula.nome_do_aluno.name, cpf)
+            return {
+                'message': 'Envio realizado (simulado)',
+                'data': {
+                    "username": cpf,
+                    "firstname": firstname,
+                    "lastname": lastname,
+                    "email": matricula.email
+                }
+            }
+
+        # Primeiro, verifique se o usuário já existe
+        user_check_url = f"{base_url}/webservice/rest/server.php?wstoken={token}&wsfunction=core_user_get_users&moodlewsrestformat=json"
+        user_check_data = {
+            'criteria[0][key]': 'username',
+            'criteria[0][value]': cpf
+        }
+        response = requests.post(user_check_url, data=user_check_data, headers=headers)
+        users = response.json().get('users', [])
+
+        user_data = {
+            "users[0][username]": cpf,
+            "users[0][password]": cpf,
+            "users[0][firstname]": firstname,
+            "users[0][lastname]": lastname,
+            "users[0][email]": matricula.email,
+        }
+
+        if not users:
+            # Se o usuário não existir, criamos um novo
+            user_create_url = f"{base_url}/webservice/rest/server.php?wstoken={token}&wsfunction=core_user_create_users&moodlewsrestformat=json"
+            response = requests.post(user_create_url, data=user_data, headers=headers)
+            if response.status_code != 200:
+                _logger.error('Erro ao criar usuário no Moodle: %s', response.text)
+                raise UserError(_('Erro ao criar usuário no Moodle! O usuário já existe!'))
     
     def compute_allowed_disciplinas(self, curso_id):
         # Buscar todas as disciplinas associadas aos grupos de disciplinas do curso selecionado
@@ -464,7 +746,7 @@ class MatriculaStatusChangeWizard(models.Model):
             # Se a matrícula for cancelada
             if self.new_status == 'MATRÍCULA CANCELADA':
                 self.matricula_id.justificativa_cancelamento = self.justificativa
-                self.matricula_id.data_provavel_certificacao = date.today() + relativedelta(months=48) 
+                self.matricula_id.data_provavel_certificacao = date.today() + relativedelta(months=48)
                 self.matricula_id.prazo_exp_certf_dias = "Matrícula Cancelada"
                 # Altera o tipo de cancelamento selecionado para a matrícula
                 self.matricula_id.tipo_de_cancelamento = self.tipo_de_cancelamento    
@@ -507,7 +789,7 @@ class ResPartner(models.Model):
     aluno = fields.Boolean(string="Aluno ?", default=False) 
     matricula_aluno = fields.Char(string="Matrícula do Aluno", readonly=True)
     curso_id = fields.Many2one('informa.curso', string='Curso Atual')
-    
+    matriculas_ids = fields.One2many('informa.matricula', 'nome_do_aluno', string="Matrículas do Aluno")
     
     @api.onchange('aluno')
     def _onchange_aluno(self):

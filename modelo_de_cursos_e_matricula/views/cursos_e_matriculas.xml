@@ -29,6 +29,7 @@
                 <tree string="Notas dos Alunos">
                     <field name="name" string="Nome da Disciplina"/>
                     <field name="media" string="Média da Disciplina" widget="related_field" options="{'field': 'media'}"/>
+                    <field name="cod_disciplina" string="código único da Disciplina"/>
                 </tree>
             </field>
         </record>
@@ -43,9 +44,9 @@
                     <field name="aluno_id" readonly="1"/>
                     <field name="curso_id" readonly="1"/>
                     <field name="disciplina_id" readonly="1"/>
-                    <field name="nota" avg="Média de Notas"/>
+                    <field name="nota" widget="nota" avg="Média de Notas"/>
+                    <field name="disciplina_media" widget="nota" readonly="1"/>
                     <field name="status" readonly="1"/>
-                    <field name="disciplina_media" readonly="1"/>
                     <field name="sequencia_disciplina" readonly="1"/>
                 </tree>
             </field>
@@ -60,6 +61,8 @@
                 <tree string="Grupos de Disciplinas">
                     <field name="name"/>
                     <field name="disciplina_ids" widget="many2many_tags"/>
+                    <field name="cod_grup_disciplina" string="Código único do Grupo"/>
+                    <field name="days_to_release" string="Dias para liberar o conteúdo"/>
                 </tree>
             </field>
         </record>
@@ -133,6 +136,7 @@
                         <group>
                             <field name="name"/>
                             <field name="cod_curso"/>
+                            <field name="formato_nota"/>
                             <field name="grupo_disciplina_id" widget="many2many_tags" context="{'default_curso_ids': active_id}" required="1"/>
                             <field name="tempo_de_conclusao"/>
                         </group>
@@ -199,6 +203,7 @@
                         <group>
                             <field name="name"/>
                             <field name="media"/>
+                            <field name="cod_disciplina" string="código único da disciplina"/>
                         </group>
                     </sheet>
                     <!-- Chatter de menssagens de log -->
@@ -222,6 +227,8 @@
                         <field name="name"/>
                         <field name="sequence"/>
                         <span><strong>Disciplinas:  </strong></span><field name="disciplina_ids" widget="Many2many_tags" nolabel="1"/>
+                        <field name="cod_grup_disciplina" string="código único do Grupo"/>
+                        <field name="days_to_release" string="Dias para liberar o conteúdo"/>
                     </group>
                 </form>
             </field>
@@ -610,6 +617,29 @@
             <field name="interval_number">1</field>
             <field name="interval_type">hours</field>
             <field name="numbercall">-1</field>
+        </record>
+
+        <!--Cron Job de atualização dos dias, em verificação para Liberar Disciplinas-->
+        <record id="cron_decrement_days" model="ir.cron">
+            <field name="name">Decrement days_to_release</field>
+            <field name="model_id" ref="model_informa_grupo_disciplina"/>
+            <field name="state">code</field>
+            <field name="code">model.decrement_days_to_release()</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="numbercall">-1</field>
+        </record>
+
+        <!--Cron Job para verificação para Processar Grupos de Disciplinas para Todos os Alunos-->
+        <record id="ir_cron_process_groups_for_all_students" model="ir.cron">
+            <field name="name">Processar Grupos de Disciplinas para Todos os Alunos</field>
+            <field name="interval_number">10</field>
+            <field name="interval_type">minutes</field>
+            <field name="numbercall">-1</field>
+            <field name="model_id" ref="model_informa_matricula"/>
+            <field name="state">code</field>
+            <field name="code">model.sudo().execute_for_all()</field>
+            <field name="active" eval="True"/>
         </record>
 
 
