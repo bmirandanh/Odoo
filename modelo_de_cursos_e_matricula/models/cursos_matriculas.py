@@ -12,6 +12,7 @@ import requests
 IS_TEST_ENVIRONMENT = True
 _logger = logging.getLogger(__name__)
         
+        
 class InformaCursos(models.Model):
     _name = 'informa.cursos'
     _inherit = ["mail.thread", "mail.activity.mixin"]
@@ -29,6 +30,16 @@ class InformaCursos(models.Model):
     ('normal', '0-10'),
     ('porcentagem', '0-100 (%)')
     ], string='Formato da Nota', default='normal', tracking=True, required=True)
+    
+    @api.constrains('grupo_disciplina_id')
+    def _check_duplicate_disciplinas(self):
+        for record in self:
+            all_disciplinas = self.env['informa.disciplina']
+            for grupo in record.grupo_disciplina_id:
+                for disciplina in grupo.disciplina_ids:
+                    if disciplina in all_disciplinas:
+                        raise ValidationError(_("A disciplina '%s' está duplicada em diferentes grupos de disciplinas para o curso '%s'.") % (disciplina.name, record.name))
+                    all_disciplinas += disciplina
     
     def action_open_courses(self):
         # Buscar o registro pelo nome
@@ -53,6 +64,7 @@ class InformaCursos(models.Model):
                 }
             }
 
+
 class GrupoDisciplina(models.Model):
     _name = 'informa.grupo_disciplina'
     _description = 'Grupo de Disciplinas'
@@ -64,6 +76,7 @@ class GrupoDisciplina(models.Model):
     cod_grup_disciplina = fields.Char(string='Código único do grupo de disciplina: ', required=True)
     next_release_date = fields.Date(string="Próxima Data de Liberação", compute="_compute_next_release_date", store=True)
     days_to_release = fields.Integer(string="Dias para Liberação", default=7, help="Número de dias para liberar as disciplinas deste grupo.")
+    default_days_to_release = fields.Integer(string="Dias para Liberação", default=7, help="Número de dias para liberar as disciplinas do próximo grupo.")
     current_sequence = fields.Integer(string="Sequência Atual", default=0, help="Armazena a sequência do grupo de disciplinas atualmente sendo liberado.")
     
     _sql_constraints = [
@@ -142,6 +155,7 @@ class Disciplina(models.Model):
 
     def _send_to_moodle(self, disciplina):
         if IS_TEST_ENVIRONMENT:
+            _logger.info('Envio simulado para o Moodle. cod.Disciplinas: %s, Nome disciplinas: %s', disciplina.cod_disciplina, disciplina.name)
             return "Envio realizado (simulado)"
         
         moodle_url = "https://YOUR_MOODLE_URL/api/YOUR_MOODLE_ENDPOINT_TO_CREATE_COURSE"
@@ -160,6 +174,50 @@ class Disciplina(models.Model):
         response = requests.post(moodle_url, json=data_to_send, headers=headers)
         if response.status_code != 200:
             _logger.error(f'Erro ao enviar disciplina para o Moodle. Resposta: {response.text}')
+            
+    # Quando os valores dos campos de um registro Disciplina são atualizados, esse método é chamado.
+    def write(self, vals):
+        res = super(Disciplina, self).write(vals)
+        self.update_moodle_information()
+        return res
+
+    def update_moodle_information(self):
+        """
+        Envia informações atualizadas da disciplina para o Moodle.
+        """
+        for disciplina in self:
+            disciplina_name = disciplina.name
+            media = disciplina.media
+            cod_disciplina = disciplina.cod_disciplina
+            
+            data_to_send = {
+                'disciplina_id': disciplina.id,
+                'disciplina_name': disciplina_name,
+                'media': media,
+                'cod_disciplina': cod_disciplina
+            }
+            
+            if IS_TEST_ENVIRONMENT:
+                _logger.info('Envio simulado para o Moodle. Informações da Disciplina: %s', data_to_send)
+                return {
+                    'message': 'Envio realizado (simulado)',
+                    'data': data_to_send
+                }
+
+            # Endpoint do Moodle para atualizar informações da disciplina
+            moodle_url = "https://YOUR_MOODLE_URL/api/YOUR_MOODLE_ENDPOINT_FOR_UPDATING_DISCIPLINA"
+            moodle_token = "YOUR_MOODLE_API_TOKEN"
+            headers = {
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {moodle_token}"
+            }
+
+            response = requests.post(moodle_url, json=data_to_send, headers=headers)
+            if response.status_code != 200:
+                _logger.error('Erro ao enviar dados para o Moodle. Resposta: %s', response.text)
+                # Aqui você pode adicionar mais lógica para tratamento de erros se necessário
+                
+        return True
             
             
 class RegistroDisciplina(models.Model):
@@ -259,10 +317,23 @@ class RegistroDisciplina(models.Model):
         for record in self:
             record.allowed_disciplinas = self._get_allowed_disciplinas(record)
 
-    @api.depends('disciplina_id')
+    @api.depends('curso_id', 'disciplina_id')
     def _compute_sequencia_disciplina(self):
         for record in self:
-            record.sequencia_disciplina = self._get_sequencia_disciplina(record)
+            if record.curso_id and record.disciplina_id:
+                # Procura pelo grupo de disciplinas que contém esta disciplina e está associado ao curso especificado
+                grupo = self.env['informa.grupo_disciplina'].search([
+                    ('disciplina_ids', 'in', [record.disciplina_id.id]),
+                    ('id', 'in', record.curso_id.grupo_disciplina_id.ids)
+                ], limit=1)
+                
+                # Use a sequência desse grupo
+                if grupo:
+                    record.sequencia_disciplina = grupo.sequence
+                else:
+                    record.sequencia_disciplina = 0
+            else:
+                record.sequencia_disciplina = 0
 
     @api.constrains('nota')
     def _check_nota(self):
@@ -345,6 +416,7 @@ class InformaMatricula(models.Model):
     grupo_disciplina_id = fields.Many2one('informa.grupo_disciplina', string='Grupo de Disciplina')
     disciplina_ids = fields.Many2many('informa.disciplina', string='Disciplinas')
     disciplina_nomes = fields.Char(compute='_compute_disciplina_nomes', string='Nome das Disciplinas')
+    last_sequence_sent = fields.Integer(string="Sequência já enviada", default=0, help="Armazena a sequência do grupo de disciplinas que foi enviada por último.")
     
     def execute_for_all(self):
         # Filtrar todas as matrículas com os status desejados
@@ -411,7 +483,12 @@ class InformaMatricula(models.Model):
             'disciplinas': disciplinas_data
         }
         
+        # Verifique se a sequência atual já foi enviada
+        if matricula.last_sequence_sent == current_sequence:
+            return {'message': 'As disciplinas desta sequência já foram enviadas.'}
+               
         if IS_TEST_ENVIRONMENT:
+            _logger.info('Envio simulado para o Moodle. Nome do aluno: %s, disciplinas: %s', aluno_name, disciplinas_data)
             return {
                 'message': 'Envio realizado (simulado)',
                 'data': data_to_send
@@ -430,7 +507,50 @@ class InformaMatricula(models.Model):
                 'error': f'Erro ao enviar dados para o Moodle. Resposta: {response.text}'
             }
 
+        # Atualize last_sequence_sent após enviar com sucesso
+        matricula.write({'last_sequence_sent': current_sequence})
+        
         return data_to_send
+    
+    def update_moodle_information(self):
+        """
+        Envia informações atualizadas da matrícula para o Moodle.
+        """
+        for matricula in self:
+            aluno_name = matricula.nome_do_aluno.name
+            curso_name = matricula.curso.name if matricula.curso else ''
+            email = matricula.email
+            telefone = matricula.telefone
+            
+            data_to_send = {
+                'matricula_id': matricula.id,
+                'aluno_name': aluno_name,
+                'curso_name': curso_name,
+                'email': email,
+                'telefone': telefone
+            }
+            
+            if IS_TEST_ENVIRONMENT:
+                _logger.info('Envio simulado para o Moodle. Informações da Matrícula: %s', data_to_send)
+                return {
+                    'message': 'Envio realizado (simulado)',
+                    'data': data_to_send
+                }
+
+            # Endpoint do Moodle para atualizar informações da matrícula
+            moodle_url = "https://YOUR_MOODLE_URL/api/YOUR_MOODLE_ENDPOINT_FOR_UPDATING_MATRICULA"
+            moodle_token = "YOUR_MOODLE_API_TOKEN"
+            headers = {
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {moodle_token}"
+            }
+
+            response = requests.post(moodle_url, json=data_to_send, headers=headers)
+            if response.status_code != 200:
+                _logger.error('Erro ao enviar dados para o Moodle. Resposta: %s', response.text)
+                # Aqui você pode adicionar mais lógica para tratamento de erros se necessário
+                
+        return True    
     
     def show_student_disciplines(self):
         self.ensure_one()
@@ -519,6 +639,13 @@ class InformaMatricula(models.Model):
 
     def write(self, vals):
         result = super(InformaMatricula, self).write(vals)
+        
+        # Se algum dos campos de interesse foi alterado, envie atualizações para o Moodle
+        fields_of_interest = ['email', 'telefone', 'nome_do_aluno', 'curso']
+
+        if any(field in vals for field in fields_of_interest):
+            self.update_moodle_information()
+
         if not self._context.get('skip_status_update'):
             self.with_context(skip_status_update=True).atualizar_status_matricula()
 
