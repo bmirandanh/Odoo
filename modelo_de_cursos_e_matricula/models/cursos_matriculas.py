@@ -153,34 +153,6 @@ class Disciplina(models.Model):
 
         return False
 
-    def _send_to_moodle(self, disciplina):
-        if IS_TEST_ENVIRONMENT:
-            _logger.info('Envio simulado para o Moodle. cod.Disciplinas: %s, Nome disciplinas: %s', disciplina.cod_disciplina, disciplina.name)
-            return "Envio realizado (simulado)"
-        
-        moodle_url = "https://YOUR_MOODLE_URL/api/YOUR_MOODLE_ENDPOINT_TO_CREATE_COURSE"
-        moodle_token = "YOUR_MOODLE_API_TOKEN"
-
-        data_to_send = {
-            'shortname': disciplina.cod_disciplina,
-            'fullname': disciplina.name
-        }
-
-        headers = {
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {moodle_token}"
-        }
-
-        response = requests.post(moodle_url, json=data_to_send, headers=headers)
-        if response.status_code != 200:
-            _logger.error(f'Erro ao enviar disciplina para o Moodle. Resposta: {response.text}')
-            
-    # Quando os valores dos campos de um registro Disciplina são atualizados, esse método é chamado.
-    def write(self, vals):
-        res = super(Disciplina, self).write(vals)
-        self.update_moodle_information()
-        return res
-
     def update_moodle_information(self):
         """
         Envia informações atualizadas da disciplina para o Moodle.
@@ -242,6 +214,7 @@ class RegistroDisciplina(models.Model):
     
     @api.model
     def auto_release_disciplines(self):
+        current_sequence = self.current_sequence
         # Pegue todas as matrículas que estão cursando
         matriculas = self.search([('status_do_certificado', '=', 'CURSANDO')])
 
@@ -416,77 +389,34 @@ class InformaMatricula(models.Model):
     grupo_disciplina_id = fields.Many2one('informa.grupo_disciplina', string='Grupo de Disciplina')
     disciplina_ids = fields.Many2many('informa.disciplina', string='Disciplinas')
     disciplina_nomes = fields.Char(compute='_compute_disciplina_nomes', string='Nome das Disciplinas')
-    last_sequence_sent = fields.Integer(string="Sequência já enviada", default=0, help="Armazena a sequência do grupo de disciplinas que foi enviada por último.")
+    last_sequence_sent = fields.Integer(string="Sequência já enviada", default=-1, help="Armazena a sequência do grupo de disciplinas que foi enviada por último.")
+    current_sequence = fields.Integer(string="Sequência atual", default=0, help="Armazena a sequência do grupo atual de disciplinas.")
     
     def execute_for_all(self):
-        # Filtrar todas as matrículas com os status desejados
+        _logger.info('Executando método execute_for_all...')
         matriculas = self.env['informa.matricula'].search([
             ('status_do_certificado', 'in', ['CURSANDO', 'EM FINALIZAÇÃO', 'EM PRAZO EXCEDIDO'])
         ])
         for matricula in matriculas:
             self.get_released_groups(matricula.id)
+        _logger.info('Método execute_for_all concluído.')
         return True
     
-    def get_released_groups(self, matricula_id):
-        matricula = self.env['informa.matricula'].browse(matricula_id)
-
-        if not matricula:
-            return {'error': 'Matrícula não encontrada.'}
-
-        aluno_name = matricula.nome_do_aluno.name
-        curso = matricula.curso
-        if not curso:
-            return {'error': 'Curso não associado à matrícula.'}
-
-        # Ordena os grupos de disciplina pelo sequence
-        grupos = curso.grupo_disciplina_id.sorted(key=lambda g: g.sequence)
-
-        current_sequence = matricula.grupo_disciplina_id.current_sequence if matricula.grupo_disciplina_id.current_sequence else 0
-
-        if current_sequence == 0:
-            # Para a sequência 0, apenas verificamos o days_to_release
-            if grupos[current_sequence].days_to_release <= 0:
-                if current_sequence + 1 < len(grupos):
-                    current_sequence += 1
-                    grupos[current_sequence].days_to_release = grupos[current_sequence].default_days_to_release
-                    matricula.grupo_disciplina_id.current_sequence = current_sequence
-                else:
-                    return {'error': 'Todas as disciplinas já foram liberadas.'}
-        else:
-            # Para outras sequências, ambas as verificações devem ser verdadeiras
-            disciplinas_anteriores = grupos[current_sequence - 1].disciplina_ids
-            registros_disciplinas = self.env['informa.registro_disciplina'].search([('matricula_id', '=', matricula_id), ('disciplina_id', 'in', disciplinas_anteriores.ids)])
-            
-            if all(record.status == 'aprovado' for record in registros_disciplinas):
-                if grupos[current_sequence].days_to_release <= 0:
-                    if current_sequence + 1 < len(grupos):
-                        current_sequence += 1
-                        grupos[current_sequence].days_to_release = grupos[current_sequence].default_days_to_release
-                        matricula.grupo_disciplina_id.current_sequence = current_sequence
-                    else:
-                        return {'error': 'Todas as disciplinas já foram liberadas.'}
-            else:
-                return {'error': 'Nem todas as disciplinas da sequência anterior estão com status de aprovado.'}
-
-        disciplinas_data = []
-
-        # Iterando sobre disciplinas do grupo atual
-        for disciplina in grupos[current_sequence].disciplina_ids:
-            disciplina_info = {
-                'shortname': disciplina.cod_disciplina,  # Nome curto no Moodle = Código da disciplina no Odoo
-                'fullname': disciplina.name  # Nome completo no Moodle = Nome da disciplina no Odoo
-            }
-            disciplinas_data.append(disciplina_info)
-
+    def send_to_moodle(self, aluno_name, disciplinas_data, current_sequence):
+        _logger.info('Iniciando envio para Moodle para o aluno %s e sequência %d...', aluno_name, current_sequence)
+    
+        # """ Enviar dados para o Moodle. """
+        
+        # Verifique se a sequência atual já foi enviada
+        if self.last_sequence_sent and self.last_sequence_sent == current_sequence:
+            _logger.error('As disciplinas desta sequência já foram enviadas.')
+            return {'message': 'As disciplinas desta sequência já foram enviadas.'}
+               
         data_to_send = {
             'aluno_name': aluno_name,
             'disciplinas': disciplinas_data
         }
-        
-        # Verifique se a sequência atual já foi enviada
-        if matricula.last_sequence_sent == current_sequence:
-            return {'message': 'As disciplinas desta sequência já foram enviadas.'}
-               
+
         if IS_TEST_ENVIRONMENT:
             _logger.info('Envio simulado para o Moodle. Nome do aluno: %s, disciplinas: %s', aluno_name, disciplinas_data)
             return {
@@ -503,19 +433,97 @@ class InformaMatricula(models.Model):
 
         response = requests.post(moodle_url, json=data_to_send, headers=headers)
         if response.status_code != 200:
+            _logger.error('Erro ao enviar dados para o Moodle. Resposta: %s', response.text)
             return {
                 'error': f'Erro ao enviar dados para o Moodle. Resposta: {response.text}'
             }
 
         # Atualize last_sequence_sent após enviar com sucesso
-        matricula.write({'last_sequence_sent': current_sequence})
-        
+        self.write({'last_sequence_sent': current_sequence})
+        _logger.info('Envio para Moodle concluído para o aluno %s e sequência %d.', aluno_name, current_sequence)
         return data_to_send
+            
+    # Quando os valores dos campos de um registro Disciplina são atualizados, esse método é chamado.
+    def write(self, vals):
+        _logger.info('Atualizando valores do registro InformaMatricula...')
+        res = super(InformaMatricula, self).write(vals)  # Chamando o método da classe pai corretamente
+        self.update_moodle_information()
+        _logger.info('Valores do registro InformaMatricula atualizados.')
+        return res
+
     
+    def get_released_groups(self, matricula_id):
+        # Primeiro, obtenha o objeto de matricula usando o matricula_id
+        matricula = self.env['informa.matricula'].browse(matricula_id)
+        _logger.info('Obtendo grupos liberados para a matrícula ID %d...', matricula_id)
+        
+        if not matricula:
+            return {'error': 'Matrícula não encontrada.'}
+
+        aluno_name = matricula.nome_do_aluno.name
+        _logger.info('Matrícula pertence ao aluno %s.', aluno_name)
+        
+        curso = matricula.curso
+        if not curso:
+            return {'error': 'Curso não associado à matrícula.'}
+
+        # Ordena os grupos de disciplina pelo sequence
+        grupos = curso.grupo_disciplina_id.sorted(key=lambda g: g.sequence)
+        # depuração:
+        if not hasattr(matricula, 'current_sequence'):
+            _logger.error('Matrícula com ID %d não tem atributo current_sequence.', matricula_id)
+            return {'error': 'Atributo current_sequence não encontrado.'}
+
+        # Defina current_sequence usando o valor armazenado no objeto de matrícula.
+        current_sequence = matricula.current_sequence
+
+        # Tratando a sequência 0
+        if current_sequence == 0:
+            if grupos[current_sequence].days_to_release <= 0:
+                disciplinas_data = [{
+                    'shortname': disciplina.cod_disciplina,
+                    'fullname': disciplina.name
+                } for disciplina in grupos[current_sequence].disciplina_ids]
+
+                _logger.info('Para o aluno %s foram liberadas as seguintes disciplinas: %s', aluno_name, ', '.join([disc['fullname'] for disc in disciplinas_data]))
+                # Incrementando o current_sequence e armazenando-o
+                matricula.current_sequence += 1
+                return self.send_to_moodle(aluno_name, disciplinas_data, current_sequence)
+        
+            else:
+                _logger.info('Aguarde o período de release para a sequência 0.')
+                return {'message': 'Aguarde o período de release para a sequência 0.'}
+            
+        # Tratando sequências posteriores
+        else:
+            # Verificando aprovação de todas as disciplinas da sequência anterior
+            disciplinas_anteriores = grupos[current_sequence - 1].disciplina_ids
+            registros_disciplinas = self.env['informa.registro_disciplina'].search([('matricula_id', '=', matricula_id), ('disciplina_id', 'in', disciplinas_anteriores.ids)])
+                
+            if all(record.status == 'aprovado' for record in registros_disciplinas):
+                if grupos[current_sequence].days_to_release <= 0:
+                    disciplinas_data = [{
+                        'shortname': disciplina.cod_disciplina,
+                        'fullname': disciplina.name
+                    } for disciplina in grupos[current_sequence].disciplina_ids]
+                    
+                    _logger.info('Para o aluno %s foram liberadas as seguintes disciplinas: %s', aluno_name, ', '.join([disc['fullname'] for disc in disciplinas_data]))
+                    matricula.current_sequence += 1
+                    return self.send_to_moodle(aluno_name, disciplinas_data, current_sequence)
+                else:
+                    _logger.info('Aguarde o período de release para a sequência %s.', current_sequence)
+                    return {'message': f'Aguarde o período de release para a sequência {current_sequence}.'}
+            else:
+                _logger.info('Nem todas as disciplinas da sequência anterior estão com status de aprovado.')
+                return {'error': 'Nem todas as disciplinas da sequência anterior estão com status de aprovado.'}
+
+        
     def update_moodle_information(self):
         """
         Envia informações atualizadas da matrícula para o Moodle.
         """
+        # Primeiro, obtenha o objeto de matricula usando o matricula_id
+        matricula = self.env['informa.matricula']
         for matricula in self:
             aluno_name = matricula.nome_do_aluno.name
             curso_name = matricula.curso.name if matricula.curso else ''
