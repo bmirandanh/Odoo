@@ -40,6 +40,17 @@ class InformaCursos(models.Model):
                     if disciplina in all_disciplinas:
                         raise ValidationError(_("A disciplina '%s' está duplicada em diferentes grupos de disciplinas para o curso '%s'.") % (disciplina.name, record.name))
                     all_disciplinas += disciplina
+                    
+    @api.constrains('grupo_disciplina_id')
+    def _check_sequence_order(self):
+        for record in self:
+            # Busca as sequências dos grupos de disciplina relacionados ao curso
+            sequences = sorted(record.grupo_disciplina_id.mapped('sequence'))
+
+            # Verifica se as sequências estão em ordem contínua
+            for index, seq in enumerate(sequences):
+                if index != seq:
+                    raise ValidationError(_("Os grupos de disciplinas devem ser adicionados em ordem sequencial. Por favor, siga a sequência corretamente."))
     
     def action_open_courses(self):
         # Buscar o registro pelo nome
@@ -63,7 +74,6 @@ class InformaCursos(models.Model):
                     'message': "Curso não encontrado!"
                 }
             }
-
 
 class GrupoDisciplina(models.Model):
     _name = 'informa.grupo_disciplina'
@@ -113,9 +123,20 @@ class Disciplina(models.Model):
     grupo_disciplina_id = fields.Many2one('informa.grupo_disciplina', string='Grupo de Disciplinas')
     cod_disciplina = fields.Char(string='Código único de disciplina: ', required=True)
     
-    _sql_constraints = [
-        ('cod_disciplina_unique', 'UNIQUE(cod_disciplina)', 'O código da disciplina deve ser único!')
-    ]    
+    def _check_cod_disciplina_in_odoo(self, cod_disciplina):
+        existing_disciplina = self.env['informa.disciplina'].search([('cod_disciplina', '=', cod_disciplina)], limit=1)
+        if existing_disciplina:
+            _logger.info(f"A disciplina com código {cod_disciplina} já existe no Odoo com ID {existing_disciplina.id}.")
+            return True
+        return False
+
+    def _check_name_in_odoo(self, name):
+        existing_disciplina = self.env['informa.disciplina'].search([('name', '=', name)], limit=1)
+        if existing_disciplina:
+            _logger.info(f"Uma disciplina com o nome {name} já existe no Odoo com ID {existing_disciplina.id}.")
+            return True
+        return False    
+    
     @api.constrains('media')
     def _check_media(self):
         for record in self:
@@ -124,17 +145,70 @@ class Disciplina(models.Model):
             
     @api.model
     def create(self, vals):
-        disciplina = super().create(vals)
-        
-        if not self._check_if_exists_in_moodle(disciplina.cod_disciplina):
-            self._send_to_moodle(disciplina)
+        cod_disciplina = vals.get('cod_disciplina')
+        name = vals.get('name')
 
+        if IS_TEST_ENVIRONMENT:
+            exists_cod_in_odoo = self._check_cod_disciplina_in_odoo(cod_disciplina)
+            exists_name_in_odoo = self._check_name_in_odoo(name)
+            
+            if exists_cod_in_odoo:
+                raise ValidationError(_("Uma disciplina com este código já existe no Odoo."))
+
+            if exists_name_in_odoo:
+                raise ValidationError(_("Uma disciplina com este nome já existe no Odoo."))
+
+        else:
+            exists_cod_in_odoo = self._check_cod_disciplina_in_odoo(cod_disciplina)
+            exists_name_in_odoo = self._check_name_in_odoo(name)
+            exists_cod_in_moodle = self._check_if_exists_in_moodle(cod_disciplina)
+            exists_name_in_moodle = self._check_name_in_moodle(name)
+            
+            if exists_cod_in_odoo:
+                raise ValidationError(_("Uma disciplina com este código já existe no Odoo."))
+
+            if exists_name_in_odoo:
+                raise ValidationError(_("Uma disciplina com este nome já existe no Odoo."))
+
+            if exists_cod_in_moodle:
+                _logger.info(f"A disciplina com código {cod_disciplina} já existe no Moodle.")
+                raise ValidationError(_("Uma disciplina com este código já existe no Moodle."))
+
+            if exists_name_in_moodle:
+                _logger.info(f"Uma disciplina com o nome {name} já existe no Moodle.")
+                raise ValidationError(_("Uma disciplina com este nome já existe no Moodle."))
+
+        disciplina = super().create(vals)
+
+        _logger.info(f"Disciplina {name} (código: {cod_disciplina}) criada com sucesso no Odoo com ID {disciplina.id}.")
+        
         return disciplina
 
-    def _check_if_exists_in_moodle(self, cod_disciplina):
+    def _send_to_moodle(self, disciplina):
         if IS_TEST_ENVIRONMENT:
-            return "Envio realizado (simulado)"
+            _logger.info(f"Simulando envio de disciplina {disciplina.name} para Moodle.")
+            return
         
+        moodle_url = "https://YOUR_MOODLE_URL/api/YOUR_MOODLE_ENDPOINT_TO_CREATE_COURSE"
+        moodle_token = "YOUR_MOODLE_API_TOKEN"
+
+        data_to_send = {
+            'cod_disciplina': disciplina.cod_disciplina,
+            'name': disciplina.name
+        }
+
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {moodle_token}"
+        }
+
+        response = requests.post(moodle_url, json=data_to_send, headers=headers)
+        if response.status_code == 200:
+            _logger.info(f"Disciplina {disciplina.name} enviada com sucesso para o Moodle.")
+        else:
+            _logger.error(f"Erro ao enviar disciplina {disciplina.name} para o Moodle. Resposta: {response.text}")
+
+    def _check_if_exists_in_moodle(self, cod_disciplina):
         moodle_url = "https://YOUR_MOODLE_URL/api/YOUR_MOODLE_ENDPOINT_TO_CHECK_COURSE"
         moodle_token = "YOUR_MOODLE_API_TOKEN"
 
@@ -148,10 +222,34 @@ class Disciplina(models.Model):
         }
 
         response = requests.get(moodle_url, params=params, headers=headers)
-        if response.status_code == 200 and response.json():
-            return True  # Disciplina já existe no Moodle
+        response_content = response.json()
+
+        if response.status_code == 200 and response_content:
+            return True  # Disciplina já existe no Moodle com esse código
 
         return False
+    
+    def _check_name_in_moodle(self, name):
+        moodle_url = "https://YOUR_MOODLE_URL/api/YOUR_MOODLE_ENDPOINT_TO_CHECK_COURSE"
+        moodle_token = "YOUR_MOODLE_API_TOKEN"
+
+        params = {
+            'fullname': name  # Ajuste conforme a terminologia usada pelo seu endpoint no Moodle
+        }
+
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {moodle_token}"
+        }
+
+        response = requests.get(moodle_url, params=params, headers=headers)
+        response_content = response.json()
+
+        if response.status_code == 200 and response_content:
+            return True  # Disciplina já existe no Moodle com esse nome
+
+        return False
+
 
     def update_moodle_information(self):
         """
@@ -489,7 +587,6 @@ class InformaMatricula(models.Model):
                 # Incrementando o current_sequence e armazenando-o
                 matricula.current_sequence += 1
                 return self.send_to_moodle(aluno_name, disciplinas_data, current_sequence)
-        
             else:
                 _logger.info('Aguarde o período de release para a sequência 0.')
                 return {'message': 'Aguarde o período de release para a sequência 0.'}
@@ -953,4 +1050,5 @@ class ResPartner(models.Model):
         semester = '01' if month <= 6 else '02'
         # Gerar os últimos 7 dígitos aleatoriamente
         last_digits = ''.join([str(random.randint(0, 9)) for _ in range(7)])
-        return f"{current_year}{semester}{last_digits}"    
+        return f"{current_year}{semester}{last_digits}"
+    

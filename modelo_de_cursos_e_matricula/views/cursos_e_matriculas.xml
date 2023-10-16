@@ -137,7 +137,7 @@
                             <field name="name"/>
                             <field name="cod_curso"/>
                             <field name="formato_nota"/>
-                            <field name="grupo_disciplina_id" widget="many2many_tags" context="{'default_curso_ids': active_id}" required="1"/>
+                            <field name="grupo_disciplina_id" widget="many2many_tags" context="{'default_curso_ids': active_id}" options="{'no_create': True}" required="1"/>
                             <field name="tempo_de_conclusao"/>
                         </group>
                         <notebook>
@@ -226,7 +226,7 @@
                     <group>
                         <field name="name"/>
                         <field name="sequence"/>
-                        <span><strong>Disciplinas:  </strong></span><field name="disciplina_ids" widget="Many2many_tags" nolabel="1"/>
+                        <span><strong>Disciplinas:  </strong></span><field name="disciplina_ids" widget="Many2many_tags" options="{'no_create': True}" nolabel="1"/>
                         <field name="cod_grup_disciplina" string="código único do Grupo"/>
                         <field name="days_to_release" string="Dias para liberar o conteúdo"/>
                     </group>
@@ -244,16 +244,16 @@
                 <form string="Matrícula">
                     <sheet>
                         <group>
-                            <field name="nome_do_aluno"/>
-                            <field name="curso"/>
+                            <field name="nome_do_aluno" options="{'no_create': True}"/>
+                            <field name="curso" options="{'no_create': True}"/>
                             <field name="regiao"/>
-                            <field name="tipo_de_ingresso"/>
-                            <field name="tipo_de_cancelamento" attrs="{'invisible': [('status_do_certificado', '!=', 'MATRÍCULA CANCELADA')]}"/>
+                            <field name="tipo_de_ingresso" options="{'no_create': True}"/>
+                            <field name="tipo_de_cancelamento" options="{'no_create': True}" attrs="{'invisible': [('status_do_certificado', '!=', 'MATRÍCULA CANCELADA')]}"/>
                             <field name="inscricao_ava" widget='date' options="{'date_format': 'DD/MM/YYYY'}"/>
                         </group>
                         <group>
-                            <field name="email"/>
-                            <field name="telefone"/>
+                            <field name="email" options="{'no_create': True}"/>
+                            <field name="telefone" options="{'no_create': True}"/>
                             <field name="numero_de_modulo"/>
                             <field name="data_provavel_certificacao" widget='date' options="{'date_format': 'DD/MM/YYYY'}"/>
                             <field name="prazo_exp_certf_dias"/>
@@ -486,6 +486,18 @@
             </field>
         </record>
 
+        <!-- View de Gráficos de matrículas-->
+
+        <record id="view_informa_matricula_graph" model="ir.ui.view">
+            <field name="model">informa.matricula</field>
+            <field name="arch" type="xml">
+                <graph string="Análise dos alunos">
+                    <field name="status_do_certificado"/>
+                    <field name="tipo_de_ingresso"/>
+                </graph>
+            </field>    
+        </record>
+
         <!-- Action das Views -->
 
         <!-- CURSOS -->
@@ -550,7 +562,7 @@
         <record id="action_informa_matricula" model="ir.actions.act_window">
             <field name="name">Matrículas</field>
             <field name="res_model">informa.matricula</field>
-            <field name="view_mode">kanban,tree,form</field>
+            <field name="view_mode">kanban,tree,form,graph</field>
             <field name="view_id" ref="view_informa_matricula_kanban"/>
             <field name="context">{'group_by': 'status_do_certificado'}</field>
             <field name="help" type="html">

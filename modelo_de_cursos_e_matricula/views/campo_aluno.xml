@@ -14,7 +14,7 @@
             </field>
         </record>
 
-        <!-- Herança para adicionar o notebook com as matrículas do aluno -->
+        <!-- Herança para adicionar o notebook com as matrículas do aluno e o botão para imprimir -->
         <record model="ir.ui.view" id="view_contact_form_inherit_notebook">
             <field name="name">contact.form.inherit.notebook</field>
             <field name="model">res.partner</field>
@@ -36,9 +36,3 @@
         </record>
     </data>
 </odoo>
-
-
-
-
-
-

@@ -14,6 +14,8 @@
     'data': [
         'views/cursos_e_matriculas.xml',
         'views/campo_aluno.xml',
+        'security/ir.model.access.xml',
+        'security/ir.model.access.csv',
     ],
     'installable': True,
     'auto_install': False,
