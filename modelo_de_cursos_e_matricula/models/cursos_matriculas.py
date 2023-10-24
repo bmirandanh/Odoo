@@ -8,8 +8,9 @@ from odoo.exceptions import UserError
 from odoo.exceptions import ValidationError
 from odoo import http
 import requests
+from moodle import Moodle
 
-IS_TEST_ENVIRONMENT = True
+IS_TEST_ENVIRONMENT = False
 _logger = logging.getLogger(__name__)
         
         
@@ -159,6 +160,7 @@ class Disciplina(models.Model):
                 raise ValidationError(_("Uma disciplina com este nome já existe no Odoo."))
 
         else:
+            self._connect_moodle()
             exists_cod_in_odoo = self._check_cod_disciplina_in_odoo(cod_disciplina)
             exists_name_in_odoo = self._check_name_in_odoo(name)
             exists_cod_in_moodle = self._check_if_exists_in_moodle(cod_disciplina)
@@ -179,115 +181,67 @@ class Disciplina(models.Model):
                 raise ValidationError(_("Uma disciplina com este nome já existe no Moodle."))
 
         disciplina = super().create(vals)
+        
+        self._send_to_moodle(disciplina)
 
         _logger.info(f"Disciplina {name} (código: {cod_disciplina}) criada com sucesso no Odoo com ID {disciplina.id}.")
         
         return disciplina
 
+    def _connect_moodle(self):
+        moodle_url = "https://avadev.medflix.club/webservice/rest/server.php"
+        moodle_token = "c502156af2c00a4b3e9e5d878922be46"
+        moodle = Moodle(moodle_url, moodle_token)
+        return moodle
+
     def _send_to_moodle(self, disciplina):
         if IS_TEST_ENVIRONMENT:
             _logger.info(f"Simulando envio de disciplina {disciplina.name} para Moodle.")
             return
+
+        base_url = "https://avadev.medflix.club/webservice/rest/server.php"
+        token = "c502156af2c00a4b3e9e5d878922be46"
         
-        moodle_url = "https://YOUR_MOODLE_URL/api/YOUR_MOODLE_ENDPOINT_TO_CREATE_COURSE"
-        moodle_token = "YOUR_MOODLE_API_TOKEN"
-
-        data_to_send = {
-            'cod_disciplina': disciplina.cod_disciplina,
-            'name': disciplina.name
+        # Construindo o endpoint
+        params = {
+            "wstoken": token,
+            "wsfunction": "core_course_create_courses",
+            "moodlewsrestformat": "json",
+            "courses[0][shortname]": disciplina.cod_disciplina,
+            "courses[0][fullname]": disciplina.name,
+            "courses[0][idnumber]": disciplina.id,
+            "courses[0][categoryid]": 1  # enviar categoryid como 1
         }
 
-        headers = {
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {moodle_token}"
-        }
-
-        response = requests.post(moodle_url, json=data_to_send, headers=headers)
+        response = requests.post(base_url, params=params)
+        
         if response.status_code == 200:
             _logger.info(f"Disciplina {disciplina.name} enviada com sucesso para o Moodle.")
+            _logger.info(f"Resposta do Moodle ao criar a Disciplina: {response.text}")
         else:
             _logger.error(f"Erro ao enviar disciplina {disciplina.name} para o Moodle. Resposta: {response.text}")
 
     def _check_if_exists_in_moodle(self, cod_disciplina):
-        moodle_url = "https://YOUR_MOODLE_URL/api/YOUR_MOODLE_ENDPOINT_TO_CHECK_COURSE"
-        moodle_token = "YOUR_MOODLE_API_TOKEN"
+        moodle = self._connect_moodle()
+        # Supondo que o método para buscar cursos seja core_course_get_courses
+        courses = moodle('core_course_get_courses')  # Obtém todos os cursos
 
-        params = {
-            'shortname': cod_disciplina
-        }
-
-        headers = {
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {moodle_token}"
-        }
-
-        response = requests.get(moodle_url, params=params, headers=headers)
-        response_content = response.json()
-
-        if response.status_code == 200 and response_content:
-            return True  # Disciplina já existe no Moodle com esse código
+        # Verifique se o curso com o cod_disciplina específico existe na lista de cursos
+        for course in courses:
+            if course['shortname'] == cod_disciplina:
+                return True
 
         return False
-    
+
     def _check_name_in_moodle(self, name):
-        moodle_url = "https://YOUR_MOODLE_URL/api/YOUR_MOODLE_ENDPOINT_TO_CHECK_COURSE"
-        moodle_token = "YOUR_MOODLE_API_TOKEN"
+        moodle = self._connect_moodle()
+        courses = moodle('core_course_get_courses')
 
-        params = {
-            'fullname': name  # Ajuste conforme a terminologia usada pelo seu endpoint no Moodle
-        }
-
-        headers = {
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {moodle_token}"
-        }
-
-        response = requests.get(moodle_url, params=params, headers=headers)
-        response_content = response.json()
-
-        if response.status_code == 200 and response_content:
-            return True  # Disciplina já existe no Moodle com esse nome
+        for course in courses:
+            if course['fullname'] == name:
+                return True
 
         return False
-
-
-    def update_moodle_information(self):
-        """
-        Envia informações atualizadas da disciplina para o Moodle.
-        """
-        for disciplina in self:
-            disciplina_name = disciplina.name
-            media = disciplina.media
-            cod_disciplina = disciplina.cod_disciplina
-            
-            data_to_send = {
-                'disciplina_id': disciplina.id,
-                'disciplina_name': disciplina_name,
-                'media': media,
-                'cod_disciplina': cod_disciplina
-            }
-            
-            if IS_TEST_ENVIRONMENT:
-                _logger.info('Envio simulado para o Moodle. Informações da Disciplina: %s', data_to_send)
-                return {
-                    'message': 'Envio realizado (simulado)',
-                    'data': data_to_send
-                }
-
-            # Endpoint do Moodle para atualizar informações da disciplina
-            moodle_url = "https://YOUR_MOODLE_URL/api/YOUR_MOODLE_ENDPOINT_FOR_UPDATING_DISCIPLINA"
-            moodle_token = "YOUR_MOODLE_API_TOKEN"
-            headers = {
-                "Content-Type": "application/json",
-                "Authorization": f"Bearer {moodle_token}"
-            }
-
-            response = requests.post(moodle_url, json=data_to_send, headers=headers)
-            if response.status_code != 200:
-                _logger.error('Erro ao enviar dados para o Moodle. Resposta: %s', response.text)
-                # Aqui você pode adicionar mais lógica para tratamento de erros se necessário
-                
-        return True
             
             
 class RegistroDisciplina(models.Model):
@@ -490,8 +444,15 @@ class InformaMatricula(models.Model):
     last_sequence_sent = fields.Integer(string="Sequência já enviada", default=-1, help="Armazena a sequência do grupo de disciplinas que foi enviada por último.")
     current_sequence = fields.Integer(string="Sequência atual", default=0, help="Armazena a sequência do grupo atual de disciplinas.")
     
+    def _connect_moodle(self):
+        moodle_url = "https://avadev.medflix.club/webservice/rest/server.php"
+        moodle_token = "c502156af2c00a4b3e9e5d878922be46"
+        moodle = Moodle(moodle_url, moodle_token)
+        return moodle
+    
     def execute_for_all(self):
         _logger.info('Executando método execute_for_all...')
+        matricula = self.env['informa.matricula']
         matriculas = self.env['informa.matricula'].search([
             ('status_do_certificado', 'in', ['CURSANDO', 'EM FINALIZAÇÃO', 'EM PRAZO EXCEDIDO'])
         ])
@@ -499,128 +460,172 @@ class InformaMatricula(models.Model):
             self.get_released_groups(matricula.id)
         _logger.info('Método execute_for_all concluído.')
         return True
-    
-    def send_to_moodle(self, aluno_name, disciplinas_data, current_sequence):
-        _logger.info('Iniciando envio para Moodle para o aluno %s e sequência %d...', aluno_name, current_sequence)
-    
-        # """ Enviar dados para o Moodle. """
-        
-        # Verifique se a sequência atual já foi enviada
-        if self.last_sequence_sent and self.last_sequence_sent == current_sequence:
-            _logger.error('As disciplinas desta sequência já foram enviadas.')
-            return {'message': 'As disciplinas desta sequência já foram enviadas.'}
-               
-        data_to_send = {
-            'aluno_name': aluno_name,
-            'disciplinas': disciplinas_data
-        }
-
-        if IS_TEST_ENVIRONMENT:
-            _logger.info('Envio simulado para o Moodle. Nome do aluno: %s, disciplinas: %s', aluno_name, disciplinas_data)
-            return {
-                'message': 'Envio realizado (simulado)',
-                'data': data_to_send
-            }
-
-        moodle_url = "https://YOUR_MOODLE_URL/api/YOUR_MOODLE_ENDPOINT"
-        moodle_token = "YOUR_MOODLE_API_TOKEN"
-        headers = {
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {moodle_token}"
-        }
-
-        response = requests.post(moodle_url, json=data_to_send, headers=headers)
-        if response.status_code != 200:
-            _logger.error('Erro ao enviar dados para o Moodle. Resposta: %s', response.text)
-            return {
-                'error': f'Erro ao enviar dados para o Moodle. Resposta: {response.text}'
-            }
-
-        # Atualize last_sequence_sent após enviar com sucesso
-        self.write({'last_sequence_sent': current_sequence})
-        _logger.info('Envio para Moodle concluído para o aluno %s e sequência %d.', aluno_name, current_sequence)
-        return data_to_send
+          
             
     # Quando os valores dos campos de um registro Disciplina são atualizados, esse método é chamado.
     def write(self, vals):
         _logger.info('Atualizando valores do registro InformaMatricula...')
-        res = super(InformaMatricula, self).write(vals)  # Chamando o método da classe pai corretamente
-        self.update_moodle_information()
+        res = super().write(vals)  # Chamando o método da classe pai corretamente
+       # self.update_moodle_information()
         _logger.info('Valores do registro InformaMatricula atualizados.')
         return res
+    
+    def get_moodle_course_id(self, d_data):
+        url = "https://avadev.medflix.club/webservice/rest/server.php"
+        
+        # Extrair o valor inteiro de d_data
+        course_id_value = d_data.get('id')
+        if course_id_value is None:
+            _logger.error('ID não encontrado em d_data: %s', d_data)
+            return None
+        
+        _logger.info('ID: %s', course_id_value)
+        
+        params = {
+            "wstoken": "c502156af2c00a4b3e9e5d878922be46",
+            "wsfunction": "core_course_get_courses_by_field",
+            "field": "idnumber",
+            "value": int(course_id_value),  # Converte o valor para inteiro
+            "moodlewsrestformat": "json"
+        }
+        response = requests.get(url, params=params)
+        data = response.json()  
+        _logger.info('Resposta no Moodle: %s', response.text)
+
+        if 'courses' in data and len(data['courses']) > 0:
+            return data['courses'][0]['id']
+        else:
+            return None
+            
+    def get_moodle_user_id(self, user_id):
+        url = "https://avadev.medflix.club/webservice/rest/server.php"
+        _logger.info('user_id: %s', user_id)
+        params = {
+            "wstoken": "c502156af2c00a4b3e9e5d878922be46",
+            "wsfunction": "core_user_get_users_by_field",
+            "field": "idnumber",
+            "values[0]": user_id,
+            "moodlewsrestformat": "json"
+        }
+        response = requests.get(url, params=params)
+        data = response.json()
+        _logger.info('Resposta no Moodle: %s', response.text)
+        
+        if data and len(data) > 0:
+            return data[0]['id']
+        else:
+            return None
+    
+    ##### Aqui inicia os métodos de atualização da Cron, em questão a vinculação das disciplinas para os alunos
+     
+    def enrol_user_to_course(self, user_id, course_id):
+        # URL base para o serviço web do Moodle
+        MOODLE_URL = "https://avadev.medflix.club/webservice/rest/server.php"
+        
+        # Parâmetros para a requisição
+        params = {
+            "wstoken": "c502156af2c00a4b3e9e5d878922be46",
+            "wsfunction": "enrol_manual_enrol_users",
+            "moodlewsrestformat": "json",
+            "enrolments[0][roleid]": 5,
+            "enrolments[0][userid]": user_id,
+            "enrolments[0][courseid]": course_id
+        }
+        
+        # Fazendo a requisição POST
+        response = requests.post(MOODLE_URL, params=params)
+            
+        if response.status_code == 200:
+            _logger.error('Resposta no Moodle: %s', response.text)
+            return response.json()
+        else:
+            _logger.error('Erro ao inscrever usuário no curso no Moodle: %s', response.text)
+            raise UserError(_('Erro ao inscrever usuário no curso no Moodle! Houve algum problema na inscrição.'))
 
     
     def get_released_groups(self, matricula_id):
-        # Primeiro, obtenha o objeto de matricula usando o matricula_id
         matricula = self.env['informa.matricula'].browse(matricula_id)
         _logger.info('Obtendo grupos liberados para a matrícula ID %d...', matricula_id)
-        
+
         if not matricula:
             return {'error': 'Matrícula não encontrada.'}
 
         aluno_name = matricula.nome_do_aluno.name
         _logger.info('Matrícula pertence ao aluno %s.', aluno_name)
-        
+
         curso = matricula.curso
         if not curso:
             return {'error': 'Curso não associado à matrícula.'}
 
-        # Ordena os grupos de disciplina pelo sequence
         grupos = curso.grupo_disciplina_id.sorted(key=lambda g: g.sequence)
-        # depuração:
-        if not hasattr(matricula, 'current_sequence'):
-            _logger.error('Matrícula com ID %d não tem atributo current_sequence.', matricula_id)
-            return {'error': 'Atributo current_sequence não encontrado.'}
-
-        # Defina current_sequence usando o valor armazenado no objeto de matrícula.
         current_sequence = matricula.current_sequence
+        user_id = matricula.nome_do_aluno.id
+        _logger.info('user_id = %s.', user_id)
 
-        # Tratando a sequência 0
-        if current_sequence == 0:
+        # Trata o caso especial da sequência 0
+        _logger.info('current_sequence = %s.', matricula.current_sequence)
+        if matricula.current_sequence == 0:
             if grupos[current_sequence].days_to_release <= 0:
                 disciplinas_data = [{
-                    'shortname': disciplina.cod_disciplina,
-                    'fullname': disciplina.name
+                    'id': disciplina.id,
                 } for disciplina in grupos[current_sequence].disciplina_ids]
-
-                _logger.info('Para o aluno %s foram liberadas as seguintes disciplinas: %s', aluno_name, ', '.join([disc['fullname'] for disc in disciplinas_data]))
-                # Incrementando o current_sequence e armazenando-o
-                matricula.current_sequence += 1
-                return self.send_to_moodle(aluno_name, disciplinas_data, current_sequence)
+                _logger.info('disciplinas_data = %s.', disciplinas_data)
+                for d_data in disciplinas_data:
+                    moodle_course_id = self.get_moodle_course_id(d_data)
+                    _logger.info('d_data = %s', d_data)
+                    _logger.info('moodle_course_id = %s', moodle_course_id)
+                    moodle_user_id = self.get_moodle_user_id(user_id)
+                    _logger.info('moodle_user_id = %s', moodle_user_id)
+                    if moodle_course_id and moodle_user_id:
+                        _logger.info('Enviando para %s, o id de curso = %s.', moodle_user_id, moodle_course_id)
+                        matricula.current_sequence += 1
+                        return self.enrol_user_to_course(user_id=moodle_user_id, course_id=moodle_course_id)
+                    else:
+                        _logger.info('Erro no GET de get_moodle_course_id.') 
             else:
-                _logger.info('Aguarde o período de release para a sequência 0.')
-                return {'message': 'Aguarde o período de release para a sequência 0.'}
-            
+                _logger.info(' Ainda não é tempo de liberar a sequência 0 ')
+                
+
         # Tratando sequências posteriores
         else:
-            # Verificando aprovação de todas as disciplinas da sequência anterior
-            disciplinas_anteriores = grupos[current_sequence - 1].disciplina_ids
-            registros_disciplinas = self.env['informa.registro_disciplina'].search([('matricula_id', '=', matricula_id), ('disciplina_id', 'in', disciplinas_anteriores.ids)])
-                
+            disciplinas_anteriores = grupos[current_sequence-1].disciplina_ids
+            _logger.info('disciplinas_anteriores = %s.', disciplinas_anteriores)
+            registros_disciplinas = self.env['informa.registro_disciplina'].search([
+                ('matricula_id', '=', matricula.id),
+                ('disciplina_id', 'in', disciplinas_anteriores.ids)
+            ])
             if all(record.status == 'aprovado' for record in registros_disciplinas):
                 if grupos[current_sequence].days_to_release <= 0:
                     disciplinas_data = [{
-                        'shortname': disciplina.cod_disciplina,
-                        'fullname': disciplina.name
+                        'id': disciplina.id,
                     } for disciplina in grupos[current_sequence].disciplina_ids]
-                    
-                    _logger.info('Para o aluno %s foram liberadas as seguintes disciplinas: %s', aluno_name, ', '.join([disc['fullname'] for disc in disciplinas_data]))
-                    matricula.current_sequence += 1
-                    return self.send_to_moodle(aluno_name, disciplinas_data, current_sequence)
+                    _logger.info('disciplinas_data = %s.', disciplinas_data)
+                    for d_data in disciplinas_data:
+                        moodle_course_id = self.get_moodle_course_id(d_data)
+                        _logger.info('moodle_course_id = %s', moodle_course_id)
+                        moodle_user_id = self.get_moodle_user_id(user_id)
+                        _logger.info('moodle_user_id = %s', moodle_user_id)
+                        if moodle_course_id and moodle_user_id:
+                            _logger.info('Enviando para %s, o id de curso = %s.', moodle_user_id, moodle_course_id)
+                            matricula.last_sequence_sent = matricula.current_sequence
+                            matricula.current_sequence += 1
+                            _logger.info('current_sequence = %s.', matricula.current_sequence)
+                            return self.enrol_user_to_course(user_id=moodle_user_id, course_id=moodle_course_id)
+                        else:
+                            _logger.info('Erro no GET de get_moodle_course_id.')
                 else:
-                    _logger.info('Aguarde o período de release para a sequência %s.', current_sequence)
-                    return {'message': f'Aguarde o período de release para a sequência {current_sequence}.'}
+                    _logger.info('Ainda não é tempo de liberar a sequência atual.')
             else:
-                _logger.info('Nem todas as disciplinas da sequência anterior estão com status de aprovado.')
-                return {'error': 'Nem todas as disciplinas da sequência anterior estão com status de aprovado.'}
+                _logger.info(' O aluno ainda não passou em todas as disciplinas da sequência anterior.')
 
-        
+        return {'message': 'Cron concluída.'}
+        # Fim dos métodos de atualização da Cron para vinculação das disciplinas aos alunos
+    
+    # métodos de update de informações para o moodle    
     def update_moodle_information(self):
         """
         Envia informações atualizadas da matrícula para o Moodle.
         """
-        # Primeiro, obtenha o objeto de matricula usando o matricula_id
-        matricula = self.env['informa.matricula']
         for matricula in self:
             aluno_name = matricula.nome_do_aluno.name
             curso_name = matricula.curso.name if matricula.curso else ''
@@ -642,20 +647,46 @@ class InformaMatricula(models.Model):
                     'data': data_to_send
                 }
 
-            # Endpoint do Moodle para atualizar informações da matrícula
-            moodle_url = "https://YOUR_MOODLE_URL/api/YOUR_MOODLE_ENDPOINT_FOR_UPDATING_MATRICULA"
-            moodle_token = "YOUR_MOODLE_API_TOKEN"
-            headers = {
-                "Content-Type": "application/json",
-                "Authorization": f"Bearer {moodle_token}"
-            }
+            moodle = self._connect_moodle()
+            # O método para atualizar informações da matrícula seja 'custom_method_update_matricula'
+            response = moodle('custom_method_update_matricula', data_to_send)
+            
+            # Suponha que a resposta seja um dicionário e tenha uma chave 'success'
+            if not response.get('success'):
+                _logger.error('Erro ao enviar dados para o Moodle.')
+        return True
 
-            response = requests.post(moodle_url, json=data_to_send, headers=headers)
-            if response.status_code != 200:
-                _logger.error('Erro ao enviar dados para o Moodle. Resposta: %s', response.text)
-                # Aqui você pode adicionar mais lógica para tratamento de erros se necessário
-                
-        return True    
+    def custom_method_update_matricula(self, data):
+        """
+        Método para atualizar as informações do aluno no Moodle.
+
+        :param data: Um dicionário contendo as informações do aluno que precisam ser atualizadas.
+        :return: Um dicionário contendo informações sobre o sucesso ou falha da operação.
+        """
+        moodle = self._connect_moodle()
+
+        # Primeiro, tente obter o ID do aluno no Moodle usando o nome (ou outra identificação única, como e-mail ou matrícula).
+        try:
+            response = moodle.call('core_user_get_users', {'criteria': [{'key': 'username', 'value': data['aluno_name']}]})
+            if not response:
+                return {'success': False, 'message': "Aluno não encontrado no Moodle."}
+            user_id = response[0]['id']
+        except Exception as e:
+            return {'success': False, 'message': f"Erro ao buscar aluno no Moodle: {e}"}
+
+        # Atualizar as informações do aluno.
+        # Presumindo que o Moodle tenha uma função chamada 'core_user_update_users' para atualizar informações do usuário.
+        users_data = [{
+            'id': user_id,
+            'firstname': data.get('firstname', ''),
+            'lastname': data.get('lastname', ''),
+            'email': data.get('email', ''),
+        }]
+        try:
+            moodle.call('core_user_update_users', users_data)
+            return {'success': True, 'message': "Informações do aluno atualizadas com sucesso."}
+        except Exception as e:
+            return {'success': False, 'message': f"Erro ao atualizar informações do aluno: {e}"}   
     
     def show_student_disciplines(self):
         self.ensure_one()
@@ -731,7 +762,7 @@ class InformaMatricula(models.Model):
                     'aluno_id': matricula_record.nome_do_aluno.id,
                     'curso_id': matricula_record.curso.id,
                     'matricula_id': matricula_record.id,
-                    'disciplina_id': disciplina.id
+                    'disciplina_id': disciplina.id,
                 })
                 
         if not self._context.get('skip_status_update'):
@@ -757,8 +788,8 @@ class InformaMatricula(models.Model):
         return result
 
     def _register_student_in_moodle(self, matricula):
-        base_url = "https://YOUR_MOODLE_URL"
-        token = "YOUR_MOODLE_API_TOKEN"
+        base_url = "https://avadev.medflix.club/webservice/rest/server.php"
+        token = "c502156af2c00a4b3e9e5d878922be46"
         headers = {
             "Content-Type": "application/x-www-form-urlencoded"
         }
@@ -768,6 +799,8 @@ class InformaMatricula(models.Model):
         firstname = names[0]
         lastname = names[1] if len(names) > 1 else firstname
         cpf = matricula.nome_do_aluno.l10n_br_cnpj_cpf
+        cpfform = 'Fg@'+cpf
+        matricula_id = matricula.nome_do_aluno.id
 
         if IS_TEST_ENVIRONMENT:
             # Se estivermos em um ambiente de teste, simplesmente logue a simulação e retorne.
@@ -783,29 +816,31 @@ class InformaMatricula(models.Model):
             }
 
         # Primeiro, verifique se o usuário já existe
-        user_check_url = f"{base_url}/webservice/rest/server.php?wstoken={token}&wsfunction=core_user_get_users&moodlewsrestformat=json"
-        user_check_data = {
-            'criteria[0][key]': 'username',
-            'criteria[0][value]': cpf
-        }
-        response = requests.post(user_check_url, data=user_check_data, headers=headers)
+        user_check_url = f"{base_url}/webservice/rest/server.php?wstoken={token}&wsfunction=core_user_get_users&moodlewsrestformat=json&criteria[0][key]=username&criteria[0][value]={cpf}"
+        response = requests.get(user_check_url, headers=headers)
         users = response.json().get('users', [])
 
-        user_data = {
-            "users[0][username]": cpf,
-            "users[0][password]": cpf,
-            "users[0][firstname]": firstname,
-            "users[0][lastname]": lastname,
-            "users[0][email]": matricula.email,
-        }
-
         if not users:
-            # Se o usuário não existir, criamos um novo
-            user_create_url = f"{base_url}/webservice/rest/server.php?wstoken={token}&wsfunction=core_user_create_users&moodlewsrestformat=json"
-            response = requests.post(user_create_url, data=user_data, headers=headers)
-            if response.status_code != 200:
-                _logger.error('Erro ao criar usuário no Moodle: %s', response.text)
-                raise UserError(_('Erro ao criar usuário no Moodle! O usuário já existe!'))
+            # Construir os dados para a criação do usuário
+            user_data = {
+                "users[0][username]": cpf,
+                "users[0][password]": cpfform,
+                "users[0][firstname]": firstname,
+                "users[0][lastname]": lastname,
+                "users[0][email]": matricula.email,
+                "users[0][idnumber]":matricula_id,
+            }
+       
+        # Se o usuário não existir, criamos um novo
+        signup_url = f"{base_url}/webservice/rest/server.php?wstoken={token}&wsfunction=core_user_create_users&moodlewsrestformat=json"
+        for key, value in user_data.items():
+            signup_url += f"&{key}={value}"
+
+        response = requests.get(signup_url, headers=headers)  # Usamos GET aqui
+        _logger.info('Resposta do Moodle ao criar usuário: %s', response.text)
+        if response.status_code != 200:
+            _logger.error('Erro ao criar usuário no Moodle: %s', response.text)
+            raise UserError(_('Erro ao criar usuário no Moodle! O usuário já existe ou houve algum problema na criação.'))
     
     def compute_allowed_disciplinas(self, curso_id):
         # Buscar todas as disciplinas associadas aos grupos de disciplinas do curso selecionado
