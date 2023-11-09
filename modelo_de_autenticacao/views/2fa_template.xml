@@ -1,0 +1,29 @@
+<odoo>
+    <template id="2fa_template" name="2FA Page">
+        <t t-call="website.layout">
+            <div class="container mt8">
+                <div class="row">
+                    <div class="col-md-4 col-md-offset-4">
+                        <h1>Autenticação de Dois Fatores</h1>
+                        <form action="/web/2fa" method="post">
+                            <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                            <input type="hidden" name="user_id" t-att-value="user.id"/>
+                            <div class="form-group">
+                                <label for="token">Token:</label>
+                                <input type="text" id="token" name="token" class="form-control" required="required"/>
+                            </div>
+                            <t t-if="error">
+                                <div class="alert alert-danger" role="alert">
+                                    <t t-esc="error"/>
+                                </div>
+                            </t>
+                            <div class="form-group">
+                                <button type="submit" class="btn btn-primary">Verificar Token</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
+</odoo>

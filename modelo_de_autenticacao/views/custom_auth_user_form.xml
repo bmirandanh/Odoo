@@ -1,0 +1,36 @@
+<odoo>
+    <data>
+        <record model="ir.ui.view" id="view_custom_auth_user_form">
+            <field name="name">custom.auth.user.form</field>
+            <field name="model">custom.auth.user</field>
+            <field name="arch" type="xml">
+                <form string="Usuário">
+                    <sheet>
+                        <group>
+                            <field name="username"/>
+                            <field name="email"/>
+                            <field name="password"/>
+                            <field name="password_hash"/>
+                            <field name="fa_secret" invisible="1"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- Adicione as ações e o menu, se necessário -->
+        <record model="ir.actions.act_window" id="action_custom_auth_user">
+            <field name="name">Usuários</field>
+            <field name="res_model">custom.auth.user</field>
+            <field name="view_mode">tree,form</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Crie um novo usuário de autenticação.
+                </p>
+            </field>
+        </record>
+
+        <menuitem id="fgmed_autenticacao" name="Usuários de Autenticação" sequence="1" groups="base.group_system"/>
+
+    </data>
+</odoo>

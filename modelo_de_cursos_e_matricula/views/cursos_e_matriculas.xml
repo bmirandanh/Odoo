@@ -41,13 +41,16 @@
             <field name="model">informa.registro_disciplina</field>
             <field name="arch" type="xml">
                 <tree string="Registro Auxiliar de Disciplina" editable="bottom">
+                    <button name="action_open_form_view" type="object" string="Abrir" class="oe_highlight"/>
+                    <button name="action_update_all_grades_from_moodle" type="object" string="Atualizar Nota do Moodle"/>
                     <field name="aluno_id" readonly="1"/>
                     <field name="curso_id" readonly="1"/>
-                    <field name="disciplina_id" readonly="1"/>
-                    <field name="nota" widget="nota" avg="Média de Notas"/>
+                    <field name="disciplina_id"/>
+                    <field name="nota" widget="nota" attrs="{'readonly': [('allow_grade_editing', '=', False)]}" avg="Média de Notas"/>
                     <field name="disciplina_media" widget="nota" readonly="1"/>
                     <field name="status" readonly="1"/>
                     <field name="sequencia_disciplina" readonly="1"/>
+                    <field name="allow_grade_editing" invisible="1"/>
                 </tree>
             </field>
         </record>
@@ -67,7 +70,6 @@
             </field>
         </record>
 
-
         <!-- MATRÍCULAS -->
 
         <record id="view_informa_matricula_tree" model="ir.ui.view">
@@ -85,13 +87,15 @@
                     <field name="email"/>
                     <field name="numero_de_modulo"/>
                     <field name="data_provavel_certificacao"/>
+                    <field name="data_original_certificacao"/>
+                    <field name="prorrogacao"/>
+                    <field name="data_prorrogacao" attrs="{'invisible': [('prorrogacao', '=', False)]}"/>
                     <field name="cod_curso"/>
                     <field name="numero_matricula" force_save="1"/>
                     <field name="matricula_aluno" force_save="1"/>
                 </tree>
             </field>
         </record>
-
 
         <!-- Tipo de Ingresso -->
 
@@ -255,7 +259,11 @@
                             <field name="email" options="{'no_create': True}"/>
                             <field name="telefone" options="{'no_create': True}"/>
                             <field name="numero_de_modulo"/>
-                            <field name="data_provavel_certificacao" widget='date' options="{'date_format': 'DD/MM/YYYY'}"/>
+                            <field name="data_provavel_certificacao" widget='date' options="{'date_format': 'DD/MM/YYYY'}" />
+                            <field name="data_original_certificacao" widget='date' options="{'date_format': 'DD/MM/YYYY'}" invisible="1"/>
+                            <field name="prorrogacao"/>
+                            <field name="allow_grade_editing"/>
+                            <field name="data_prorrogacao" attrs="{'invisible': [('prorrogacao', '=', False)]}" widget='date' options="{'date_format': 'DD/MM/YYYY'}"/>
                             <field name="prazo_exp_certf_dias"/>
                             <field name="status_do_certificado"/>
                             <field name="cod_curso"/>
@@ -263,13 +271,20 @@
                             <field name="matricula_aluno" force_save="1"/>
                             <field name="justificativa_cancelamento" attrs="{'invisible': [('status_do_certificado', '!=', 'MATRÍCULA CANCELADA')]}"/>
                         </group>
+                        <group>
+                            <!-- Disciplinas Sobrepostas -->
+                            <field name="overlapping_disciplines_ids" widget="many2many_tags" options="{'no_create': True}" />
+
+                            <!-- Matrículas Sobrepostas -->
+                            <field name="overlapping_matricula_descriptions"  options="{'no_create': True}" />
+                        </group>
                     </sheet>
                     <xpath expr="//sheet" position="before">
                         <header>
                             <button string="Cancelar Matrícula" attrs="{'invisible': [('id', '=', False)]}" type="object" name="action_open_status_change_wizard" class="oe_highlight"/>
                         </header>
                     </xpath>
-                    <!-- Chatter de menssagens de log -->
+                    <!-- Chatter de mensagens de log -->
                     <div class="oe_chatter">
                         <field name="message_follower_ids" widget="mail_followers" groups="base.group_system"/>
                         <field name="activity_ids" widget="mail_activity" groups="base.group_system"/>
@@ -397,6 +412,34 @@
             </record>
 
 
+        <!-- NOTAS E DISCIPLINAS -->
+
+        <record id="view_registro_disciplina_form" model="ir.ui.view">
+            <field name="name">registro.disciplina.form</field>
+            <field name="model">informa.registro_disciplina</field>
+            <field name="arch" type="xml">
+                <form string="Registro Auxiliar de Disciplina">
+                    <sheet>
+                        <group>
+                            <field name="aluno_id"/>
+                            <field name="curso_id"/>
+                            <field name="disciplina_id"/>
+                            <field name="nota" widget="nota" avg="Média de Notas"/>
+                            <field name="disciplina_media" widget="nota"/>
+                            <field name="status"/>
+                            <field name="sequencia_disciplina"/>
+                        </group>
+                    </sheet>
+                    <!-- Chatter de mensagens de log -->
+                    <div class="oe_chatter">
+                        <field name="message_follower_ids" widget="mail_followers" groups="base.group_system"/>
+                        <field name="activity_ids" widget="mail_activity" groups="base.group_system"/>
+                        <field name="message_ids" widget="mail_thread"/>
+                    </div>
+                </form>
+            </field>
+        </record>
+
         <!-- KANBAN MATRICULA-->
 
         <record id="view_informa_matricula_kanban" model="ir.ui.view">
@@ -418,7 +461,8 @@
                                             <span>E-mail: </span><field name="email" force_save="1"/><br/>
                                             <span>Telefone: </span><field name="telefone" force_save="1"/><br/>
                                             <span>Data de início: </span><field name="inscricao_ava"/><br/>
-                                            <span>Data de Finalização: </span><field name="prazo_exp_certf_dias"/><br/>
+                                            <span>Data de Provável fim: </span><field name="data_original_certificacao"/><br/>
+                                            <span>Dias faltantes para o fim: </span><field name="prazo_exp_certf_dias"/><br/>
                                             <span>Numero de Matrícula do curso: </span><field name="numero_matricula" force_save="1"/><br/>
                                         </div>
                                     </div>
@@ -553,7 +597,7 @@
             <field name="name">Registro Auxiliar de Disciplina</field>
             <field name="type">ir.actions.act_window</field>
             <field name="res_model">informa.registro_disciplina</field>
-            <field name="view_mode">tree</field>
+            <field name="view_mode">tree,form</field>
             <field name="view_id" ref="view_registro_disciplina_tree"/>
         </record>
         
@@ -627,7 +671,18 @@
             <field name="state">code</field>
             <field name="code">model.atualizar_status_dias_passados()</field>
             <field name="interval_number">1</field>
-            <field name="interval_type">hours</field>
+            <field name="interval_type">days</field>
+            <field name="numbercall">-1</field>
+        </record>
+
+        <!--Cron Job de atualização dos dias, em verificação a cada hora-->
+        <record id="cron_atualizar_notas" model="ir.cron">
+            <field name="name">Atualizar Notas dos Alunos</field>
+            <field name="model_id" ref="model_informa_registro_disciplina"/>
+            <field name="state">code</field>
+            <field name="code">model.update_all_students_grades_from_moodle()</field>
+            <field name="interval_number">50</field>
+            <field name="interval_type">minutes</field>
             <field name="numbercall">-1</field>
         </record>
 
@@ -645,7 +700,7 @@
         <!--Cron Job para verificação para Processar Grupos de Disciplinas para Todos os Alunos-->
         <record id="ir_cron_process_groups_for_all_students" model="ir.cron">
             <field name="name">Processar Grupos de Disciplinas para Todos os Alunos</field>
-            <field name="interval_number">1</field>
+            <field name="interval_number">10</field>
             <field name="interval_type">minutes</field>
             <field name="numbercall">-1</field>
             <field name="model_id" ref="model_informa_matricula"/>
@@ -653,7 +708,6 @@
             <field name="code">model.sudo().execute_for_all()</field>
             <field name="active" eval="True"/>
         </record>
-
 
         <!--Wizard dos botões de cancelamento -->
         <record id="view_matricula_status_change_wizard_form" model="ir.ui.view">

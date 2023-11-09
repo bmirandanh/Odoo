@@ -1,0 +1,21 @@
+<odoo>        
+    <data>    
+        <record id="view_informa_matricula_confirmation_wizard_form" model="ir.ui.view">
+            <field name="name">informa.matricula.confirmation.wizard.form</field>
+            <field name="model">informa.matricula.confirmation.wizard</field>
+            <field name="arch" type="xml">
+                <form>
+                    <group>
+                        <field name="message" nolabel="1"/>
+                        <field name="proceed_with_creation"/>
+                    </group>
+                    <footer>
+                        <button string="Confirmar" type="object" class="btn-primary" name="action_confirm"/>
+                        <button string="Cancelar" type="object" class="btn-secondary" name="action_cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+    </data>
+</odoo>

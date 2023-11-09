@@ -1,0 +1,18 @@
+<odoo>
+    <template id="protected_page_template" name="Protected Page">
+        <t t-call="website.layout">
+            <div id="wrap" class="oe_structure oe_empty">
+                <div class="container mt-5">
+                    <div>
+                        <h1 class="display-4">Página Protegida</h1>
+                        <p class="lead">Esta é uma página protegida. Se você está vendo esta mensagem, você passou pela autenticação de dois fatores com sucesso.</p>
+                        <p>Conteúdo adicional e links podem ser adicionados aqui.</p>
+                        <p class="lead">
+                            <a class="btn btn-primary btn-lg" href="#" role="button">Ação Principal</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
+</odoo>

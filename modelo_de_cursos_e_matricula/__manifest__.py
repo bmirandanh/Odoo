@@ -14,6 +14,7 @@
     'data': [
         'views/cursos_e_matriculas.xml',
         'views/campo_aluno.xml',
+        'views/confirmacao_disciplina.xml',
         'security/ir.model.access.xml',
         'security/ir.model.access.csv',
     ],

@@ -1,0 +1,23 @@
+{
+    'name': 'Autenticação Personalizada',
+    'version': '1.0',
+    'summary': 'Autenticação Personalizada com Autenticação de Dois Fatores (2FA)',
+    'sequence': 10,
+    'description': """Autenticação Personalizada com Autenticação de Dois Fatores (2FA) para acesso a HTML.""",
+    'category': 'Website',
+    'website': 'https://www.suaempresa.com',
+    'depends': ['base', 'web', 'mail'],
+    'data': [
+        'data/custom_auth_data.xml',
+        'views/login_template.xml',
+        'views/2fa_template.xml',
+        'views/protected_page_template.xml',
+        'views/custom_auth_user_form.xml',
+    ],
+    'demo': [],
+    'qweb': [],
+    'installable': True,
+    'application': True,
+    'auto_install': False,
+    'license': 'LGPL-3',
+}

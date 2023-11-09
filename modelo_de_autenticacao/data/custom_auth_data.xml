@@ -1,0 +1,51 @@
+<odoo>
+    <data noupdate="1">
+
+        <!-- E-mail Template para Autenticação de Dois Fatores -->
+        <record id="email_template_2fa_token" model="mail.template">
+            <field name="name">Token de Autenticação de Dois Fatores</field>
+            <field name="email_from">noreplyfgmed@gmail.com</field>  <!-- Endereço de e-mail fixo -->
+            <field name="subject">Seu Token de Autenticação de Dois Fatores</field>
+            <field name="body_html"><![CDATA[
+                <p>Olá ${object.username},</p> <!-- Substitua object.name por object.username -->
+                <p>Seu token de autenticação de dois fatores é: ${ctx.get('token')}</p>
+                <p>Se você não solicitou este token, por favor, ignore este e-mail.</p>
+            ]]></field>
+            <field name="model_id" ref="model_custom_auth_user"/>
+            <field name="auto_delete" eval="True"/>
+        </record>
+
+        <!-- Template de e-mail de boas-vindas -->
+        <record id="email_template_welcome" model="mail.template">
+            <field name="name">Boas Vindas ao Usuário</field>
+            <field name="model_id" ref="modelo_de_autenticacao.model_custom_auth_user"/>
+            <field name="subject">Bem-vindo(a) ao sistema ${object.name}</field>
+            <field name="body_html"><![CDATA[
+                <p>Olá,</p>
+                <p>Seja bem vindo ao portal da FGMED!</p>
+                <p></p>
+                <p>Abaixo estão suas informações de Login:</p>
+                <p></p>
+                <p>Usuário: ${object.username}</p>
+                <p>Senha: ${ctx.get('password')}</p>
+                <p></p>
+                <p>Por favor, altere sua senha após o primeiro login.</p>
+            ]]></field>
+        </record>
+        
+        <!-- Template de e-mail de notificação de alteração -->
+        <record id="email_template_data_change" model="mail.template">
+            <field name="name">Notificação de Alteração de Dados</field>
+            <field name="model_id" ref="modelo_de_autenticacao.model_custom_auth_user"/>
+            <field name="subject">Alterações no cadastro</field>
+            <field name="body_html"><![CDATA[
+                <p>Olá,</p>
+                <p>Seus dados foram atualizados com sucesso.</p>
+                <p><strong>Usuário: ${object.username}</strong></p>
+                <p><strong>Nova Senha: ${ctx.get('new_password')}</strong></p>
+                <p>Por favor, lembre-se de mudar sua senha após o login.</p>
+            ]]></field>
+        </record>
+
+    </data>    
+</odoo>
