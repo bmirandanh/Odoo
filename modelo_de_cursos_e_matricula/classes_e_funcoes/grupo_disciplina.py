@@ -22,7 +22,7 @@ class GrupoDisciplina(models.Model):
     sequence = fields.Integer(string='Sequência', help="Determina a ordem de exibição dos grupos.")
     disciplina_ids = fields.Many2many('informa.disciplina', string="Disciplinas")
     cod_grup_disciplina = fields.Char(string='Código único do grupo de disciplina: ', required=True)
-    next_release_date = fields.Date(string="Próxima Data de Liberação", compute="_compute_next_release_date", store=True)
+    next_release_date = fields.Date(string="Próxima Data de Liberação", store=True)
     days_to_release = fields.Integer(string="Dias para Liberação", default=7, help="Número de dias para liberar as disciplinas deste grupo.")
     default_days_to_release = fields.Integer(string="Dias para Liberação", default=7, help="Número de dias para liberar as disciplinas do próximo grupo.")
     current_sequence = fields.Integer(string="Sequência Atual", default=0, help="Armazena a sequência do grupo de disciplinas atualmente sendo liberado.")

@@ -1,0 +1,58 @@
+<odoo>
+    <template id="academic_record_template" name="Academic Record Page" inherit_id="website.layout">
+        <xpath expr="//div[@id='wrap']" position="inside">
+            <t t-call="website.layout">
+                <div class="container o_editable">
+                    <div class="page-header o_editable">
+                        <h1>Centro Universitário FGMED</h1>
+                    </div>
+                    <div class="row o_editable">
+                        <div class="col-xs-12 o_editable">
+                            <!-- Informações do aluno -->
+                            <div class="panel panel-default o_editable">
+                                <div class="panel-body o_editable">
+                                    <div class="row o_editable">
+                                        <div class="col-xs-9 o_editable">
+                                            <h3>Dados Pessoais</h3>
+                                            <p>Nome: <t t-esc="request.env.user.partner_id.name" /></p>
+                                            <p>Matrícula: <t t-esc="request.env.user.partner_id.matricula_aluno" /></p>
+                                        </div>
+                                        <div class="text-center mb-3">
+                                            <a href="/academic_record/pdf/${request.env.user}" class="btn btn-primary">Imprimir Histórico</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Informações acadêmicas -->
+                            <div class="panel panel-default o_editable">
+                                <div class="panel-heading o_editable">
+                                    <h3 class="panel-title">Histórico Acadêmico</h3>
+                                </div>
+                                <div class="panel-body o_editable">
+                                    <t t-foreach="request.env['informa.matricula'].search([('nome_do_aluno', '=', request.env.user.partner_id.id)])" t-as="matricula">
+                                        <div class="matricula-record o_editable">
+                                            </br>
+                                            <h4>Matrícula: <t t-esc="matricula.numero_matricula." /></h4>
+                                            </br>                                                                                                                  
+                                            <p>Curso: <t t-esc="matricula.curso.name" /></p>
+                                            <p>Status: <t t-esc="matricula.status_do_certificado" /></p>
+                                            <p>Região: <t t-esc="matricula.regiao" /></p>
+                                            <div class="disciplinas o_editable">
+                                                <h5>Disciplinas:</h5>
+                                                <ul>
+                                                    <t t-foreach="matricula.grupo_disciplina_id.disciplina_ids" t-as="disciplina">
+                                                        <li><t t-esc="disciplina.name" /> - Nota: <t t-esc="disciplina.nota" /></li>
+                                                    </t>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </t>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </t>
+        </xpath>
+    </template>
+</odoo>

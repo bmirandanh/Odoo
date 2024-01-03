@@ -1,5 +1,6 @@
 <odoo>
     <data>
+    
         <record model="ir.ui.view" id="view_custom_auth_user_form">
             <field name="name">custom.auth.user.form</field>
             <field name="model">custom.auth.user</field>
@@ -11,7 +12,12 @@
                             <field name="email"/>
                             <field name="password"/>
                             <field name="password_hash"/>
+                            <field name="partner_id"/>
                             <field name="fa_secret" invisible="1"/>
+                            <field name="is_admin"/>
+                            <field name="username_moodle"/>
+                            <field name="password_moodle"/>
+                            <field name="image" widget="image" class="oe avatar"/>                            
                         </group>
                     </sheet>
                 </form>

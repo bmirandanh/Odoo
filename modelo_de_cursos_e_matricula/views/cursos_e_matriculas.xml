@@ -125,6 +125,20 @@
             </field>
         </record>
 
+        <!-- Tipo de Cancelamento -->
+
+        <record id="view_tipo_bloqueio_tree" model="ir.ui.view">
+            <field name="name">tipo.de.bloqueio.tree</field>
+            <field name="model">tipo.de.bloqueio</field>
+            <field name="arch" type="xml">
+                <tree string="Tipo de Justificativa de Trancamento de curso">
+                    <field name="nome"/>
+                    <field name="descricao"/>
+                    <field name="color" widget="color_picker"/>
+                </tree>
+            </field>
+        </record>
+
 
         <!-- Form das View -->
 
@@ -252,6 +266,7 @@
                             <field name="curso" options="{'no_create': True}"/>
                             <field name="regiao"/>
                             <field name="tipo_de_ingresso" options="{'no_create': True}"/>
+                            <field name="tipo_de_block" options="{'no_create': True}" attrs="{'invisible': [('status_do_certificado', '!=', 'TRANCADO')]}"/>
                             <field name="tipo_de_cancelamento" options="{'no_create': True}" attrs="{'invisible': [('status_do_certificado', '!=', 'MATRÍCULA CANCELADA')]}"/>
                             <field name="inscricao_ava" widget='date' options="{'date_format': 'DD/MM/YYYY'}"/>
                         </group>
@@ -269,7 +284,7 @@
                             <field name="cod_curso"/>
                             <field name="numero_matricula" force_save="1"/>
                             <field name="matricula_aluno" force_save="1"/>
-                            <field name="justificativa_cancelamento" attrs="{'invisible': [('status_do_certificado', '!=', 'MATRÍCULA CANCELADA')]}"/>
+                            <field name="justificativa_cancelamento" attrs="{'invisible': ['|', ('status_do_certificado', '!=', 'MATRÍCULA CANCELADA'), ('status_do_certificado', '!=', 'TRANCADO')]}"/>
                         </group>
                         <group>
                             <!-- Disciplinas Sobrepostas -->
@@ -282,6 +297,7 @@
                     <xpath expr="//sheet" position="before">
                         <header>
                             <button string="Cancelar Matrícula" attrs="{'invisible': [('id', '=', False)]}" type="object" name="action_open_status_change_wizard" class="oe_highlight"/>
+                            <button string="Trancar Matrícula" attrs="{'invisible': [('id', '=', False)]}" type="object" name="action_open_status_change_block_wizard" class="oe_highlight"/>
                         </header>
                     </xpath>
                     <!-- Chatter de mensagens de log -->
@@ -325,6 +341,30 @@
             <field name="model">tipo.de.cancelamento</field>
             <field name="arch" type="xml">
                 <form string="Tipo de Cancelamento">
+                    <sheet>
+                        <group>
+                            <field name="nome"/>
+                            <field name="descricao"/>
+                            <field name="color" widget="color_picker"/>
+                        </group>
+                    </sheet>
+                    <!-- Chatter de menssagens de log -->
+                    <div class="oe_chatter">
+                        <field name="message_follower_ids" widget="mail_followers" groups="base.group_system"/>
+                        <field name="activity_ids" widget="mail_activity" groups="base.group_system"/>
+                        <field name="message_ids" widget="mail_thread"/>
+                    </div>
+                </form>
+            </field>
+        </record>
+
+        <!-- TIPO DE CANCELAMENTO -->
+
+        <record id="view_tipo_bloqueio_form" model="ir.ui.view">
+            <field name="name">tipo.de.bloqueio.form</field>
+            <field name="model">tipo.de.bloqueio</field>
+            <field name="arch" type="xml">
+                <form string="Trancar Matrícula">
                     <sheet>
                         <group>
                             <field name="nome"/>
@@ -456,6 +496,7 @@
                                         <div class="o_primary">
                                             <field name="color_tipo_ingresso" widget="color_picker" />
                                             <field name="color_tipo_cancelamento" widget="color_picker" attrs="{'invisible': [('status_do_certificado', '!=', 'MATRÍCULA CANCELADA')]}" /><br/>
+                                            <field name="color_tipo_Bloqueio" widget="color_picker" attrs="{'invisible': [('status_do_certificado', '!=', 'TRANCADO')]}" /><br/>
                                             <span>Aluno: </span><strong><field name="nome_do_aluno"/></strong><br/>
                                             <span>Curso: </span><field name="curso"/><br/>
                                             <span>E-mail: </span><field name="email" force_save="1"/><br/>
@@ -466,6 +507,20 @@
                                             <span>Numero de Matrícula do curso: </span><field name="numero_matricula" force_save="1"/><br/>
                                         </div>
                                     </div>
+                                </div>
+                                <div>
+                                </div>
+                                <div>
+                                    <span> - </span>
+                                </div>
+                                <div>
+                                    <button name="reingressar_matricula_wizard" 
+                                            string="Reingressar Matrícula" 
+                                            type="object" 
+                                            class="oe_highlight" 
+                                            attrs="{'invisible': [('status_do_certificado', 'not in', ['MATRÍCULA CANCELADA', 'TRANCADO','FINALIZADO', 'EXPEDIDO'])]}">
+                                    Reingressar Matrícula
+                                    </button>
                                 </div>
                             </div>
                         </t>
@@ -510,7 +565,7 @@
                                                     string="Reingressar Matrícula" 
                                                     type="object" 
                                                     class="oe_highlight" 
-                                                    attrs="{'invisible': [('status_do_certificado', 'not in', ['MATRÍCULA CANCELADA', 'FINALIZADO', 'EXPEDIDO'])]}">
+                                                    attrs="{'invisible': [('status_do_certificado', 'not in', ['MATRÍCULA CANCELADA', 'TRANCADO', 'FINALIZADO', 'EXPEDIDO'])]}">
                                             Reingressar Matrícula
                                             </button>
                                         </div>                                        
@@ -636,6 +691,23 @@
             </field>
         </record>
 
+        <!-- TIPO DE BLOQUEIO -->
+
+        <record id="action_tipo_bloqueio" model="ir.actions.act_window">
+            <field name="name">Tipo de Bloqueio</field>
+            <field name="res_model">tipo.de.bloqueio</field>
+            <field name="view_mode">tree,form</field>
+            <field name="view_id" ref="view_tipo_cancelamento_tree"/>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Crie seu primeiro tipo de justicativa de Trancamento de curso
+                </p>
+                <p>
+                    adicione os tipos de trancamento de curso
+                </p>
+            </field>
+        </record>
+
         <!-- TIPO DE INGRESSO -->
 
         <record id="action_tipo_ingresso" model="ir.actions.act_window">
@@ -709,6 +781,25 @@
             <field name="active" eval="True"/>
         </record>
 
+        <!--Wizard dos botões de Trancar Matrícula -->
+        <record id="view_matricula_status_change_wizard_block_form" model="ir.ui.view">
+            <field name="name">matricula.status.change.wizard.block.form</field>
+            <field name="model">matricula.status.change.block.wizard</field>
+            <field name="arch" type="xml">
+                <form>
+                    <group>
+                        <field name="matricula_id" invisible="1"/>
+                        <field name="new_status"/>
+                        <field name="tipo_de_block" attrs="{'required': [('new_status', '=', 'TRANCADO')]}"/>
+                        <span><strong>justificativa: </strong></span><field name="justificativa" nolabel="1"/>
+                    </group>
+                    <footer>
+                        <button string="Trancar Matrícula"  type="object" class="btn-primary" name="change_status"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
         <!--Wizard dos botões de cancelamento -->
         <record id="view_matricula_status_change_wizard_form" model="ir.ui.view">
             <field name="name">matricula.status.change.wizard.form</field>
@@ -731,10 +822,13 @@
         <!-- Itens de menu das views -->
         <menuitem id="fgmed_cursos_e_matriculas" name="Cursos e Matrículas" sequence="1" groups="base.group_system"/>
         <menuitem id="fgmed_cursos_menu" parent="fgmed_cursos_e_matriculas" name="Cursos" action="action_informa_cursos" groups="base.group_system" />
-        <menuitem id="fgmed_disciplinas_menu" parent="fgmed_cursos_e_matriculas" name="Disciplinas" action="action_informa_disciplinas" groups="base.group_system" />        <menuitem id="fgmed_matriculas" parent="fgmed_cursos_e_matriculas" name="Matrículas" action="action_informa_matricula" groups="base.group_system" />
+        <menuitem id="fgmed_disciplinas_menu" parent="fgmed_cursos_e_matriculas" name="Disciplinas" action="action_informa_disciplinas" groups="base.group_system" />        
+        <menuitem id="fgmed_matriculas" parent="fgmed_cursos_e_matriculas" name="Matrículas" action="action_informa_matricula" groups="base.group_system" />
         <menuitem id="menu_info_cursos_menu" parent="fgmed_cursos_e_matriculas" name="Quadro de Alunos" action="action_info_cursos"  groups="base.group_system" sequence="10"/>
         <menuitem id="fgmed_tipo_ingresso_menu" parent="fgmed_cursos_e_matriculas" name="Tipo de Ingresso" action="action_tipo_ingresso" groups="base.group_system" />
         <menuitem id="fgmed_tipo_cancelamento_menu" parent="fgmed_cursos_e_matriculas" name="Tipo de cancelamento" action="action_tipo_cancelamento" groups="base.group_system" />
+        <menuitem id="fgmed_tipo_bloqueio_menu" parent="fgmed_cursos_e_matriculas" name="Tipo de Bloqueio" action="action_tipo_bloqueio" groups="base.group_system" />
         <menuitem id="fgmed_grupo_disciplina" parent="fgmed_cursos_e_matriculas" name="Grupo de disciplinas" action="action_grupo_disciplina" groups="base.group_system" />    
+    
     </data>
 </odoo>

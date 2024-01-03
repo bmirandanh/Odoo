@@ -26,8 +26,8 @@ class InformaMatricula(models.Model):
         ('EM PRAZO EXCEDIDO','EM PRAZO EXCEDIDO'),
         ('EXPEDIDO','EXPEDIDO'),
         ('MATRÍCULA CANCELADA','MATRÍCULA CANCELADA'),
-        ],
-        compute='_compute_status_certificado', default="CURSANDO", store=True, tracking=True
+        ('TRANCADO','TRANCADO'),
+        ], default="CURSANDO", store=True, tracking=True
     )
     regiao = fields.Selection([
         ('AVA','AVA'),
@@ -47,14 +47,16 @@ class InformaMatricula(models.Model):
     data_prorrogacao = fields.Date(string="Data de Prorrogação", tracking=True)
     tipo_de_ingresso = fields.Many2one('tipo.de.ingresso', string="Tipo de ingresso", required=True, tracking=True)
     tipo_de_cancelamento = fields.Many2one('tipo.de.cancelamento', string="Tipo de Cancelamento", tracking=True)
+    tipo_de_block = fields.Many2one('tipo.de.bloqueio', string="Tipo de Bloqueio", tracking=True)
     color_tipo_ingresso = fields.Integer(related='tipo_de_ingresso.color', string='Color Index from Tipo de Ingresso')
     color_tipo_cancelamento = fields.Integer(related='tipo_de_cancelamento.color', string='Color Index from Tipo de Cancelamento')
+    color_tipo_Bloqueio= fields.Integer(related='tipo_de_cancelamento.color', string='Color Index from Tipo de Bloqueio')
     numero_matricula = fields.Char(string="Número de Matrícula", readonly=True)
     matricula_aluno = fields.Char(related='nome_do_aluno.matricula_aluno', string="Matrícula do Aluno", readonly=True)
     cod_curso = fields.Char(compute='_compute_cod_curso', string="Código do Curso", tracking=True, store=True)
     grupo_disciplina_id = fields.Many2one('informa.grupo_disciplina', string='Grupo de Disciplina')
     disciplina_ids = fields.Many2many('informa.disciplina', string='Disciplinas')
-    disciplina_nomes = fields.Char(compute='_compute_disciplina_Nome das Disciplinas')
+    disciplina_nomes = fields.Char(compute='_compute_disciplina_nomes')
     last_sequence_sent = fields.Integer(string="Sequência já enviada", default=-1, help="Armazena a sequência do grupo de disciplinas que foi enviada por último.")
     current_sequence = fields.Integer(string="Sequência atual", default=0, help="Armazena a sequência do grupo atual de disciplinas.")
     dias_passados = fields.Integer(string="auxiliar dos dias passados", default=0)
@@ -88,6 +90,8 @@ class InformaMatricula(models.Model):
                 record.prazo_exp_certf_dias = "Expedido"
             elif record.status_do_certificado == 'MATRÍCULA CANCELADA':
                 record.prazo_exp_certf_dias = "Matrícula Cancelada"
+            elif record.status_do_certificado == 'TRANCADO':
+                record.prazo_exp_certf_dias = "Matrícula Trancada"                
             elif record.status_do_certificado == 'FINALIZADO':
                 record.prazo_exp_certf_dias = "Curso Finalizado"
             else:
@@ -659,4 +663,17 @@ class InformaMatricula(models.Model):
             'res_model': 'matricula.status.change.wizard',
             'target': 'new',
             'context': context,
-        }           
+        }
+        
+    def action_open_status_change_block_wizard(self):
+        context = {
+            'default_matricula_id': self.id,
+        }
+        return {
+            'name': _('Trancar Matrícula'),
+            'type': 'ir.actions.act_window',
+            'view_mode': 'form',
+            'res_model': 'matricula.status.change.block.wizard',
+            'target': 'new',
+            'context': context,
+        }            

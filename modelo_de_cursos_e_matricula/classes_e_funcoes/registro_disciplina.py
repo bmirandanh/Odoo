@@ -23,8 +23,8 @@ class RegistroDisciplina(models.Model):
     matricula_id = fields.Many2one('informa.matricula', string='Matricula', tracking=True)
     disciplina_id = fields.Many2one('informa.disciplina', string='Disciplina', tracking=True)
     disciplina_media = fields.Float(compute='_compute_disciplina_media', string='Média da Disciplina', tracking=True)
-    nota = fields.Float(string='Nota', tracking=True)
-    status = fields.Selection([('aprovado', 'Aprovado'), ('reprovado', 'Reprovado'), ('aproveitamento (aprovado)', 'Aproveitamento (Aprovado)'), ('aproveitamento (reprovado)', 'Aproveitamento (Reprovado)')], string='Status', compute='_compute_status', store=True, tracking=True)
+    nota = fields.Float(string='Nota', default=lambda self: self._get_default_nota(), tracking=True)
+    status = fields.Selection([('aprovado', 'Aprovado'), ('reprovado', 'Reprovado'), ('aproveitamento (aprovado)', 'Aproveitamento'), ('aproveitamento (reprovado)', 'Não Aproveitado'), ('Em Aguardo', 'Em Aguardo')], string='Status', compute='_compute_status', store=True, tracking=True)
     allowed_disciplinas = fields.Many2many('informa.disciplina', compute='_compute_allowed_disciplinas', tracking=True)
     sequencia_disciplina = fields.Integer(string='Sequência', compute='_compute_sequencia_disciplina', tracking=True)
     todas_notas_dadas = fields.Boolean(string='Todas Notas Dadas', compute='_compute_todas_notas_dadas', tracking=True)
@@ -33,6 +33,10 @@ class RegistroDisciplina(models.Model):
     ('normal', '0-10'),
     ('porcentagem', '0-100 (%)')
     ], string='Formato da Nota', default='normal', tracking=True)
+    
+    def _get_default_nota(self):
+        # Retorna None ou False para tentar ter um valor vazio
+        return None
         
     def update_grade_from_moodle(self):
         for record in self:
@@ -251,18 +255,21 @@ class RegistroDisciplina(models.Model):
     @api.depends('nota', 'disciplina_media', 'matricula_id.overlapping_disciplines_ids', 'matricula_id.allow_grade_editing')
     def _compute_status(self):
         for record in self:
-            # Verifique se o campo allow_grade_editing está marcado na matrícula relacionada
+            # Primeiro, verifica se a nota está vazia
+            if record.nota == 0.00:
+                record.status = 'Em Aguardo'
+                continue  # Vai para a próxima iteração do loop
+
+            # Verificação de allow_grade_editing
             if not record.matricula_id.allow_grade_editing:
-                # Se allow_grade_editing NÃO está marcado, então verifica se a disciplina está na lista de sobrepostas.
                 if record.matricula_id.overlapping_disciplines_ids and record.disciplina_id in record.matricula_id.overlapping_disciplines_ids:
-                    # Decida entre Aproveitamento (Aprovado) ou Aproveitamento (Reprovado) baseado na nota e na média.
                     if record.nota >= record.disciplina_media:
                         record.status = 'aproveitamento (aprovado)'
                     else:
                         record.status = 'aproveitamento (reprovado)'
-                    continue  # Vai para a próxima iteração do loop, sem executar o código abaixo.
+                    continue
 
-            # Se allow_grade_editing está marcado ou se a disciplina não está na lista de sobrepostas, usa o método padrão.
+            # Método padrão para calcular o status
             record.status = self._get_student_status(record.nota, record.disciplina_media)
 
     def _get_student_status(self, nota, media):

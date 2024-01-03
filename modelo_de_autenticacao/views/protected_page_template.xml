@@ -2,16 +2,21 @@
     <template id="protected_page_template" name="Protected Page">
         <t t-call="website.layout">
             <div id="wrap" class="oe_structure oe_empty">
-                <div class="container mt-5">
-                    <div>
-                        <h1 class="display-4">Página Protegida</h1>
-                        <p class="lead">Esta é uma página protegida. Se você está vendo esta mensagem, você passou pela autenticação de dois fatores com sucesso.</p>
-                        <p>Conteúdo adicional e links podem ser adicionados aqui.</p>
-                        <p class="lead">
-                            <a class="btn btn-primary btn-lg" href="#" role="button">Ação Principal</a>
-                        </p>
+                <section class="layout">
+                    <div class="step-container">
+                        <div class="step step1">
+                            <h2> - Histórico - </h2>
+                            <a class="btn btn-step" href="/academic_record" role="button">Exibir</a>
+                        </div>
+                        <div class="step step2">
+                            <h2> - Moodle - </h2>
+                            <a class="btn btn-step" href="/moodle_access" role="button">Exibir</a>
+                        </div>
+                        <div class="step step3">
+                            <a class="btn btn-step" href="/web/2flogin" role="button">Sair</a>
+                        </div>
                     </div>
-                </div>
+                </section>
             </div>
         </t>
     </template>

@@ -9,3 +9,5 @@ from . import tipo_cancelamento
 from . import matricula_status_change_wizard
 from . import matricula_reingresso_wizard
 from . import matricula_confirmation_wizard
+from . import tipo_bloqueio
+from . import matricula_status_change_block_wizard

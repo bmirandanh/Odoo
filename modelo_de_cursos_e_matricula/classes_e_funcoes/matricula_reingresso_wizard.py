@@ -24,7 +24,7 @@ class MatriculaReingressoWizard(models.Model):
 
     def confirm_reingresso(self):
         if self.matricula_id:
-            allowed_statuses = ['MATRÍCULA CANCELADA', 'FINALIZADO', 'EXPEDIDO']
+            allowed_statuses = ['MATRÍCULA CANCELADA', 'FINALIZADO', 'EXPEDIDO', 'TRANCADO']
             if self.matricula_id.status_do_certificado not in allowed_statuses:
                 raise ValidationError(_("Não é possível realizar re-ingresso com o status '%s'.") % self.matricula_id.status_do_certificado)
 
