@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>        
+        
+
+        <!--Wizard dos botões de cancelamento -->
+        <record id="view_matricula_status_change_wizard_form" model="ir.ui.view">
+            <field name="name">matricula.status.change.wizard.form</field>
+            <field name="model">matricula.status.change.wizard</field>
+            <field name="arch" type="xml">
+                <form>
+                    <group>
+                        <field name="matricula_id" invisible="1"/>
+                        <field name="new_status"/>
+                        <field name="tipo_de_cancelamento" attrs="{'required': [('new_status', '=', 'MATRÍCULA SUSPENSA')]}"/>
+                        <span><strong>justificativa: </strong></span><field name="justificativa" nolabel="1"/>
+                    </group>
+                    <footer>
+                        <button string="Cancelar Matrícula"  type="object" class="btn-primary" name="change_status"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+        <!-- TIPO DE RE-INGRESSO -->
+
+        <record id="view_matricula_reingresso_wizard_form" model="ir.ui.view">
+            <field name="name">matricula.reingresso.wizard.form</field>
+            <field name="model">matricula.reingresso.wizard</field>
+            <field name="arch" type="xml">
+                <form>
+                    <group>
+                        <field name="matricula_id"/>
+                        <field name="data_inscricao" />
+                        <field name="tipo_de_ingresso"/>
+                    </group>
+                    <footer>
+                        <button string="Confirmar" type="object" name="confirm_reingresso" class="btn-primary"/>
+                        <button string="Cancelar" class="btn-secondary" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+    </data>
+</odoo>

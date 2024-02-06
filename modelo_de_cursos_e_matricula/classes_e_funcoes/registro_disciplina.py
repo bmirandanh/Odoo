@@ -68,19 +68,75 @@ class RegistroDisciplina(models.Model):
                             record.nota = float(grade_str.replace(",", "."))
                         except ValueError:
                             _logger.error('Valor de nota inválido: %s', grade_str)
-                    else:
-                        record.nota = 6.0
-                        _logger.info('Nota padrão atribuída para grade_str vazio ou "-": %s', grade_str)
                     break
-    
+                
+    def has_no_grade_as_dash(self, course_id, user_id):
+        url = "https://avadev.medflix.club/webservice/rest/server.php"
+        params = {
+            "wstoken": "c502156af2c00a4b3e9e5d878922be46",
+            "wsfunction": "gradereport_user_get_grade_items",
+            "courseid": course_id,
+            "userid": user_id,
+            "moodlewsrestformat": "json"
+        }
+        response = requests.get(url, params=params)
+        data = response.json()
+
+        if 'usergrades' in data:
+            for grade_item in data['usergrades'][0]['gradeitems']:
+                if grade_item['gradeformatted'] == "-":
+                    return True
+        return False   
+
+    def get_moodle_course_id_int(self, course_id_value): 
+        url = "https://avadev.medflix.club/webservice/rest/server.php"
+        
+        if course_id_value is None:
+            _logger.error('ID do curso não fornecido')
+            return None
+        
+        _logger.info('ID do curso: %s', course_id_value)
+        
+        params = {
+            "wstoken": "c502156af2c00a4b3e9e5d878922be46",
+            "wsfunction": "core_course_get_courses_by_field",
+            "field": "idnumber",
+            "value": course_id_value,
+            "moodlewsrestformat": "json"
+        }
+        response = requests.get(url, params=params)
+        data = response.json()  
+        _logger.info('Resposta no Moodle: %s', response.text)
+        
+        params = {
+            "wstoken": "c502156af2c00a4b3e9e5d878922be46",
+            "wsfunction": "core_course_get_courses_by_field",
+            "field": "idnumber",
+            "value": int(course_id_value),  # Converte o valor para inteiro
+            "moodlewsrestformat": "json"
+        }
+        response = requests.get(url, params=params)
+        data = response.json()  
+        _logger.info('Resposta no Moodle: %s', response.text)
+
+        if 'courses' in data and len(data['courses']) > 0:
+            return data['courses'][0]['id']
+        else:
+            return None 
+           
     def action_update_all_grades_from_moodle(self):
         for record in self:
             record.update_grade_from_moodle()
-    
+                    
     def update_all_students_grades_from_moodle(self):
         all_records = self.search([])  # isso buscará todos os registros do modelo 'informa.registro_disciplina'
         for record in all_records:
-            record.update_grade_from_moodle()
+            curso_id = self.curso_id.id
+            aluno_id = self.aluno_id.id
+            moodle_curso_id = self.get_moodle_course_id_int(curso_id)
+            moodle_aluno_id = self.get_moodle_user_id(aluno_id)
+            if moodle_curso_id and moodle_aluno_id and not self.has_no_grade_as_dash(moodle_curso_id, moodle_aluno_id):
+                record.update_grade_from_moodle()
 
     def action_open_form_view(self):
         self.ensure_one()
@@ -175,7 +231,7 @@ class RegistroDisciplina(models.Model):
 
         for matricula in matriculas:
             # A lógica de liberação das disciplinas será semelhante à nossa função anterior
-            current_group = self.env['informa.grupo_disciplina'].search([('sequence', '=', matricula.grupo_disciplina_id.current_sequence)], limit=1)
+            current_group = self.env['informa.curriculo.variant'].search([('sequence', '=', matricula.grupo_disciplina_id.current_sequence)], limit=1)
 
             # Se não encontrou um grupo ou já liberou todas as sequências, retorne
             if not current_group:
@@ -237,6 +293,17 @@ class RegistroDisciplina(models.Model):
 
     def write(self, values):
         result = super(RegistroDisciplina, self).write(values)
+        status_antigo = self.status
+        
+        if 'status' in values and values['status'] != 'aprovado' and status_antigo == 'aprovado':
+            # Seu código para obter o Moodle user_id e course_id
+            moodle_curso_id = self.env['informa.matricula'].get_moodle_course_id(self.curso_id.id)
+            moodle_aluno_id = self.env['informa.matricula'].get_moodle_user_id(self.aluno_id.id)
+
+            if moodle_curso_id and moodle_aluno_id:
+                # Re-inscrever o aluno no curso
+                self.env['informa.matricula'].enrol_user_to_course(moodle_aluno_id, moodle_curso_id)
+                
         # Se 'nota' está entre os valores a serem atualizados e 'allow_grade_editing' é verdadeiro
         if 'nota' in values:
             for record in self:
@@ -291,9 +358,9 @@ class RegistroDisciplina(models.Model):
         for record in self:
             if record.curso_id and record.disciplina_id:
                 # Procura pelo grupo de disciplinas que contém esta disciplina e está associado ao curso especificado
-                grupo = self.env['informa.grupo_disciplina'].search([
+                grupo = self.env['informa.curriculo.variant'].search([
                     ('disciplina_ids', 'in', [record.disciplina_id.id]),
-                    ('id', 'in', record.curso_id.grupo_disciplina_id.ids)
+                    ('id', 'in', record.curso_id.variant_curriculo_id.ids)
                 ], limit=1)
                 
                 # Use a sequência desse grupo
@@ -331,6 +398,6 @@ class RegistroDisciplina(models.Model):
 
     # Retorna a sequência da disciplina para um determinado registro
     def _get_sequencia_disciplina(self, record):
-        grupo = self.env['informa.grupo_disciplina'].search([('disciplina_ids', 'in', [record.disciplina_id.id])], limit=1)
+        grupo = self.env['informa.curriculo.variant'].search([('disciplina_ids', 'in', [record.disciplina_id.id])], limit=1)
         return grupo.sequence if grupo else 0
     

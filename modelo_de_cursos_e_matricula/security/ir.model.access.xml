@@ -1,15 +1,6 @@
 <odoo>
   <data>
-
-    <!-- Definição do modelo cursos e matriculas -->
-    <record id="model_cursos_e_matriculas" model="ir.model">
-      <field name="name">Cursos e Matriculas</field>
-      <field name="model">x_modelo_de_cursos_e_matricula.model_cursos_e_matriculas</field>
-      <field name="state">manual</field>
-      <field name="transient" eval="False"/>
-      <field name="field_id" eval="[(6, 0, [])]"/>
-    </record>
-
+  
     <record id="group_cursos_e_matriculas" model="res.groups">
       <field name="name">Grupo de Cursos e Matrículas</field>
       <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>

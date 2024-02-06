@@ -19,11 +19,98 @@ class MatriculaReingressoWizard(models.Model):
 
     matricula_id = fields.Many2one('informa.matricula', string="Matrícula", readonly=True)
     tipo_de_ingresso = fields.Many2one('tipo.de.ingresso', string="Tipo de Ingresso", required=True)
-    justificativa = fields.Text(string="Justificativa", required=True)
     data_inscricao = fields.Date(string="Data de Inscrição", required=True, default=fields.Date.today())
+    
+    def get_moodle_course_id_int(self, course_id_value): 
+        url = "https://avadev.medflix.club/webservice/rest/server.php"
+        
+        if course_id_value is None:
+            _logger.error('ID do curso não fornecido')
+            return None
+        
+        _logger.info('ID do curso: %s', course_id_value)
+        
+        params = {
+            "wstoken": "c502156af2c00a4b3e9e5d878922be46",
+            "wsfunction": "core_course_get_courses_by_field",
+            "field": "idnumber",
+            "value": course_id_value,
+            "moodlewsrestformat": "json"
+        }
+        response = requests.get(url, params=params)
+        data = response.json()  
+        _logger.info('Resposta no Moodle: %s', response.text)
+
+        if 'courses' in data and len(data['courses']) > 0:
+            return data['courses'][0]['id']
+        else:
+            return None
+        
+    def get_moodle_user_id(self, user_id):
+        url = "https://avadev.medflix.club/webservice/rest/server.php"
+        _logger.info('user_id: %s', user_id)
+        params = {
+            "wstoken": "c502156af2c00a4b3e9e5d878922be46",
+            "wsfunction": "core_user_get_users_by_field",
+            "field": "idnumber",
+            "values[0]": user_id,
+            "moodlewsrestformat": "json"
+        }
+        response = requests.get(url, params=params)
+        data = response.json()
+        _logger.info('Resposta no Moodle: %s', response.text)
+        
+        if data and len(data) > 0:
+            return data[0]['id']
+        else:
+            return None
+
+    def enrol_user_to_course(self, user_id, course_id):
+        # URL base para o serviço web do Moodle
+        MOODLE_URL = "https://avadev.medflix.club/webservice/rest/server.php"
+        
+        # Parâmetros para a requisição
+        params = {
+            "wstoken": "c502156af2c00a4b3e9e5d878922be46",
+            "wsfunction": "enrol_manual_enrol_users",
+            "moodlewsrestformat": "json",
+            "enrolments[0][roleid]": 5,
+            "enrolments[0][userid]": user_id,
+            "enrolments[0][courseid]": course_id
+        }
+        
+        # Fazendo a requisição POST
+        response = requests.post(MOODLE_URL, params=params)
+            
+        if response.status_code == 200:
+            _logger.error('Resposta no Moodle: %s', response.text)
+            return response.json()
+        else:
+            _logger.error('Erro ao inscrever usuário no curso no Moodle: %s', response.text)
+            raise UserError(_('Erro ao inscrever usuário no curso no Moodle! Houve algum problema na inscrição.'))        
 
     def confirm_reingresso(self):
+
         if self.matricula_id:
+            matricula = self.matricula_id
+
+            # Busca a instância correspondente em 'informa.registro_disciplina'
+            registro_disciplina = self.env['informa.registro_disciplina'].search([
+                ('curso_id', '=', matricula.curso.id),
+                ('aluno_id', '=', matricula.nome_do_aluno.id)
+            ], limit=1)
+
+            # Verifica se encontrou a instância
+            if not registro_disciplina:
+                raise ValidationError(_("Registro de disciplina não encontrado para o aluno da matrícula."))
+
+            # Agora, você pode usar registro_disciplina para obter curso_id e aluno_id
+            curso_id = registro_disciplina.curso_id.id
+            aluno_id = registro_disciplina.aluno_id.id
+
+            moodle_curso_id = self.get_moodle_course_id_int(curso_id)
+            moodle_aluno_id = self.get_moodle_user_id(aluno_id)
+            
             allowed_statuses = ['MATRÍCULA CANCELADA', 'FINALIZADO', 'EXPEDIDO', 'TRANCADO']
             if self.matricula_id.status_do_certificado not in allowed_statuses:
                 raise ValidationError(_("Não é possível realizar re-ingresso com o status '%s'.") % self.matricula_id.status_do_certificado)
@@ -32,9 +119,7 @@ class MatriculaReingressoWizard(models.Model):
             disciplinas = self.env['informa.registro_disciplina'].search([('matricula_id', '=', self.matricula_id.id)])
             for disciplina in disciplinas:
                 disciplina.nota = 0.0
-
-            self.matricula_id.message_post(body=_("Justificativa para re-ingresso: %s") % (self.justificativa,))
-
             self.matricula_id.status_do_certificado = 'CURSANDO'
             self.matricula_id.inscricao_ava = self.data_inscricao
             self.matricula_id.tipo_de_ingresso = self.tipo_de_ingresso
+            self.enrol_user_to_course(moodle_aluno_id, moodle_curso_id)

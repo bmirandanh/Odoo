@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <!--Quadro de informação-->
+        <record id="action_info_cursos" model="ir.actions.act_window">
+            <field name="name">Quadro de Alunos</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">informa.matricula</field>
+            <field name="context">{'group_by': 'curso', 'default_from_specific_menu': True}</field>
+            <field name="view_mode">kanban,tree,form</field>
+            <field name="view_id" ref="view_matricula_kanban"/>
+        </record>
+
+    </data>
+</odoo>

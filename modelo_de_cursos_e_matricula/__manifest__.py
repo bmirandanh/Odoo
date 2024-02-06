@@ -12,9 +12,12 @@
         'account',
     ],
     'data': [
+        'views/auto_cron.xml',
         'views/cursos_e_matriculas.xml',
         'views/campo_aluno.xml',
         'views/confirmacao_disciplina.xml',
+        'views/quadro_de_informacoes.xml',
+        'views/wizards.xml',
         'security/ir.model.access.xml',
         'security/ir.model.access.csv',
     ],

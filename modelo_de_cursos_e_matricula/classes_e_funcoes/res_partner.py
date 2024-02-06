@@ -16,10 +16,10 @@ _logger = logging.getLogger(__name__)
 class ResPartner(models.Model):
     _inherit = 'res.partner'
     
-    aluno = fields.Boolean(string="Aluno ?", default=False) 
-    matricula_aluno = fields.Char(string="Matrícula do Aluno", readonly=True)
-    curso_id = fields.Many2one('informa.curso', string='Curso Atual')
-    matriculas_ids = fields.One2many('informa.matricula', 'nome_do_aluno', string="Matrículas do Aluno")
+    aluno = fields.Boolean(string="Aluno ?", default=False, tracking=True) 
+    matricula_aluno = fields.Char(string="Matrícula do Aluno", readonly=True, tracking=True)
+    curso_id = fields.Many2one('informa.cursos', string='Curso Atual, tracking=True')
+    matriculas_ids = fields.One2many('informa.matricula', 'nome_do_aluno', string="Matrículas do Aluno", tracking=True)
     
     @api.onchange('aluno')
     def _onchange_aluno(self):
@@ -46,7 +46,7 @@ class ResPartner(models.Model):
         # Determinar o semestre baseado no mês atual
         month = fields.Date.today().month
         semester = '01' if month <= 6 else '02'
-        # Gerar os últimos 7 dígitos aleatoriamente
-        last_digits = ''.join([str(random.randint(0, 9)) for _ in range(7)])
+        # Gerar os últimos 4 dígitos aleatoriamente
+        last_digits = ''.join([str(random.randint(0, 9)) for _ in range(4)])
         return f"{current_year}{semester}{last_digits}"
     

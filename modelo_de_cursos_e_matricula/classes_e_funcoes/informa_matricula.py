@@ -15,6 +15,9 @@ IS_TEST_ENVIRONMENT = False
 _logger = logging.getLogger(__name__)
 
 class InformaMatricula(models.Model):
+    """
+    Esta classe representa as matrículas dos alunos em cursos.
+    """
     _name = 'informa.matricula'
     _inherit = ["mail.thread", "mail.activity.mixin"]
     _description = 'Matriculas'
@@ -25,8 +28,7 @@ class InformaMatricula(models.Model):
         ('FINALIZADO','FINALIZADO'),
         ('EM PRAZO EXCEDIDO','EM PRAZO EXCEDIDO'),
         ('EXPEDIDO','EXPEDIDO'),
-        ('MATRÍCULA CANCELADA','MATRÍCULA CANCELADA'),
-        ('TRANCADO','TRANCADO'),
+        ('MATRICULA SUSPENSA','MATRICULA SUSPENSA'),
         ], default="CURSANDO", store=True, tracking=True
     )
     regiao = fields.Selection([
@@ -46,15 +48,13 @@ class InformaMatricula(models.Model):
     prorrogacao = fields.Boolean(string="Prorrogação", tracking=True)
     data_prorrogacao = fields.Date(string="Data de Prorrogação", tracking=True)
     tipo_de_ingresso = fields.Many2one('tipo.de.ingresso', string="Tipo de ingresso", required=True, tracking=True)
-    tipo_de_cancelamento = fields.Many2one('tipo.de.cancelamento', string="Tipo de Cancelamento", tracking=True)
-    tipo_de_block = fields.Many2one('tipo.de.bloqueio', string="Tipo de Bloqueio", tracking=True)
+    tipo_de_cancelamento = fields.Many2one('tipo.de.cancelamento', string="Tipo de Suspensão", tracking=True)
     color_tipo_ingresso = fields.Integer(related='tipo_de_ingresso.color', string='Color Index from Tipo de Ingresso')
-    color_tipo_cancelamento = fields.Integer(related='tipo_de_cancelamento.color', string='Color Index from Tipo de Cancelamento')
-    color_tipo_Bloqueio= fields.Integer(related='tipo_de_cancelamento.color', string='Color Index from Tipo de Bloqueio')
+    color_tipo_cancelamento = fields.Integer(related='tipo_de_cancelamento.color', string='Color Index from Tipo de Suspensão')
     numero_matricula = fields.Char(string="Número de Matrícula", readonly=True)
     matricula_aluno = fields.Char(related='nome_do_aluno.matricula_aluno', string="Matrícula do Aluno", readonly=True)
     cod_curso = fields.Char(compute='_compute_cod_curso', string="Código do Curso", tracking=True, store=True)
-    grupo_disciplina_id = fields.Many2one('informa.grupo_disciplina', string='Grupo de Disciplina')
+    grupo_disciplina_id = fields.Many2one('informa.curriculo', string='Grupo de Disciplina')
     disciplina_ids = fields.Many2many('informa.disciplina', string='Disciplinas')
     disciplina_nomes = fields.Char(compute='_compute_disciplina_nomes')
     last_sequence_sent = fields.Integer(string="Sequência já enviada", default=-1, help="Armazena a sequência do grupo de disciplinas que foi enviada por último.")
@@ -66,14 +66,49 @@ class InformaMatricula(models.Model):
     overlapping_matricula_ids = fields.Many2many('informa.matricula', 'informa_matricula_rel', 'matricula_id', 'overlap_id', string='Matrículas Sobrepostas', readonly=True)
     overlapping_matricula_descriptions = fields.Char(compute='_compute_overlapping_matriculas', string='Matrículas Sobrepostas', readonly=True)
     allow_grade_editing = fields.Boolean( string="Permitir Edição de Notas para Disciplinas Sobrepostas")
-    
+    variant_curriculo_id = fields.Many2one('informa.curriculo.variant', string='Variante do Currículo', domain="[('id', 'in', available_variants)]", store=True)
+    available_variants = fields.Many2many('informa.curriculo.variant', compute='_compute_available_variants')
+
+    @api.depends('curso')
+    def _compute_variant_curriculo_id(self):
+        """
+        Calcula a variante do currículo com base no curso selecionado.
+        """
+        for matricula in self:
+            matricula.variant_curriculo_id = matricula.curso.variant_curriculo_id
+            
+    @api.depends('grupo_disciplina_id')
+    def _compute_available_variants(self):
+        """
+        Calcula as variantes disponíveis com base no grupo de disciplinas selecionado.
+        """
+
+        for matricula in self:
+            matricula.available_variants = matricula.grupo_disciplina_id.variant_ids.ids if matricula.grupo_disciplina_id else []
+
+    @api.onchange('grupo_disciplina_id')
+    def _onchange_grupo_disciplina_id(self):
+        """
+        Atualiza o domínio do campo variant_curriculo_id com base no grupo de disciplinas selecionado.
+        """
+        if self.grupo_disciplina_id:
+            return {'domain': {'variant_curriculo_id': [('id', 'in', self.available_variants)]}}
+        else:
+            return {'domain': {'variant_curriculo_id': []}}
+        
     @api.depends('overlapping_matricula_ids')
     def _compute_overlapping_matriculas(self):
+        """
+        Calcula as descrições das matrículas sobrepostas.
+        """
         for record in self:
             descriptions = record.overlapping_matricula_ids.mapped('numero_matricula')
             record.overlapping_matricula_descriptions = ', '.join(descriptions)
                 
     def atualizar_status_dias_passados(self):
+        """
+        Atualiza o status dos dias passados para todas as matrículas.
+        """        
         _logger.info('Atualizar dias passados')
         matriculas = self.search([])  # Isso buscará todos os registros de 'informa.matricula'
         for matricula in matriculas:
@@ -156,12 +191,16 @@ class InformaMatricula(models.Model):
     # Quando os valores dos campos de um registro Disciplina são atualizados, esse método é chamado.
     def write(self, vals):
         _logger.info('Atualizando valores do registro InformaMatricula...')
+        status_antigo = self.status_do_certificado
         res = super().write(vals)  # Chamando o método da classe pai corretamente
        # self.update_moodle_information()
         _logger.info('Valores do registro InformaMatricula atualizados.')
+        if 'status_do_certificado' in vals and vals['status_do_certificado'] in ['TRANCADO', 'MATRÍCULA CANCELADA'] and status_antigo not in ['TRANCADO', 'MATRÍCULA CANCELADA']:
+            # Bloquear o acesso do aluno ao Moodle
+            self.block_access_to_moodle()
         return res
     
-    def get_moodle_course_id(self, d_data):
+    def get_moodle_course_id(self, d_data): 
         url = "https://avadev.medflix.club/webservice/rest/server.php"
         
         # Extrair o valor inteiro de d_data
@@ -177,6 +216,31 @@ class InformaMatricula(models.Model):
             "wsfunction": "core_course_get_courses_by_field",
             "field": "idnumber",
             "value": int(course_id_value),  # Converte o valor para inteiro
+            "moodlewsrestformat": "json"
+        }
+        response = requests.get(url, params=params)
+        data = response.json()  
+        _logger.info('Resposta no Moodle: %s', response.text)
+
+        if 'courses' in data and len(data['courses']) > 0:
+            return data['courses'][0]['id']
+        else:
+            return None
+        
+    def get_moodle_course_id_int(self, course_id_value): 
+        url = "https://avadev.medflix.club/webservice/rest/server.php"
+        
+        if course_id_value is None:
+            _logger.error('ID do curso não fornecido')
+            return None
+        
+        _logger.info('ID do curso: %s', course_id_value)
+        
+        params = {
+            "wstoken": "c502156af2c00a4b3e9e5d878922be46",
+            "wsfunction": "core_course_get_courses_by_field",
+            "field": "idnumber",
+            "value": course_id_value,
             "moodlewsrestformat": "json"
         }
         response = requests.get(url, params=params)
@@ -233,6 +297,64 @@ class InformaMatricula(models.Model):
             _logger.error('Erro ao inscrever usuário no curso no Moodle: %s', response.text)
             raise UserError(_('Erro ao inscrever usuário no curso no Moodle! Houve algum problema na inscrição.'))
 
+    def block_access_to_moodle(self, moodle_aluno_id, moodle_curso_id):
+        moodle_url = "https://avadev.medflix.club/webservice/rest/server.php"
+        token = "c502156af2c00a4b3e9e5d878922be46"
+        user_id = moodle_aluno_id
+        course_id = moodle_curso_id
+        
+        if user_id and course_id:
+            params = {
+                "wstoken": token,
+                "wsfunction": "enrol_manual_unenrol_users",
+                "moodlewsrestformat": "json",
+                "enrolments[0][userid]": user_id,
+                "enrolments[0][courseid]": course_id,
+                "enrolments[0][roleid]": 5,
+            }
+            response = requests.post(moodle_url, params=params)
+            if response.status_code == 200:
+                _logger.info('Usuário suspenso no Moodle: %s', response.text)
+            else:
+                _logger.error('Erro ao suspender usuário no Moodle: %s', response.text)
+                
+    def has_no_grade_as_dash(self, course_id, user_id):
+        url = "https://avadev.medflix.club/webservice/rest/server.php"
+        params = {
+            "wstoken": "c502156af2c00a4b3e9e5d878922be46",
+            "wsfunction": "gradereport_user_get_grade_items",
+            "courseid": course_id,
+            "userid": user_id,
+            "moodlewsrestformat": "json"
+        }
+        response = requests.get(url, params=params)
+        data = response.json()
+
+        if 'usergrades' in data:
+            for grade_item in data['usergrades'][0]['gradeitems']:
+                if grade_item['gradeformatted'] == "-":
+                    return True
+        return False
+                        
+    def check_approved_disciplinas(self):
+        registro_disciplinas = self.env['informa.registro_disciplina'].search([('status', '=', 'aprovado')])
+        for registro in registro_disciplinas:
+            curso_id = registro.curso_id.id
+            aluno_id = registro.aluno_id.id
+            moodle_curso_id = self.get_moodle_course_id_int(curso_id)
+            moodle_aluno_id = self.get_moodle_user_id(aluno_id)
+            if moodle_curso_id and moodle_aluno_id and not self.has_no_grade_as_dash(moodle_curso_id, moodle_aluno_id):
+                self.block_access_to_moodle(moodle_aluno_id, moodle_curso_id)
+
+    def check_reproved_disciplinas(self):
+        registro_disciplinas = self.env['informa.registro_disciplina'].search([('status', '=', 'reprovado')])
+        for registro in registro_disciplinas:
+            curso_id = registro.curso_id.id
+            aluno_id = registro.aluno_id.id
+            moodle_curso_id = self.get_moodle_course_id_int(curso_id)
+            moodle_aluno_id = self.get_moodle_user_id(aluno_id)
+            if moodle_curso_id and moodle_aluno_id and not self.has_no_grade_as_dash(moodle_curso_id, moodle_aluno_id):
+                self.block_access_to_moodle(moodle_aluno_id, moodle_curso_id)
     
     def get_released_groups(self, matricula_id):
         matricula = self.env['informa.matricula'].browse(matricula_id)
@@ -248,7 +370,7 @@ class InformaMatricula(models.Model):
         if not curso:
             return {'error': 'Curso não associado à matrícula.'}
 
-        grupos = curso.grupo_disciplina_id.sorted(key=lambda g: g.sequence)
+        grupos = curso.variant_curriculo_id.sorted(key=lambda g: g.sequence)
         current_sequence = matricula.current_sequence
         user_id = matricula.nome_do_aluno.id
         _logger.info('user_id = %s.', user_id)
@@ -454,11 +576,11 @@ class InformaMatricula(models.Model):
         all_matriculas = self.search([('nome_do_aluno', '=', aluno_id)])
         
         # Corrigindo a obtenção das disciplinas
-        new_disciplinas_from_groups = self.env['informa.cursos'].browse(curso_id).grupo_disciplina_id.mapped('disciplina_ids')
+        new_disciplinas_from_groups = self.env['informa.cursos'].browse(curso_id).variant_curriculo_id.mapped('disciplina_ids')
         
         overlapping_courses = []
         for matricula in all_matriculas:
-            common_disciplinas = new_disciplinas_from_groups & matricula.curso.grupo_disciplina_id.mapped('disciplina_ids')
+            common_disciplinas = new_disciplinas_from_groups & matricula.curso.variant_curriculo_id.mapped('disciplina_ids')
             if common_disciplinas:
                 for disciplina in common_disciplinas:
                     overlapping_courses.append((disciplina.id, disciplina.name, matricula.id, matricula.numero_matricula))
@@ -574,7 +696,7 @@ class InformaMatricula(models.Model):
     def compute_allowed_disciplinas(self, curso_id):
         # Buscar todas as disciplinas associadas aos grupos de disciplinas do curso selecionado
         disciplinas = self.env['informa.disciplina']
-        for grupo in curso_id.grupo_disciplina_id:
+        for grupo in curso_id.variant_curriculo_id:
             disciplinas |= grupo.disciplina_ids
         return disciplinas
                 
@@ -664,16 +786,4 @@ class InformaMatricula(models.Model):
             'target': 'new',
             'context': context,
         }
-        
-    def action_open_status_change_block_wizard(self):
-        context = {
-            'default_matricula_id': self.id,
-        }
-        return {
-            'name': _('Trancar Matrícula'),
-            'type': 'ir.actions.act_window',
-            'view_mode': 'form',
-            'res_model': 'matricula.status.change.block.wizard',
-            'target': 'new',
-            'context': context,
-        }            
+    

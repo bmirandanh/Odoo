@@ -15,7 +15,7 @@
                     <field name="name"/>
                     <field name="tempo_de_conclusao"/>
                     <field name="cod_curso"/>
-                    <field name="grupo_disciplina_id" widget="many2many_tags" context="{'default_curso_ids': active_id}" required="1"/>
+                    <field name="curriculo_id"  context="{'default_curso_ids': active_id}" required="1"/>
                 </tree>
             </field>
         </record>
@@ -48,24 +48,40 @@
                     <field name="disciplina_id"/>
                     <field name="nota" widget="nota" attrs="{'readonly': [('allow_grade_editing', '=', False)]}" avg="Média de Notas"/>
                     <field name="disciplina_media" widget="nota" readonly="1"/>
-                    <field name="status" readonly="1"/>
+                    <field name="status" attrs="{'readonly': [('allow_grade_editing', '=', False)]}"/>
                     <field name="sequencia_disciplina" readonly="1"/>
                     <field name="allow_grade_editing" invisible="1"/>
                 </tree>
             </field>
         </record>
 
-        <!-- GRUPO DE DISCIPLINAS -->
+        <!-- CURRÍCULO -->
         
-        <record id="view_grupo_disciplina_tree" model="ir.ui.view">
-            <field name="name">informa.grupo_disciplina.tree</field>
-            <field name="model">informa.grupo_disciplina</field>
+        <record id="view_curriculo_tree" model="ir.ui.view">
+            <field name="name">informa.curriculo.tree</field>
+            <field name="model">informa.curriculo</field>
             <field name="arch" type="xml">
                 <tree string="Grupos de Disciplinas">
                     <field name="name"/>
-                    <field name="disciplina_ids" widget="many2many_tags"/>
-                    <field name="cod_grup_disciplina" string="Código único do Grupo"/>
-                    <field name="days_to_release" string="Dias para liberar o conteúdo"/>
+                    <field name="cod_curriculo" string="Código único do Grupo"/>
+                </tree>
+            </field>
+        </record>
+
+        <!-- Versão de CURRÍCULO -->
+        
+        <record id="view_curriculo_tree" model="ir.ui.view">
+            <field name="name">informa.curriculo.variant.tree</field>
+            <field name="model">informa.curriculo.variant</field>
+            <field name="arch" type="xml">
+                <tree string="Variantes de Currículo">
+                    <field name="name"/>
+                    <field name="create_date" string="data de criação"/>
+                    <field name="disciplina_ids"/>
+                    <field name="variation_number"/>
+                    <field name="curriculo_id"/>
+                    <field name="days_to_release"/>
+                    <field name="sequence"/>
                 </tree>
             </field>
         </record>
@@ -82,7 +98,7 @@
                     <field name="status_do_certificado"/>
                     <field name="regiao"/>
                     <field name="tipo_de_ingresso"/>
-                    <field name="tipo_de_cancelamento" attrs="{'invisible': [('status_do_certificado', '!=', 'MATRÍCULA CANCELADA')]}"/>
+                    <field name="tipo_de_cancelamento" attrs="{'invisible': [('status_do_certificado', '!=', 'MATRÍCULA SUSPENSÃO')]}"/>
                     <field name="inscricao_ava"/>
                     <field name="email"/>
                     <field name="numero_de_modulo"/>
@@ -117,31 +133,15 @@
             <field name="name">tipo.de.cancelamento.tree</field>
             <field name="model">tipo.de.cancelamento</field>
             <field name="arch" type="xml">
-                <tree string="Tipo de Cancelamento">
+                <tree string="Tipo de Suspensão">
                     <field name="nome"/>
                     <field name="descricao"/>
                     <field name="color" widget="color_picker"/>
                 </tree>
             </field>
         </record>
-
-        <!-- Tipo de Cancelamento -->
-
-        <record id="view_tipo_bloqueio_tree" model="ir.ui.view">
-            <field name="name">tipo.de.bloqueio.tree</field>
-            <field name="model">tipo.de.bloqueio</field>
-            <field name="arch" type="xml">
-                <tree string="Tipo de Justificativa de Trancamento de curso">
-                    <field name="nome"/>
-                    <field name="descricao"/>
-                    <field name="color" widget="color_picker"/>
-                </tree>
-            </field>
-        </record>
-
 
         <!-- Form das View -->
-
 
         <!-- CURSOS -->
 
@@ -155,7 +155,8 @@
                             <field name="name"/>
                             <field name="cod_curso"/>
                             <field name="formato_nota"/>
-                            <field name="grupo_disciplina_id" widget="many2many_tags" context="{'default_curso_ids': active_id}" options="{'no_create': True}" required="1"/>
+                            <field name="curriculo_id" context="{'default_curso_ids': active_id}" options="{'no_create': True}" required="1"/>
+                            <field name="variant_curriculo_id" domain="[('curriculo_id', '=', curriculo_id)]"/>
                             <field name="tempo_de_conclusao"/>
                         </group>
                         <notebook>
@@ -234,24 +235,52 @@
             </field>
         </record>
 
-        <!-- GRUPO DE DISCIPLINAS -->
+        <!-- CURRÍCULO -->
 
-        <record id="view_grupo_disciplina_form" model="ir.ui.view">
-            <field name="name">informa.grupo_disciplina.form</field>
-            <field name="model">informa.grupo_disciplina</field>
+        <record id="view_curriculo_form" model="ir.ui.view">
+            <field name="name">informa.curriculo.form</field>
+            <field name="model">informa.curriculo</field>
             <field name="arch" type="xml">
-                <form string="Grupo de Disciplinas">
+                <form string="Currículo">
                     <group>
                         <field name="name"/>
-                        <field name="sequence"/>
-                        <span><strong>Disciplinas:  </strong></span><field name="disciplina_ids" widget="Many2many_tags" options="{'no_create': True}" nolabel="1"/>
-                        <field name="cod_grup_disciplina" string="código único do Grupo"/>
-                        <field name="days_to_release" string="Dias para liberar o conteúdo"/>
+                        <field name="cod_curriculo" string="Código Único do Currículo"/>
                     </group>
+                    <!-- Chatter de mensagens de log -->
+                    <div class="oe_chatter">
+                        <field name="message_follower_ids" widget="mail_followers" groups="base.group_system"/>
+                        <field name="activity_ids" widget="mail_activity" groups="base.group_system"/>
+                        <field name="message_ids" widget="mail_thread"/>
+                    </div>
                 </form>
             </field>
         </record>
-                 
+
+        <!-- Versão de CURRÍCULO -->
+        
+        <record id="view_curriculo_variant_form" model="ir.ui.view">
+            <field name="name">informa.curriculo.variant.form</field>
+            <field name="model">informa.curriculo.variant</field>
+            <field name="arch" type="xml">
+                <form string="Variante de Currículo">
+                    <group>
+                        <field name="name"/>
+                        <field name="create_date" string="Data de Criação"/>
+                        <field name="disciplina_ids"/>
+                        <field name="variation_number"/>
+                        <field name="curriculo_id"/>
+                        <field name="days_to_release"/>
+                        <field name="sequence"/>
+                    </group>
+                    <!-- Chatter de mensagens de log -->
+                    <div class="oe_chatter">
+                        <field name="message_follower_ids" widget="mail_followers" groups="base.group_system"/>
+                        <field name="activity_ids" widget="mail_activity" groups="base.group_system"/>
+                        <field name="message_ids" widget="mail_thread"/>
+                    </div>
+                </form>
+            </field>
+        </record>
 
         <!-- MATRÍCULAS -->
 
@@ -266,8 +295,7 @@
                             <field name="curso" options="{'no_create': True}"/>
                             <field name="regiao"/>
                             <field name="tipo_de_ingresso" options="{'no_create': True}"/>
-                            <field name="tipo_de_block" options="{'no_create': True}" attrs="{'invisible': [('status_do_certificado', '!=', 'TRANCADO')]}"/>
-                            <field name="tipo_de_cancelamento" options="{'no_create': True}" attrs="{'invisible': [('status_do_certificado', '!=', 'MATRÍCULA CANCELADA')]}"/>
+                            <field name="tipo_de_cancelamento" options="{'no_create': True}" attrs="{'invisible': [('status_do_certificado', '!=', 'MATRÍCULA SUSPENSA')]}"/>
                             <field name="inscricao_ava" widget='date' options="{'date_format': 'DD/MM/YYYY'}"/>
                         </group>
                         <group>
@@ -296,8 +324,7 @@
                     </sheet>
                     <xpath expr="//sheet" position="before">
                         <header>
-                            <button string="Cancelar Matrícula" attrs="{'invisible': [('id', '=', False)]}" type="object" name="action_open_status_change_wizard" class="oe_highlight"/>
-                            <button string="Trancar Matrícula" attrs="{'invisible': [('id', '=', False)]}" type="object" name="action_open_status_change_block_wizard" class="oe_highlight"/>
+                            <button string="Suspender Matrícula" attrs="{'invisible': [('id', '=', False)]}" type="object" name="action_open_status_change_wizard" class="oe_highlight"/>
                         </header>
                     </xpath>
                     <!-- Chatter de mensagens de log -->
@@ -340,7 +367,7 @@
             <field name="name">tipo.de.cancelamento.form</field>
             <field name="model">tipo.de.cancelamento</field>
             <field name="arch" type="xml">
-                <form string="Tipo de Cancelamento">
+                <form string="Tipo de Suspensão">
                     <sheet>
                         <group>
                             <field name="nome"/>
@@ -357,99 +384,6 @@
                 </form>
             </field>
         </record>
-
-        <!-- TIPO DE CANCELAMENTO -->
-
-        <record id="view_tipo_bloqueio_form" model="ir.ui.view">
-            <field name="name">tipo.de.bloqueio.form</field>
-            <field name="model">tipo.de.bloqueio</field>
-            <field name="arch" type="xml">
-                <form string="Trancar Matrícula">
-                    <sheet>
-                        <group>
-                            <field name="nome"/>
-                            <field name="descricao"/>
-                            <field name="color" widget="color_picker"/>
-                        </group>
-                    </sheet>
-                    <!-- Chatter de menssagens de log -->
-                    <div class="oe_chatter">
-                        <field name="message_follower_ids" widget="mail_followers" groups="base.group_system"/>
-                        <field name="activity_ids" widget="mail_activity" groups="base.group_system"/>
-                        <field name="message_ids" widget="mail_thread"/>
-                    </div>
-                </form>
-            </field>
-        </record>
-
-        <!-- TIPO DE RE-INGRESSO -->
-
-        <record id="view_matricula_reingresso_wizard_form" model="ir.ui.view">
-            <field name="name">matricula.reingresso.wizard.form</field>
-            <field name="model">matricula.reingresso.wizard</field>
-            <field name="arch" type="xml">
-                <form>
-                    <group>
-                        <field name="matricula_id"/>
-                        <field name="data_inscricao" />
-                        <field name="tipo_de_ingresso"/>
-                        <field name="justificativa"/>
-                    </group>
-                    <footer>
-                        <button string="Confirmar" type="object" name="confirm_reingresso" class="btn-primary"/>
-                        <button string="Cancelar" class="btn-secondary" special="cancel"/>
-                    </footer>
-                </form>
-            </field>
-        </record>
-
-        <!-- TIPO DE CANCELAMENTO -->
-
-        <record id="view_matricula_reingresso_wizard_form" model="ir.ui.view">
-            <field name="name">matricula.reingresso.wizard.form</field>
-            <field name="model">matricula.reingresso.wizard</field>
-            <field name="arch" type="xml">
-                <form>
-                    <group>
-                        <field name="matricula_id"/>
-                        <field name="tipo_de_ingresso"/>
-                        <field name="justificativa"/>
-                    </group>
-                    <footer>
-                        <button string="Confirmar" type="object" name="confirm_reingresso" class="btn-primary"/>
-                        <button string="Cancelar" class="btn-secondary" special="cancel"/>
-                    </footer>
-                </form>
-            </field>
-        </record>
-
-        <record id="view_informa_cursos_kanban" model="ir.ui.view">
-            <field name="name">informa.cursos.kanban</field>
-            <field name="model">informa.cursos</field>
-            <field name="arch" type="xml">
-            <kanban class="o_kanban_view o_informa_cursos_kanban">
-                        <templates>
-                            <t t-name="kanban-box">
-                                <div t-attf-class="oe_kanban_card">
-                                    <!-- Nome do curso -->
-                                    <div class="o_kanban_record_top">
-                                        <field name="name"/>
-                                    </div>
-                                    <!-- Detalhes do curso -->
-                                    <div class="o_kanban_record_bottom">
-                                        <field name="tempo_de_conclusao"/>
-                                    </div>
-                                    <div>
-                                        <button name="action_open_courses" type="object" string="Ver Curso" class="oe_highlight">
-                                            Visualizar disciplinas
-                                        </button>
-                                    </div>
-                                </div>
-                            </t>
-                        </templates>
-                    </kanban>
-                </field>
-            </record>
 
 
         <!-- NOTAS E DISCIPLINAS -->
@@ -479,6 +413,8 @@
                 </form>
             </field>
         </record>
+    
+        <!-- KANBAN'S-->
 
         <!-- KANBAN MATRICULA-->
 
@@ -496,7 +432,6 @@
                                         <div class="o_primary">
                                             <field name="color_tipo_ingresso" widget="color_picker" />
                                             <field name="color_tipo_cancelamento" widget="color_picker" attrs="{'invisible': [('status_do_certificado', '!=', 'MATRÍCULA CANCELADA')]}" /><br/>
-                                            <field name="color_tipo_Bloqueio" widget="color_picker" attrs="{'invisible': [('status_do_certificado', '!=', 'TRANCADO')]}" /><br/>
                                             <span>Aluno: </span><strong><field name="nome_do_aluno"/></strong><br/>
                                             <span>Curso: </span><field name="curso"/><br/>
                                             <span>E-mail: </span><field name="email" force_save="1"/><br/>
@@ -529,6 +464,35 @@
             </field>
         </record>
 
+        <!-- KANBAN CURSOS-->
+        
+        <record id="view_informa_cursos_kanban" model="ir.ui.view">
+            <field name="name">informa.cursos.kanban</field>
+            <field name="model">informa.cursos</field>
+            <field name="arch" type="xml">
+            <kanban class="o_kanban_view o_informa_cursos_kanban">
+                        <templates>
+                            <t t-name="kanban-box">
+                                <div t-attf-class="oe_kanban_card">
+                                    <!-- Nome do curso -->
+                                    <div class="o_kanban_record_top">
+                                        <field name="name"/>
+                                    </div>
+                                    <!-- Detalhes do curso -->
+                                    <div class="o_kanban_record_bottom">
+                                        <field name="tempo_de_conclusao"/>
+                                    </div>
+                                    <div>
+                                        <button name="action_open_courses" type="object" string="Ver Curso" class="oe_highlight">
+                                            Visualizar disciplinas
+                                        </button>
+                                    </div>
+                                </div>
+                            </t>
+                        </templates>
+                    </kanban>
+                </field>
+            </record>
 
         <!-- KANBAN QUADRO DE INFORMAÇÕES-->
 
@@ -592,10 +556,9 @@
             <field name="arch" type="xml">
                 <graph string="Análise dos alunos">
                     <field name="status_do_certificado"/>
-                    <field name="tipo_de_ingresso"/>
                 </graph>
             </field>    
-        </record>
+        </record>        
 
         <!-- Action das Views -->
 
@@ -616,6 +579,15 @@
             </field>
         </record>
 
+        <record id="action_info_cursos" model="ir.actions.act_window">
+            <field name="name">Quadro de Alunos</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">informa.matricula</field>
+            <field name="context">{'group_by': 'curso', 'default_from_specific_menu': True}</field>
+            <field name="view_mode">kanban,tree,form</field>
+            <field name="view_id" ref="view_matricula_kanban"/>
+        </record>
+
         <!-- DISCIPLINAS -->
 
         <record id="action_informa_disciplinas" model="ir.actions.act_window">
@@ -634,14 +606,25 @@
             </field>
         </record>        
 
-        <!-- GRUPO DE DISCIPLINAS -->
+        <!-- CURRÍCULO -->
 
-        <record id="action_grupo_disciplina" model="ir.actions.act_window">
-            <field name="name">Grupos de Disciplinas</field>
-            <field name="res_model">informa.grupo_disciplina</field>
+        <record id="action_curriculo" model="ir.actions.act_window">
+            <field name="name">Currículos</field>
+            <field name="res_model">informa.curriculo</field>
             <field name="view_mode">tree,form</field>
             <field name="help" type="html">
-                <p class="oe_view_nocontent_create">Clique para adicionar um novo Grupo de Disciplinas.</p>
+                <p class="oe_view_nocontent_create">Clique para adicionar um novo Currículos.</p>
+            </field>
+        </record>
+
+        <!-- Versão do Currículos -->
+
+        <record id="action_variacao_curriculo" model="ir.actions.act_window">
+            <field name="name">Variação dos Currículos</field>
+            <field name="res_model">informa.curriculo.variant</field>
+            <field name="view_mode">tree,form</field>
+            <field name="help" type="html">
+                <p class="oe_view_nocontent_create">Clique para adicionar uma nova versão para um Currículo.</p>
             </field>
         </record>
 
@@ -674,36 +657,19 @@
             </field>
         </record>
 
-        <!-- TIPO DE CANCELAMENTO -->
+        <!-- TIPO DE Suspensão -->
 
         <record id="action_tipo_cancelamento" model="ir.actions.act_window">
-            <field name="name">Tipo de Cancelamento</field>
+            <field name="name">Tipo de Suspensão</field>
             <field name="res_model">tipo.de.cancelamento</field>
             <field name="view_mode">tree,form</field>
             <field name="view_id" ref="view_tipo_cancelamento_tree"/>
             <field name="help" type="html">
                 <p class="o_view_nocontent_smiling_face">
-                    Crie seu primeiro tipo de cancelamento
+                    Crie seu primeiro tipo de Suspensão
                 </p>
                 <p>
-                    adicione os tipos de cancelamento disponíveis
-                </p>
-            </field>
-        </record>
-
-        <!-- TIPO DE BLOQUEIO -->
-
-        <record id="action_tipo_bloqueio" model="ir.actions.act_window">
-            <field name="name">Tipo de Bloqueio</field>
-            <field name="res_model">tipo.de.bloqueio</field>
-            <field name="view_mode">tree,form</field>
-            <field name="view_id" ref="view_tipo_cancelamento_tree"/>
-            <field name="help" type="html">
-                <p class="o_view_nocontent_smiling_face">
-                    Crie seu primeiro tipo de justicativa de Trancamento de curso
-                </p>
-                <p>
-                    adicione os tipos de trancamento de curso
+                    adicione os tipos de suspensão disponíveis
                 </p>
             </field>
         </record>
@@ -725,100 +691,6 @@
             </field>
         </record>
 
-        <!--Quadro de informação-->
-
-        <record id="action_info_cursos" model="ir.actions.act_window">
-            <field name="name">Quadro de Alunos</field>
-            <field name="type">ir.actions.act_window</field>
-            <field name="res_model">informa.matricula</field>
-            <field name="context">{'group_by': 'curso', 'default_from_specific_menu': True}</field>
-            <field name="view_mode">kanban,tree,form</field>
-            <field name="view_id" ref="view_matricula_kanban"/>
-        </record>
-
-        <!--Cron Job de atualização dos dias, em verificação a cada hora-->
-        <record id="cron_atualizar_status_dias_passados" model="ir.cron">
-            <field name="name">Atualizar Status e Dias Passados</field>
-            <field name="model_id" ref="model_informa_matricula"/>
-            <field name="state">code</field>
-            <field name="code">model.atualizar_status_dias_passados()</field>
-            <field name="interval_number">1</field>
-            <field name="interval_type">days</field>
-            <field name="numbercall">-1</field>
-        </record>
-
-        <!--Cron Job de atualização dos dias, em verificação a cada hora-->
-        <record id="cron_atualizar_notas" model="ir.cron">
-            <field name="name">Atualizar Notas dos Alunos</field>
-            <field name="model_id" ref="model_informa_registro_disciplina"/>
-            <field name="state">code</field>
-            <field name="code">model.update_all_students_grades_from_moodle()</field>
-            <field name="interval_number">50</field>
-            <field name="interval_type">minutes</field>
-            <field name="numbercall">-1</field>
-        </record>
-
-        <!--Cron Job de atualização dos dias, em verificação para Liberar Disciplinas-->
-        <record id="cron_decrement_days" model="ir.cron">
-            <field name="name">Decrement days_to_release</field>
-            <field name="model_id" ref="model_informa_grupo_disciplina"/>
-            <field name="state">code</field>
-            <field name="code">model.decrement_days_to_release()</field>
-            <field name="interval_number">1</field>
-            <field name="interval_type">days</field>
-            <field name="numbercall">-1</field>
-        </record>
-
-        <!--Cron Job para verificação para Processar Grupos de Disciplinas para Todos os Alunos-->
-        <record id="ir_cron_process_groups_for_all_students" model="ir.cron">
-            <field name="name">Processar Grupos de Disciplinas para Todos os Alunos</field>
-            <field name="interval_number">10</field>
-            <field name="interval_type">minutes</field>
-            <field name="numbercall">-1</field>
-            <field name="model_id" ref="model_informa_matricula"/>
-            <field name="state">code</field>
-            <field name="code">model.sudo().execute_for_all()</field>
-            <field name="active" eval="True"/>
-        </record>
-
-        <!--Wizard dos botões de Trancar Matrícula -->
-        <record id="view_matricula_status_change_wizard_block_form" model="ir.ui.view">
-            <field name="name">matricula.status.change.wizard.block.form</field>
-            <field name="model">matricula.status.change.block.wizard</field>
-            <field name="arch" type="xml">
-                <form>
-                    <group>
-                        <field name="matricula_id" invisible="1"/>
-                        <field name="new_status"/>
-                        <field name="tipo_de_block" attrs="{'required': [('new_status', '=', 'TRANCADO')]}"/>
-                        <span><strong>justificativa: </strong></span><field name="justificativa" nolabel="1"/>
-                    </group>
-                    <footer>
-                        <button string="Trancar Matrícula"  type="object" class="btn-primary" name="change_status"/>
-                    </footer>
-                </form>
-            </field>
-        </record>
-
-        <!--Wizard dos botões de cancelamento -->
-        <record id="view_matricula_status_change_wizard_form" model="ir.ui.view">
-            <field name="name">matricula.status.change.wizard.form</field>
-            <field name="model">matricula.status.change.wizard</field>
-            <field name="arch" type="xml">
-                <form>
-                    <group>
-                        <field name="matricula_id" invisible="1"/>
-                        <field name="new_status"/>
-                        <field name="tipo_de_cancelamento" attrs="{'required': [('new_status', '=', 'MATRÍCULA CANCELADA')]}"/>
-                        <span><strong>justificativa: </strong></span><field name="justificativa" nolabel="1"/>
-                    </group>
-                    <footer>
-                        <button string="Cancelar Matrícula"  type="object" class="btn-primary" name="change_status"/>
-                    </footer>
-                </form>
-            </field>
-        </record>
-
         <!-- Itens de menu das views -->
         <menuitem id="fgmed_cursos_e_matriculas" name="Cursos e Matrículas" sequence="1" groups="base.group_system"/>
         <menuitem id="fgmed_cursos_menu" parent="fgmed_cursos_e_matriculas" name="Cursos" action="action_informa_cursos" groups="base.group_system" />
@@ -826,9 +698,8 @@
         <menuitem id="fgmed_matriculas" parent="fgmed_cursos_e_matriculas" name="Matrículas" action="action_informa_matricula" groups="base.group_system" />
         <menuitem id="menu_info_cursos_menu" parent="fgmed_cursos_e_matriculas" name="Quadro de Alunos" action="action_info_cursos"  groups="base.group_system" sequence="10"/>
         <menuitem id="fgmed_tipo_ingresso_menu" parent="fgmed_cursos_e_matriculas" name="Tipo de Ingresso" action="action_tipo_ingresso" groups="base.group_system" />
-        <menuitem id="fgmed_tipo_cancelamento_menu" parent="fgmed_cursos_e_matriculas" name="Tipo de cancelamento" action="action_tipo_cancelamento" groups="base.group_system" />
-        <menuitem id="fgmed_tipo_bloqueio_menu" parent="fgmed_cursos_e_matriculas" name="Tipo de Bloqueio" action="action_tipo_bloqueio" groups="base.group_system" />
-        <menuitem id="fgmed_grupo_disciplina" parent="fgmed_cursos_e_matriculas" name="Grupo de disciplinas" action="action_grupo_disciplina" groups="base.group_system" />    
-    
+        <menuitem id="fgmed_tipo_cancelamento_menu" parent="fgmed_cursos_e_matriculas" name="Tipo de Suspensão" action="action_tipo_cancelamento" groups="base.group_system" />
+        <menuitem id="fgmed_curriculos" parent="fgmed_cursos_e_matriculas" name="Currículos" action="action_curriculo" groups="base.group_system" />    
+        <menuitem id="fgmed_versao_curriculo" parent="fgmed_cursos_e_matriculas" name="Versão de Currículos" action="action_variacao_curriculo" groups="base.group_system" />    
     </data>
 </odoo>

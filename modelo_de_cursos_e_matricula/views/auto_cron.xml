@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+                
+        <!--Cron Job de atualização dos dias, em verificação a cada hora-->
+        <record id="cron_atualizar_status_dias_passados" model="ir.cron">
+            <field name="name">Atualizar Status e Dias Passados</field>
+            <field name="model_id" ref="model_informa_matricula"/>
+            <field name="state">code</field>
+            <field name="code">model.atualizar_status_dias_passados()</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="numbercall">-1</field>
+        </record>
+
+        <!--Cron Job de atualização dos dias, em verificação a cada hora-->
+        <record id="cron_atualizar_notas" model="ir.cron">
+            <field name="name">Atualizar Notas dos Alunos</field>
+            <field name="model_id" ref="model_informa_registro_disciplina"/>
+            <field name="state">code</field>
+            <field name="code">model.update_all_students_grades_from_moodle()</field>
+            <field name="interval_number">50</field>
+            <field name="interval_type">minutes</field>
+            <field name="numbercall">-1</field>
+        </record>
+
+        <!--Cron Job de atualização dos dias, em verificação para Liberar Disciplinas-->
+        <record id="cron_decrement_days" model="ir.cron">
+            <field name="name">Decrement days_to_release</field>
+            <field name="model_id" ref="modelo_de_cursos_e_matricula.model_informa_curriculo_variant"/>
+            <field name="state">code</field>
+            <field name="code">model.decrement_days_to_release()</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="numbercall">-1</field>
+        </record>
+
+
+        <!--Cron Job para verificação para Processar Grupos de Disciplinas para Todos os Alunos-->
+        <record id="ir_cron_process_groups_for_all_students" model="ir.cron">
+            <field name="name">Processar Grupos de Disciplinas para Todos os Alunos</field>
+            <field name="interval_number">10</field>
+            <field name="interval_type">minutes</field>
+            <field name="numbercall">-1</field>
+            <field name="model_id" ref="model_informa_matricula"/>
+            <field name="state">code</field>
+            <field name="code">model.sudo().execute_for_all()</field>
+            <field name="active" eval="True"/>
+        </record>
+
+        <!--Cron Job para retirar disciplinas aprovadas para Todos os Alunos-->
+        <record id="ir_cron_process_enroll_disciplines_for_all_students" model="ir.cron">
+            <field name="name">Disciplinas aprovadas para Todos os Alunos</field>
+            <field name="interval_number">30</field>
+            <field name="interval_type">minutes</field>
+            <field name="numbercall">-1</field>
+            <field name="model_id" ref="model_informa_matricula"/>
+            <field name="state">code</field>
+            <field name="code">model.sudo().check_approved_disciplinas()</field>
+            <field name="active" eval="True"/>
+        </record>
+
+        <!--Cron Job para retirar disciplinas reprovadas para Todos os Alunos-->
+        <record id="ir_cron_process_unroll_disciplines_for_all_students" model="ir.cron">
+            <field name="name">Disciplinas reprovadas para Todos os Alunos</field>
+            <field name="interval_number">35</field>
+            <field name="interval_type">minutes</field>
+            <field name="numbercall">-1</field>
+            <field name="model_id" ref="model_informa_matricula"/>
+            <field name="state">code</field>
+            <field name="code">model.sudo().check_reproved_disciplinas()</field>
+            <field name="active" eval="True"/>
+        </record>        
+    
+    </data>
+</odoo>

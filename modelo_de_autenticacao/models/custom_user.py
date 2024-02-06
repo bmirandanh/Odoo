@@ -49,7 +49,7 @@ class CustomAuthUser(models.Model):
                 # Cria um usuário do Odoo vinculado ao usuário personalizado
                 odoo_user_vals = {
                     'name': new_user.username,
-                    'login': new_user.email,  # ou outro campo apropriado
+                    'login': new_user.email,
                     'groups_id': [(4, website_admin_group.id)]
                 }
                 odoo_user = self.env['res.users'].create(odoo_user_vals)

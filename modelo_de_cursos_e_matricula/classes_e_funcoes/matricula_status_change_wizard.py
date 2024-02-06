@@ -25,9 +25,93 @@ class MatriculaStatusChangeWizard(models.Model):
     tipo_de_cancelamento = fields.Many2one('tipo.de.cancelamento', string="Tipo de Cancelamento")
     justificativa = fields.Text(string="Justificativa", required=True)
 
-    def change_status(self):
-        if self.matricula_id:
+    def get_moodle_course_id_int(self, course_id_value): 
+        url = "https://avadev.medflix.club/webservice/rest/server.php"
+        
+        if course_id_value is None:
+            _logger.error('ID do curso não fornecido')
+            return None
+        
+        _logger.info('ID do curso: %s', course_id_value)
+        
+        params = {
+            "wstoken": "c502156af2c00a4b3e9e5d878922be46",
+            "wsfunction": "core_course_get_courses_by_field",
+            "field": "idnumber",
+            "value": course_id_value,
+            "moodlewsrestformat": "json"
+        }
+        response = requests.get(url, params=params)
+        data = response.json()  
+        _logger.info('Resposta no Moodle: %s', response.text)
 
+        if 'courses' in data and len(data['courses']) > 0:
+            return data['courses'][0]['id']
+        else:
+            return None
+            
+    def get_moodle_user_id(self, user_id):
+        url = "https://avadev.medflix.club/webservice/rest/server.php"
+        _logger.info('user_id: %s', user_id)
+        params = {
+            "wstoken": "c502156af2c00a4b3e9e5d878922be46",
+            "wsfunction": "core_user_get_users_by_field",
+            "field": "idnumber",
+            "values[0]": user_id,
+            "moodlewsrestformat": "json"
+        }
+        response = requests.get(url, params=params)
+        data = response.json()
+        _logger.info('Resposta no Moodle: %s', response.text)
+        
+        if data and len(data) > 0:
+            return data[0]['id']
+        else:
+            return None
+        
+    def block_access_to_moodle(self, moodle_aluno_id, moodle_curso_id):
+        moodle_url = "https://avadev.medflix.club/webservice/rest/server.php"
+        token = "c502156af2c00a4b3e9e5d878922be46"
+        user_id = moodle_aluno_id
+        course_id = moodle_curso_id
+        
+        if user_id and course_id:
+            params = {
+                "wstoken": token,
+                "wsfunction": "enrol_manual_unenrol_users",
+                "moodlewsrestformat": "json",
+                "enrolments[0][userid]": user_id,
+                "enrolments[0][courseid]": course_id,
+                "enrolments[0][roleid]": 5,
+            }
+            response = requests.post(moodle_url, params=params)
+            if response.status_code == 200:
+                _logger.info('Usuário suspenso no Moodle: %s', response.text)
+            else:
+                _logger.error('Erro ao suspender usuário no Moodle: %s', response.text)
+                
+    def change_status(self):
+        
+        if self.matricula_id:
+            matricula = self.matricula_id
+
+            # Busca a instância correspondente em 'informa.registro_disciplina'
+            registro_disciplina = self.env['informa.registro_disciplina'].search([
+                ('curso_id', '=', matricula.curso.id),
+                ('aluno_id', '=', matricula.nome_do_aluno.id)
+            ], limit=1)
+
+            # Verifica se encontrou a instância
+            if not registro_disciplina:
+                raise ValidationError(_("Registro de disciplina não encontrado para o aluno da matrícula."))
+
+            # Agora, você pode usar registro_disciplina para obter curso_id e aluno_id
+            curso_id = registro_disciplina.curso_id.id
+            aluno_id = registro_disciplina.aluno_id.id
+
+            moodle_curso_id = self.get_moodle_course_id_int(curso_id)
+            moodle_aluno_id = self.get_moodle_user_id(aluno_id)
+               
             # Lista dos status que podem ser cancelados
             allowed_statuses = ['CURSANDO', 'EM FINALIZAÇÃO', 'EM PRAZO EXCEDIDO']
 
@@ -50,7 +134,7 @@ class MatriculaStatusChangeWizard(models.Model):
                 self.matricula_id.tipo_de_cancelamento = self.tipo_de_cancelamento    
                 # Altera o color_tipo_cancelamento pelo color do tipo de cancelamento selecionado
                 self.matricula_id.color_tipo_cancelamento = self.tipo_de_cancelamento.color
-
+                self.block_access_to_moodle(moodle_aluno_id, moodle_curso_id)
                     
             # Registra a justificativa como uma mensagem de rastreamento na matrícula
             self.matricula_id.message_post(body=_("Justificativa para alteração de status: %s") % (self.justificativa,))

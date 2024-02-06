@@ -37,6 +37,7 @@
         </record>
 
         <menuitem id="fgmed_autenticacao" name="Usuários de Autenticação" sequence="1" groups="base.group_system"/>
+        <menuitem id="fgmed_usuários_moodle" parent="fgmed_autenticacao" name="Usúários Moodle" action="action_custom_auth_user" groups="base.group_system" />
 
     </data>
 </odoo>

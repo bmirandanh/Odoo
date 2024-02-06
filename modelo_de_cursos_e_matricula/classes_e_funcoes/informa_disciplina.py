@@ -20,7 +20,7 @@ class Disciplina(models.Model):
 
     name = fields.Char(string='Nome da Disciplina', required=True)
     media = fields.Float(string='Média para Aprovação')
-    grupo_disciplina_id = fields.Many2one('informa.grupo_disciplina', string='Grupo de Disciplinas')
+    grupo_disciplina_id = fields.Many2one('informa.curriculo', string='Grupo de Disciplinas')
     cod_disciplina = fields.Char(string='Código único de disciplina: ', required=True)
     
     def _check_cod_disciplina_in_odoo(self, cod_disciplina):
