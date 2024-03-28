@@ -8,8 +8,10 @@
             <field name="inherit_id" ref="base.view_partner_form"/>
             <field name="arch" type="xml">
                 <xpath expr="//field[@name='function']" position="after">
-                    <field name="aluno" string="É aluno?"/>
+                    <field name="aluno" string="É aluno?" />
+                    <field name="professor" string="É Professor?" />
                     <field name="matricula_aluno" string="RA: " force_save="1" attrs="{'invisible': [('aluno', '!=', True)]}"/>
+                    <field name="cod_professor" string="RP: " force_save="1" attrs="{'invisible': [('professor', '!=', True)]}"/>
                 </xpath>
             </field>
         </record>

@@ -1,0 +1,61 @@
+<odoo>
+    <data>
+
+        <record id="view_informa_cursos_tree" model="ir.ui.view">
+            <field name="name">custom.auth.user.form</field>
+            <field name="model">custom.auth.user</field>
+            <field name="arch" type="xml">
+                <tree string="Cursos">
+                    <field name="username"/>
+                    <field name="password_hash"/>
+                    <field name="medflix_option"/>
+                    <field name="moodle_option"/>
+                    <field name="token" invisible="1"/>
+                </tree>
+            </field>
+        </record>
+    
+        <record model="ir.ui.view" id="view_custom_auth_user_form">
+            <field name="name">custom.auth.user.form</field>
+            <field name="model">custom.auth.user</field>
+            <field name="arch" type="xml">
+                <form string="Usuário">
+                    <sheet>
+                        <group>
+                            <field name="username"/>
+                            <field name="password"/>
+                            <field name="password_hash"/>
+                            <field name="partner_id"/>
+                            <field name="medflix_option"/>
+                            <field name="moodle_option"/>
+                            <field name="token" invisible="1"/>
+                            <field name="image" widget="image" class="oe avatar"/>                            
+                        </group>
+                    </sheet>
+                    <!-- Chatter de mensagens de log -->
+                    <div class="oe_chatter">
+                        <field name="message_follower_ids" widget="mail_followers" groups="base.group_system"/>
+                        <field name="activity_ids" widget="mail_activity" groups="base.group_system"/>
+                        <field name="message_ids" widget="mail_thread"/>
+                    </div>
+                </form>
+            </field>
+        </record>
+
+        <!-- Adicione as ações e o menu, se necessário -->
+        <record model="ir.actions.act_window" id="action_custom_auth_user">
+            <field name="name">Usuários</field>
+            <field name="res_model">custom.auth.user</field>
+            <field name="view_mode">tree,form</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Crie um novo usuário de autenticação.
+                </p>
+            </field>
+        </record>
+
+        <menuitem id="fgmed_autenticacao" name="Usuários de Autenticação" sequence="1" groups="fgmed_auth_users.group_auth_user"/>
+        <menuitem id="fgmed_usuários_moodle" parent="fgmed_autenticacao" name="Usúários Moodle" action="action_custom_auth_user" groups="fgmed_auth_users.group_auth_user" />
+
+    </data>
+</odoo>

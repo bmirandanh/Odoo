@@ -18,10 +18,22 @@ class Disciplina(models.Model):
     _description = 'Disciplina'
     _inherit = ["mail.thread", "mail.activity.mixin"]
 
-    name = fields.Char(string='Nome da Disciplina', required=True)
-    media = fields.Float(string='Média para Aprovação')
-    grupo_disciplina_id = fields.Many2one('informa.curriculo', string='Grupo de Disciplinas')
-    cod_disciplina = fields.Char(string='Código único de disciplina: ', required=True)
+    name = fields.Char(string='Nome da Disciplina', required=True, tracking=True)
+    media = fields.Float(string='Média para Aprovação', tracking=True)
+    grupo_disciplina_id = fields.Many2one('informa.curriculo', string='Grupo de Disciplinas', tracking=True)
+    cod_disciplina = fields.Char(string='Código único de disciplina: ', required=True, tracking=True)
+
+    def action_open_menu(self):
+        view_id2 = self.env.ref('modelo_de_cursos_e_matricula.view_course_management_form').id
+        return {
+            'name': 'Menu Principal',
+            'type': 'ir.actions.act_window',
+            'res_model': 'course.creation.wizard',
+            'view_mode': 'form',
+            'view_id': view_id2,
+            'target': 'new',
+            'context': {'form_view_initial_mode': 'edit', 'force_detailed_view': 'true'}
+        }
     
     def _check_cod_disciplina_in_odoo(self, cod_disciplina):
         existing_disciplina = self.env['informa.disciplina'].search([('cod_disciplina', '=', cod_disciplina)], limit=1)
@@ -81,25 +93,59 @@ class Disciplina(models.Model):
 
         disciplina = super().create(vals)
         
+        # Registrar a ação de criação na auditoria
+        self.env['audit.log.report'].create_log(disciplina, vals, action='create')
+                
         self._send_to_moodle(disciplina)
 
         _logger.info(f"Disciplina {name} (código: {cod_disciplina}) criada com sucesso no Odoo com ID {disciplina.id}.")
         
         return disciplina
+    
+    def write(self, values):
+        # Log de auditoria antes da alteração
+        for rec in self:
+            self.env['audit.log.report'].create_log(rec, values, action='write')
+        # Chamar o método original de 'write'
+        return super(Disciplina, self).write(values)  
 
     def _connect_moodle(self):
-        moodle_url = "https://avadev.medflix.club/webservice/rest/server.php"
-        moodle_token = "c502156af2c00a4b3e9e5d878922be46"
+        
+        # Obtendo acesso ao modelo de configurações do módulo fgmed_config_params
+        ParamObj = self.env['fgmed.config.params']
+        
+        # Buscando as configurações de base_url e token
+        base_url_param = ParamObj.search([('chave', '=', 'moodle_base_url')], limit=1)
+        token_param = ParamObj.search([('chave', '=', 'moodle_token')], limit=1)
+
+        # Atribuindo os valores encontrados ou definindo um valor padrão
+        base_url = base_url_param.valor
+        token = token_param.valor
+                
+        moodle_url = base_url+"webservice/rest/server.php"
+        moodle_token = token
         moodle = Moodle(moodle_url, moodle_token)
         return moodle
 
     def _send_to_moodle(self, disciplina):
+        
+        # Obtendo acesso ao modelo de configurações do módulo fgmed_config_params
+        ParamObj = self.env['fgmed.config.params']
+        
+        # Buscando as configurações de base_url e token
+        base_url_param = ParamObj.search([('chave', '=', 'moodle_base_url')], limit=1)
+        token_param = ParamObj.search([('chave', '=', 'moodle_token')], limit=1)
+
+        # Atribuindo os valores encontrados ou definindo um valor padrão
+        base_url_m = base_url_param.valor
+        token_m = token_param.valor
+        
         if IS_TEST_ENVIRONMENT:
             _logger.info(f"Simulando envio de disciplina {disciplina.name} para Moodle.")
             return
 
-        base_url = "https://avadev.medflix.club/webservice/rest/server.php"
-        token = "c502156af2c00a4b3e9e5d878922be46"
+        base_url = base_url_m+"webservice/rest/server.php"
+        token = token_m
         
         # Construindo o endpoint
         params = {
@@ -142,4 +188,19 @@ class Disciplina(models.Model):
 
         return False
             
-                    
+    def unlink(self):
+        # Preparar dados para o log de auditoria antes da exclusão
+        for record in self:
+            log_vals = {
+                'model_name': record._name,
+                'action': 'unlink',
+                'field_name': '',
+                'old_value': '',
+                'new_value': f'Registro Excluído com ID {record.id}',
+                'user_id': self.env.user.id,
+                'change_date': fields.Datetime.now(),
+            }
+            self.env['audit.log.report'].create(log_vals)
+
+        # Chamar o método original de 'unlink'
+        return super(Disciplina, self).unlink()                    

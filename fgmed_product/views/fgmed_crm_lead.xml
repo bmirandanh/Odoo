@@ -24,7 +24,7 @@
         <field name="crm_variant_id"/>
       </xpath>
       <xpath expr="//div[@class='o_row o_row_readonly']" position="after">
-        <field name="mobile" placeholder="Celular" widget="phone"/>
+        <field name="mobile" placeholder="Telefone Móvel" widget="phone"/>
       </xpath>
       <xpath expr="//field[@id='mobile_page_lead']" position="attributes">
         <attribute name="invisible">1</attribute>

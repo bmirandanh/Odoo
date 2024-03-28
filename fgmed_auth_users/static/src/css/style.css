@@ -1,0 +1,377 @@
+/* General page styles */
+body {
+    font-family: Arial, sans-serif;
+}
+
+/* Header styles */
+.page-header h1 {
+    background-color: #004400; /* Dark green background */
+    color: #ffffff; /* White text */
+    padding: 10px;
+    text-align: center;
+}
+
+/* Card styles */
+.card {
+    border: 1px solid #cccccc;
+    margin-bottom: 20px;
+}
+
+.card-header {
+    background-color: #008000; /* Green background */
+    color: #ffffff; /* White text */
+    padding: 10px;
+}
+
+.card-body {
+    padding: 20px;
+    background-color: #f8f8f8; /* Light grey background */
+}
+
+/* Personal data styles */
+.personal-data {
+    margin-bottom: 20px;
+}
+
+/* Academic record styles */
+.academic-record {
+    background-color: #f2f2f2; /* Very light grey background */
+    padding: 15px;
+}
+
+/* Table styles */
+.table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table th,
+.table td {
+    border: 1px solid #000000;
+    padding: 5px;
+    text-align: left;
+}
+
+.table th {
+    background-color: #ffa500; /* Orange background for header */
+    color: #ffffff; /* White text */
+}
+
+/* Footer styles */
+.footer {
+    background-color: #333333; /* Dark grey background */
+    color: #ffffff; /* White text */
+    padding: 10px;
+    text-align: center;
+}
+
+/* Utility classes */
+.text-center {
+    text-align: center;
+}
+
+.mb-0 {
+    margin-bottom: 0;
+}
+
+.mb-2 {
+    margin-bottom: 0.5rem;
+}
+
+.mb-4 {
+    margin-bottom: 1rem;
+}
+
+.user-image {
+    max-width: 200px; /* Set the maximum width of the image */
+    max-height: 200px; /* Set the maximum height of the image */
+    border-radius: 50%; /* Optional: makes the image round */
+    border: 3px solid #fff; /* Optional: adds a white border around the image */
+    box-shadow: 0 4px 6px 0 rgba(0, 0, 0, 0.25); /* Optional: adds a shadow for some depth */
+}
+
+
+/* Personal data styles */
+.personal-data .user-image {
+    max-width: 720px; 
+    border-radius: 50%; 
+    margin-right: 75px;
+    margin-bottom: 45px;  
+}
+
+.login-box {
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    width: 340px;
+    margin: 100px auto;
+    padding: 20px;
+}
+
+.login-box-inner {
+    position: relative;
+    padding: 25px;
+}
+
+.login-header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.form-control {
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid #333;
+    border-radius: 0;
+    box-shadow: none;
+    outline: none;
+    height: 45px;
+    margin-bottom: 20px;
+    transition: all 0.3s ease-in-out;
+}
+
+.form-control:focus {
+    border-color: #00b5ad;
+}
+
+.login-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+body .login-page-background  {
+
+    background: linear-gradient(
+        135deg,
+        #b0efba 0%,
+        #b6f19b 40%,
+        #b5f865 60%,
+        #ffc23f 100%
+    );
+
+    /* Assegura que o gradiente cubra toda a página */
+    min-height: 100vh;
+    /* Aplica o desfoque ao fundo */
+    backdrop-filter: blur(20px);
+
+    /* Outras propriedades para centralizar o formulário de login */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    padding: 0;
+}
+
+/* Estilos para a página de login */
+.login-form-container {
+    background-color: rgba(255, 255, 255, 0.9); /* Fundo semi-transparente para o formulário */
+    padding: 40px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 400px;
+    margin: 5% auto; /* Centraliza o formulário na página */
+}
+
+/* Título da página de login */
+.login-title {
+    color: #333;
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 24px; /* Tamanho do texto do título */
+}
+
+/* Estilização dos inputs */
+.form-control {
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    margin-bottom: 15px;
+    padding: 10px;
+    width: 100%;
+    box-sizing: border-box; /* Garante que padding não adicione largura */
+}
+
+/* Botão de login */
+.btn-primary {
+    background-color: #009688; /* Cor de fundo do botão de login */
+    border: none;
+    border-radius: 4px;
+    color: white;
+    cursor: pointer;
+    padding: 10px 0;
+    text-align: center;
+    width: 100%;
+    margin-top: 20px; /* Espaçamento superior do botão */
+}
+
+.btn-primary:hover {
+    background-color: #00796b; /* Cor ao passar o mouse */
+}
+
+.btn-login {
+    background: #00b5ad;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 10px 20px;
+    font-size: 16px;
+    font-weight: bold;
+    width: 100%;
+    cursor: pointer;
+    transition: background 0.3s ease-in-out;
+}
+
+.btn-login:hover {
+    background: #00897b;
+}
+
+.login-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+}
+
+.login-container {
+    background: #fff;
+    padding: 40px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 400px;
+}
+
+.login-title {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.form-control {
+    border-radius: 20px;
+    padding: 10px 15px;
+    border: 1px solid #ccc;
+    margin-bottom: 15px;
+}
+
+.btn-login {
+    width: 100%;
+    border-radius: 20px;
+    padding: 10px;
+    background: #00b5ad; /* Your button color */
+    border: none;
+    color: #fff;
+}
+
+.forgot-password {
+    display: block;
+    text-align: right;
+    margin-bottom: 10px;
+}
+
+.keep-logged-in {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.btn-login:hover {
+    background: #00897b; /* Darken button on hover */
+}
+
+.layout {
+    display: flex;
+    gap: 20px;
+  
+    justify-content: space-around;
+    align-items: center;
+  }
+
+.container.my-7 {
+    border: 2px solid #ccc; /* Adiciona uma borda sólida com a cor cinza clara */
+    background-color: #f7f7f7; /* Define uma cor de fundo clara para a div */
+    box-shadow: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23); /* Aplica uma sombra para dar profundidade */
+    border-radius: 15px; /* Arredonda os cantos da borda */
+}
+
+/* Personaliza o login-wrapper para alinhar com o novo estilo da container */
+.login-wrapper {
+    background: rgba(255, 255, 255, 0.9); /* Adiciona transparência ao fundo do formulário */
+    border-radius: 15px; /* Arredonda os cantos */
+    padding: 25px; /* Adiciona um padding para que o conteúdo não toque as bordas */
+    margin-top: -50px; /* Ajusta a margem superior para sobrepor à borda da container */
+    box-shadow: none; /* Remove a sombra para não conflitar com a sombra da container */
+}
+
+/* Se quiser um fundo mais complexo com um gradiente para a container */
+.container.my-7 {
+    background-image: linear-gradient(135deg, #77efaf 0%, #f9f9f9 50%, #fefcea 75%, #f8fffd 100%);
+    /* Restante do CSS permanece */
+}
+
+.step-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh; /* Use the full height of the viewport */
+    gap: 30px; /* Increase the space between circles */
+}
+.step {
+    border-radius: 50%;
+    width: 200px; /* Increase the size of circles */
+    height: 200px; /* Increase the size of circles */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+.step h1 {
+    font-size: 1.5rem; /* Increase the font size */
+    color: white;
+    margin-bottom: 15px; /* Increase the spacing */
+    text-align: center;
+}
+.btn-step {
+    border: none;
+    padding: 15px 30px; /* Increase the padding */
+    color: black;
+    background-color: white;
+    cursor: pointer;
+    font-size: 1.25rem; /* Increase the font size */
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn-step2 {
+    border: none;
+    padding: 8px 12px; /* Increase the padding */
+    color: black;
+    background-color: white;
+    cursor: pointer;
+    font-size: 1.25rem; /* Increase the font size */
+    text-decoration: none;
+    display: inline-block;
+}
+
+.step1 {
+    background-color: rgb(239, 216, 0); /* Red */
+}
+.step2 {
+    background-color: #12f382; /* Yellow */
+}
+.step3 {
+    background-color: #4ab6ff; /* Blue */
+}
+.step4 {
+    border-radius: 50%;
+    width: 100px; /* Increase the size of circles */
+    height: 100px; /* Increase the size of circles */
+    display: flex;
+    justify-content: center;
+    align-items: right;
+    flex-direction: column;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    background-color: #4ab6ff; /* Blue */
+}

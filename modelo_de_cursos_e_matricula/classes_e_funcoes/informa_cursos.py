@@ -35,6 +35,18 @@ class InformaCursos(models.Model):
     ('porcentagem', '0-100 (%)')
     ], string='Formato da Nota', default='normal', tracking=True, required=True)
     
+    def action_open_menu(self):
+        view_id2 = self.env.ref('modelo_de_cursos_e_matricula.view_course_management_form').id
+        return {
+            'name': 'Menu Principal',
+            'type': 'ir.actions.act_window',
+            'res_model': 'course.creation.wizard',
+            'view_mode': 'form',
+            'view_id': view_id2,
+            'target': 'new',
+            'context': {'form_view_initial_mode': 'edit', 'force_detailed_view': 'true'}
+        }
+    
     @api.constrains('variant_curriculo_id')
     def _check_duplicate_disciplinas(self):
         """
@@ -80,4 +92,36 @@ class InformaCursos(models.Model):
                     'title': "Aviso",
                     'message': "Curso não encontrado!"
                 }
-            }        
+            }
+
+    @api.model
+    def create(self, values):
+        # Chamar o método original de 'create'
+        record = super(InformaCursos, self).create(values)
+        # Log de auditoria
+        self.env['audit.log.report'].create_log(record, values, action='create')
+        return record
+
+    def write(self, values):
+        # Log de auditoria antes da alteração
+        for rec in self:
+            self.env['audit.log.report'].create_log(rec, values, action='write')
+        # Chamar o método original de 'write'
+        return super(InformaCursos, self).write(values)
+
+    def unlink(self):
+        # Preparar dados para o log de auditoria antes da exclusão
+        for record in self:
+            log_vals = {
+                'model_name': record._name,
+                'action': 'unlink',
+                'field_name': '',
+                'old_value': '',
+                'new_value': f'Registro Excluído com ID {record.id}',
+                'user_id': self.env.user.id,
+                'change_date': fields.Datetime.now(),
+            }
+            self.env['audit.log.report'].create(log_vals)
+
+        # Chamar o método original de 'unlink'
+        return super(InformaCursos, self).unlink()

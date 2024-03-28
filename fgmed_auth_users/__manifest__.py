@@ -1,0 +1,25 @@
+{
+    'name': 'FGMED usuários',
+    'version': '1.0',
+    'summary': 'Autenticação Personalizada com Autenticação de Dois Fatores (2FA)',
+    'sequence': 10,
+    'description': """Autenticação Personalizada com Autenticação de Dois Fatores (2FA) para acesso a HTML.""",
+    'category': 'Website',
+    'depends': [
+        'base', 
+        'web', 
+        'mail',
+    ],
+    'data': [
+        'data/custom_auth_data.xml',
+        'security/ir.model.access.xml',
+        'security/ir.model.access.csv',  
+        'views/custom_auth_user_form.xml',      
+    ],
+    'demo': [],
+    'qweb': [],
+    'installable': True,
+    'application': True,
+    'auto_install': False,
+    'license': 'LGPL-3',
+}

@@ -1,0 +1,61 @@
+.oe_stat_button4 {
+    color: white; /* Texto branco */
+    background-color: #005bc4; /* Fundo azul */
+    border-color: #007bff; /* Borda azul */
+    font-size: 10px; /* Tamanho do texto */
+    padding: 5px 10px; /* Padding para um botão maior */
+    margin: 10px; /* Espaçamento entre os botões */
+    min-width: 40px; /* Largura mínima */
+    height: 40px; /* Altura dos botões */
+    white-space: nowrap; /* Evita quebra de linha */
+    overflow: visible; /* Mostra o texto overflow */
+    line-height: 30px; /* Altura da linha para alinhar o texto verticalmente */
+    display: inline-block; /* Mantém os botões na mesma linha */
+    max-width: 100%; /* Largura máxima */
+    border-radius: 10px; /* Cantos arredondados */
+}
+
+.oe_stat_button3 {
+    color: white; /* Texto branco */
+    background-color: #007bff; /* Fundo azul */
+    border-color: #007bff; /* Borda azul */
+    font-size: 20px; /* Tamanho do texto */
+    padding: 15px 30px; /* Padding para um botão maior */
+    margin: 10px; /* Espaçamento entre os botões */
+    min-width: 200px; /* Largura mínima */
+    height: 60px; /* Altura dos botões */
+    white-space: nowrap; /* Evita quebra de linha */
+    overflow: visible; /* Mostra o texto overflow */
+    line-height: 30px; /* Altura da linha para alinhar o texto verticalmente */
+    display: inline-block; /* Mantém os botões na mesma linha */
+    max-width: 100%; /* Largura máxima */
+    border-radius: 3px; /* Cantos arredondados */
+}
+
+.oe_stat_button2 {
+    color: white; /* Texto branco */
+    background-color: #0a9011; /* Fundo azul */
+    border-color: #007bff; /* Borda azul */
+    font-size: 20px; /* Tamanho do texto */
+    padding: 15px 30px; /* Padding para um botão maior */
+    margin: 10px; /* Espaçamento entre os botões */
+    min-width: 200px; /* Largura mínima */
+    height: 60px; /* Altura dos botões */
+    white-space: nowrap; /* Evita quebra de linha */
+    overflow: visible; /* Mostra o texto overflow */
+    line-height: 30px; /* Altura da linha para alinhar o texto verticalmente */
+    display: inline-block; /* Mantém os botões na mesma linha */
+    max-width: 100%; /* Largura máxima */
+    border-radius: 3px; /* Cantos arredondados */
+}
+
+.oe_stat_button:hover {
+    background-color: #0056b3; /* Fundo ao passar o mouse */
+    border-color: #0056b3; /* Borda ao passar o mouse */
+}
+
+/* Remove o Save e Discard do Wizard */
+.o_form_nosheet .o_form_button_save,
+.o_form_nosheet .o_form_button_cancel {
+    display: none;
+}

@@ -10,7 +10,6 @@ from odoo import http
 import requests
 from moodle import Moodle
 
-
 IS_TEST_ENVIRONMENT = False
 _logger = logging.getLogger(__name__)
 
@@ -35,7 +34,7 @@ class InformaMatricula(models.Model):
         ('AVA','AVA'),
         ('PRESENCIAL','PRESENCIAL'),
         ] , required=True, tracking=True)
-    justificativa_cancelamento = fields.Text(string="Justificativa de Cancelamento", tracking=True)
+    justificativa_cancelamento = fields.Text(string="Justificativa de Suspensão", tracking=True)
     inscricao_ava = fields.Date(string='Inscrição Ava', required=True, tracking=True)
     email = fields.Char(string="Email", tracking=True)
     telefone = fields.Char(string="Telefone", tracking=True)
@@ -65,10 +64,23 @@ class InformaMatricula(models.Model):
     overlapping_disciplines_ids = fields.Many2many('informa.disciplina', 'informa_disciplina_rel', 'disciplina_id', 'overlap_id', string='Disciplinas Sobrepostas', readonly=True)
     overlapping_matricula_ids = fields.Many2many('informa.matricula', 'informa_matricula_rel', 'matricula_id', 'overlap_id', string='Matrículas Sobrepostas', readonly=True)
     overlapping_matricula_descriptions = fields.Char(compute='_compute_overlapping_matriculas', string='Matrículas Sobrepostas', readonly=True)
-    allow_grade_editing = fields.Boolean( string="Permitir Edição de Notas para Disciplinas Sobrepostas")
+    allow_grade_editing = fields.Boolean( string="Permitir Edição")
     variant_curriculo_id = fields.Many2one('informa.curriculo.variant', string='Variante do Currículo', domain="[('id', 'in', available_variants)]", store=True)
     available_variants = fields.Many2many('informa.curriculo.variant', compute='_compute_available_variants')
+    moodle = fields.Boolean( string="Moodle?")
 
+    def action_open_menu(self):
+        view_id2 = self.env.ref('modelo_de_cursos_e_matricula.view_course_management_form').id
+        return {
+            'name': 'Menu Principal',
+            'type': 'ir.actions.act_window',
+            'res_model': 'course.creation.wizard',
+            'view_mode': 'form',
+            'view_id': view_id2,
+            'target': 'new',
+            'context': {'form_view_initial_mode': 'edit', 'force_detailed_view': 'true'}
+        }
+        
     @api.depends('curso')
     def _compute_variant_curriculo_id(self):
         """
@@ -172,8 +184,20 @@ class InformaMatricula(models.Model):
                     record.prazo_exp_certf_dias = _("Data de provável certificação não definida")
         
     def _connect_moodle(self):
-        moodle_url = "https://avadev.medflix.club/webservice/rest/server.php"
-        moodle_token = "c502156af2c00a4b3e9e5d878922be46"
+        
+        # Obtendo acesso ao modelo de configurações do módulo fgmed_config_params
+        ParamObj = self.env['fgmed.config.params']
+        
+        # Buscando as configurações de base_url e token
+        base_url_param = ParamObj.search([('chave', '=', 'moodle_base_url')], limit=1)
+        token_param = ParamObj.search([('chave', '=', 'moodle_token')], limit=1)
+
+        # Atribuindo os valores encontrados ou definindo um valor padrão
+        base_url = base_url_param.valor
+        token = token_param.valor         
+                
+        moodle_url = base_url+"webservice/rest/server.php"
+        moodle_token = token
         moodle = Moodle(moodle_url, moodle_token)
         return moodle
     
@@ -200,8 +224,20 @@ class InformaMatricula(models.Model):
             self.block_access_to_moodle()
         return res
     
-    def get_moodle_course_id(self, d_data): 
-        url = "https://avadev.medflix.club/webservice/rest/server.php"
+    def get_moodle_course_id(self, d_data):
+        
+        # Obtendo acesso ao modelo de configurações do módulo fgmed_config_params
+        ParamObj = self.env['fgmed.config.params']
+        
+        # Buscando as configurações de base_url e token
+        base_url_param = ParamObj.search([('chave', '=', 'moodle_base_url')], limit=1)
+        token_param = ParamObj.search([('chave', '=', 'moodle_token')], limit=1)
+
+        # Atribuindo os valores encontrados ou definindo um valor padrão
+        base_url = base_url_param.valor
+        token = token_param.valor         
+         
+        url = base_url+"webservice/rest/server.php"
         
         # Extrair o valor inteiro de d_data
         course_id_value = d_data.get('id')
@@ -212,7 +248,7 @@ class InformaMatricula(models.Model):
         _logger.info('ID: %s', course_id_value)
         
         params = {
-            "wstoken": "c502156af2c00a4b3e9e5d878922be46",
+            "wstoken": token,
             "wsfunction": "core_course_get_courses_by_field",
             "field": "idnumber",
             "value": int(course_id_value),  # Converte o valor para inteiro
@@ -227,8 +263,20 @@ class InformaMatricula(models.Model):
         else:
             return None
         
-    def get_moodle_course_id_int(self, course_id_value): 
-        url = "https://avadev.medflix.club/webservice/rest/server.php"
+    def get_moodle_course_id_int(self, course_id_value):
+        
+        # Obtendo acesso ao modelo de configurações do módulo fgmed_config_params
+        ParamObj = self.env['fgmed.config.params']
+        
+        # Buscando as configurações de base_url e token
+        base_url_param = ParamObj.search([('chave', '=', 'moodle_base_url')], limit=1)
+        token_param = ParamObj.search([('chave', '=', 'moodle_token')], limit=1)
+
+        # Atribuindo os valores encontrados ou definindo um valor padrão
+        base_url = base_url_param.valor
+        token = token_param.valor        
+         
+        url = base_url+"webservice/rest/server.php"
         
         if course_id_value is None:
             _logger.error('ID do curso não fornecido')
@@ -237,7 +285,7 @@ class InformaMatricula(models.Model):
         _logger.info('ID do curso: %s', course_id_value)
         
         params = {
-            "wstoken": "c502156af2c00a4b3e9e5d878922be46",
+            "wstoken": token,
             "wsfunction": "core_course_get_courses_by_field",
             "field": "idnumber",
             "value": course_id_value,
@@ -253,10 +301,22 @@ class InformaMatricula(models.Model):
             return None
             
     def get_moodle_user_id(self, user_id):
-        url = "https://avadev.medflix.club/webservice/rest/server.php"
+        
+        # Obtendo acesso ao modelo de configurações do módulo fgmed_config_params
+        ParamObj = self.env['fgmed.config.params']
+        
+        # Buscando as configurações de base_url e token
+        base_url_param = ParamObj.search([('chave', '=', 'moodle_base_url')], limit=1)
+        token_param = ParamObj.search([('chave', '=', 'moodle_token')], limit=1)
+
+        # Atribuindo os valores encontrados ou definindo um valor padrão
+        base_url = base_url_param.valor
+        token = token_param.valor        
+        
+        url = base_url+"webservice/rest/server.php"
         _logger.info('user_id: %s', user_id)
         params = {
-            "wstoken": "c502156af2c00a4b3e9e5d878922be46",
+            "wstoken": token,
             "wsfunction": "core_user_get_users_by_field",
             "field": "idnumber",
             "values[0]": user_id,
@@ -274,12 +334,24 @@ class InformaMatricula(models.Model):
     ##### Aqui inicia os métodos de atualização da Cron, em questão a vinculação das disciplinas para os alunos
      
     def enrol_user_to_course(self, user_id, course_id):
+        
+        # Obtendo acesso ao modelo de configurações do módulo fgmed_config_params
+        ParamObj = self.env['fgmed.config.params']
+        
+        # Buscando as configurações de base_url e token
+        base_url_param = ParamObj.search([('chave', '=', 'moodle_base_url')], limit=1)
+        token_param = ParamObj.search([('chave', '=', 'moodle_token')], limit=1)
+
+        # Atribuindo os valores encontrados ou definindo um valor padrão
+        base_url = base_url_param.valor
+        token = token_param.valor
+        
         # URL base para o serviço web do Moodle
-        MOODLE_URL = "https://avadev.medflix.club/webservice/rest/server.php"
+        MOODLE_URL = base_url+"webservice/rest/server.php"
         
         # Parâmetros para a requisição
         params = {
-            "wstoken": "c502156af2c00a4b3e9e5d878922be46",
+            "wstoken": token,
             "wsfunction": "enrol_manual_enrol_users",
             "moodlewsrestformat": "json",
             "enrolments[0][roleid]": 5,
@@ -298,8 +370,18 @@ class InformaMatricula(models.Model):
             raise UserError(_('Erro ao inscrever usuário no curso no Moodle! Houve algum problema na inscrição.'))
 
     def block_access_to_moodle(self, moodle_aluno_id, moodle_curso_id):
-        moodle_url = "https://avadev.medflix.club/webservice/rest/server.php"
-        token = "c502156af2c00a4b3e9e5d878922be46"
+        # Obtendo acesso ao modelo de configurações do módulo fgmed_config_params
+        ParamObj = self.env['fgmed.config.params']
+        
+        # Buscando as configurações de base_url e token
+        base_url_param = ParamObj.search([('chave', '=', 'moodle_base_url')], limit=1)
+        token_param = ParamObj.search([('chave', '=', 'moodle_token')], limit=1)
+
+        # Atribuindo os valores encontrados ou definindo um valor padrão
+        base_url = base_url_param.valor
+        token = token_param.valor
+        
+        moodle_url = base_url+"webservice/rest/server.php"
         user_id = moodle_aluno_id
         course_id = moodle_curso_id
         
@@ -319,6 +401,18 @@ class InformaMatricula(models.Model):
                 _logger.error('Erro ao suspender usuário no Moodle: %s', response.text)
                 
     def has_no_grade_as_dash(self, course_id, user_id):
+        
+        # Obtendo acesso ao modelo de configurações do módulo fgmed_config_params
+        ParamObj = self.env['fgmed.config.params']
+        
+        # Buscando as configurações de base_url e token
+        base_url_param = ParamObj.search([('chave', '=', 'moodle_base_url')], limit=1)
+        token_param = ParamObj.search([('chave', '=', 'moodle_token')], limit=1)
+
+        # Atribuindo os valores encontrados ou definindo um valor padrão
+        base_url_m = base_url_param.valor
+        token = token_param.valor             
+        
         url = "https://avadev.medflix.club/webservice/rest/server.php"
         params = {
             "wstoken": "c502156af2c00a4b3e9e5d878922be46",
@@ -448,6 +542,9 @@ class InformaMatricula(models.Model):
         """
         Envia informações atualizadas da matrícula para o Moodle.
         """
+        if not self.moodle:
+            return {'success': False, 'message': 'Integração com Moodle desativada.'}
+        
         for matricula in self:
             aluno_name = matricula.nome_do_aluno.name
             curso_name = matricula.curso.name if matricula.curso else ''
@@ -468,7 +565,6 @@ class InformaMatricula(models.Model):
                     'message': 'Envio realizado (simulado)',
                     'data': data_to_send
                 }
-
             moodle = self._connect_moodle()
             # O método para atualizar informações da matrícula seja 'custom_method_update_matricula'
             response = moodle('custom_method_update_matricula', data_to_send)
@@ -485,17 +581,18 @@ class InformaMatricula(models.Model):
         :param data: Um dicionário contendo as informações do aluno que precisam ser atualizadas.
         :return: Um dicionário contendo informações sobre o sucesso ou falha da operação.
         """
-        moodle = self._connect_moodle()
-
+        if not self.moodle:
+            return {'success': False, 'message': 'Integração com Moodle desativada.'}
+        
+        moodlec = self._connect_moodle()
         # Primeiro, tente obter o ID do aluno no Moodle usando o nome (ou outra identificação única, como e-mail ou matrícula).
         try:
-            response = moodle.call('core_user_get_users', {'criteria': [{'key': 'username', 'value': data['aluno_name']}]})
+            response = moodlec.call('core_user_get_users', {'criteria': [{'key': 'username', 'value': data['aluno_name']}]})
             if not response:
                 return {'success': False, 'message': "Aluno não encontrado no Moodle."}
             user_id = response[0]['id']
         except Exception as e:
             return {'success': False, 'message': f"Erro ao buscar aluno no Moodle: {e}"}
-
         # Atualizar as informações do aluno.
         # Presumindo que o Moodle tenha uma função chamada 'core_user_update_users' para atualizar informações do usuário.
         users_data = [{
@@ -505,11 +602,11 @@ class InformaMatricula(models.Model):
             'email': data.get('email', ''),
         }]
         try:
-            moodle.call('core_user_update_users', users_data)
+            moodlec.call('core_user_update_users', users_data)
             return {'success': True, 'message': "Informações do aluno atualizadas com sucesso."}
         except Exception as e:
             return {'success': False, 'message': f"Erro ao atualizar informações do aluno: {e}"}   
-    
+
     def show_student_disciplines(self):
         self.ensure_one()
 
@@ -553,8 +650,9 @@ class InformaMatricula(models.Model):
     def atualizar_status_matricula(self):
         for matricula in self:
             registros_disciplina = self.env['informa.registro_disciplina'].search([('matricula_id', '=', matricula.id)])
-            if all(record.status == 'aprovado' for record in registros_disciplina):
+            if registros_disciplina and all(record.status == 'aprovado' for record in registros_disciplina):
                 matricula.status_do_certificado = 'FINALIZADO'
+
     
     def _update_related_disciplinas(self):
         for matricula in self:
@@ -566,11 +664,16 @@ class InformaMatricula(models.Model):
         # Primeiro, verifique se o aluno já tem uma matrícula no curso especificado.
         aluno_id = vals.get('nome_do_aluno')
         curso_id = vals.get('curso')
-        existing_matricula = self.search([('nome_do_aluno', '=', aluno_id), ('curso', '=', curso_id)])
-        overlapping_courses = []
+        existing_matricula = self.search([('nome_do_aluno', '=', aluno_id), ('curso', '=', curso_id)], limit=1)
         
         if existing_matricula:
             raise UserError(_('O aluno já possui uma matrícula neste curso!'))
+            
+        # Se não houver matrícula existente, crie a nova matrícula.
+        matricula_record = super(InformaMatricula, self).create(vals)
+        
+        # Lógica para registrar a criação na auditoria
+        self.env['audit.log.report'].create_log(matricula_record, vals, action='create')
         
         # Verificar se o aluno tem matrícula em algum curso que contém disciplinas iguais.
         all_matriculas = self.search([('nome_do_aluno', '=', aluno_id)])
@@ -579,21 +682,20 @@ class InformaMatricula(models.Model):
         new_disciplinas_from_groups = self.env['informa.cursos'].browse(curso_id).variant_curriculo_id.mapped('disciplina_ids')
         
         overlapping_courses = []
-        for matricula in all_matriculas:
+        for matricula in all_matriculas - matricula_record:
             common_disciplinas = new_disciplinas_from_groups & matricula.curso.variant_curriculo_id.mapped('disciplina_ids')
             if common_disciplinas:
                 for disciplina in common_disciplinas:
                     overlapping_courses.append((disciplina.id, disciplina.name, matricula.id, matricula.numero_matricula))
-
+                    
         if overlapping_courses:
             overlapping_disciplinas = [item[0] for item in overlapping_courses]
             overlapping_matriculas = [item[2] for item in overlapping_courses]
-            vals['overlapping_disciplines_ids'] = [(6, 0, overlapping_disciplinas)]
-            vals['overlapping_matricula_ids'] = [(6, 0, overlapping_matriculas)]
+            matricula_record.write({
+                'overlapping_disciplines_ids': [(6, 0, overlapping_disciplinas)],
+                'overlapping_matricula_ids': [(6, 0, overlapping_matriculas)],
+            })
             
-        # Se não houver matrícula existente, crie a nova matrícula.
-        matricula_record = super(InformaMatricula, self).create(vals)
-        
         # Pegue as disciplinas permitidas para o curso associado à matrícula.
         allowed_disciplinas = self.compute_allowed_disciplinas(matricula_record.curso)
         
@@ -611,88 +713,150 @@ class InformaMatricula(models.Model):
             matricula_record.with_context(skip_status_update=True).atualizar_status_matricula()
             
         # Método para levar as informações para o moodle 
-        self._register_student_in_moodle(matricula_record)
-        
+        if self.moodle:
+            self._register_student_in_moodle(matricula_record)
+
         # Se data_provavel_certificacao estiver no dicionário vals e data_original_certificacao não estiver, repassa o valor
         if 'data_provavel_certificacao' in vals and 'data_original_certificacao' not in vals:
-            vals['data_original_certificacao'] = vals['data_provavel_certificacao']
-        
+            matricula_record.data_original_certificacao = vals['data_provavel_certificacao']
+
         return matricula_record
 
     def write(self, vals):
         result = super(InformaMatricula, self).write(vals)
+
+        # Lógica para registrar a atualização na auditoria
+        for record in self:
+            self.env['audit.log.report'].create_log(record, vals, action='write')
         
         # Se algum dos campos de interesse foi alterado, envie atualizações para o Moodle
         fields_of_interest = ['email', 'telefone', 'nome_do_aluno', 'curso']
-
-        if any(field in vals for field in fields_of_interest):
-            self.update_moodle_information()
+        if self.moodle:
+            if any(field in vals for field in fields_of_interest):
+                self.update_moodle_information()
 
         if not self._context.get('skip_status_update'):
             self.with_context(skip_status_update=True).atualizar_status_matricula()
 
         return result
 
+    def unlink(self):
+        # Preparar dados para o log de auditoria antes da exclusão
+        for record in self:
+            log_vals = {
+                'model_name': record._name,
+                'action': 'unlink',
+                'field_name': '',
+                'old_value': '',
+                'new_value': f'Registro Excluído com ID {record.id}',
+                'user_id': self.env.user.id,
+                'change_date': fields.Datetime.now(),
+            }
+            self.env['audit.log.report'].create(log_vals)
+
+        # Chamar o método original de 'unlink'
+        return super(InformaMatricula, self).unlink()  
+
     def _register_student_in_moodle(self, matricula):
-        base_url = "https://avadev.medflix.club/webservice/rest/server.php"
-        token = "c502156af2c00a4b3e9e5d878922be46"
-        headers = {
-            "Content-Type": "application/x-www-form-urlencoded"
-        }
+        
+        if self.moodle:    
+            # Obtendo acesso ao modelo de configurações do módulo fgmed_config_params
+            ParamObj = self.env['fgmed.config.params']
+            
+            # Buscando as configurações de base_url e token
+            base_url_param = ParamObj.search([('chave', '=', 'moodle_base_url')], limit=1)
+            token_param = ParamObj.search([('chave', '=', 'moodle_token')], limit=1)
 
-        # Divida o nome completo no primeiro espaço
-        names = matricula.nome_do_aluno.name.split(' ', 1)
-        firstname = names[0]
-        lastname = names[1] if len(names) > 1 else firstname
-        cpf = matricula.nome_do_aluno.l10n_br_cnpj_cpf
-        cpfform = 'Fg@'+cpf
-        matricula_id = matricula.nome_do_aluno.id
+            # Atribuindo os valores encontrados ou definindo um valor padrão
+            base_url_m = base_url_param.valor
+            token_m = token_param.valor         
+                            
+            base_url = base_url_m+"webservice/rest/server.php"
+            token = token_m
+            headers = {
+                "Content-Type": "application/x-www-form-urlencoded"
+            }
+            
+            # Divida o nome completo no primeiro espaço
+            names = matricula.nome_do_aluno.name.split(' ', 1)
+            firstname = names[0]
+            lastname = names[1] if len(names) > 1 else firstname
+            matricula_id = matricula.nome_do_aluno.id
+            # Assegure que a variável 'cpf' seja definida antes de ser usada
+            cpf = matricula.nome_do_aluno.l10n_br_cnpj_cpf
+            cpfform = 'Fg@' + cpf
+                
+            # Obtenha os objetos de modelo necessários
+            AuthUserObj = self.env['custom.auth.user']
+            PartnerObj = self.env['res.partner']
 
-        if IS_TEST_ENVIRONMENT:
-            # Se estivermos em um ambiente de teste, simplesmente logue a simulação e retorne.
-            _logger.info('Envio simulado para o Moodle. Nome do aluno: %s, CPF: %s', matricula.nome_do_aluno.name, cpf)
-            return {
-                'message': 'Envio realizado (simulado)',
-                'data': {
-                    "username": cpf,
-                    "firstname": firstname,
-                    "lastname": lastname,
-                    "email": matricula.email
+            # Verifique se o usuário já existe no modelo custom.auth.user
+            existing_auth_user = AuthUserObj.search([('username', '=', cpf)], limit=1)
+
+            # Se o usuário não existir no modelo custom.auth.user, crie um novo
+            if not existing_auth_user:
+                # A partir da matrícula, obtenha o partner_id
+                partner_id = PartnerObj.search([('id', '=', matricula.nome_do_aluno.id)], limit=1)
+
+                # Crie um novo usuário no modelo custom.auth.user
+                if partner_id:
+                    new_auth_user = AuthUserObj.create({
+                        'username': cpf,
+                        'password': cpfform,  # Ou qualquer lógica para definir a senha aqui
+                        'partner_id': partner_id.id,
+                        # 'image': 'Sua lógica para definir a imagem, se necessário'
+                    })
+                    _logger.info('Novo usuário de autenticação customizada criado: %s', new_auth_user.username)
+                else:
+                    raise UserError(_('Parceiro não encontrado para a matrícula fornecida!'))        
+
+            if IS_TEST_ENVIRONMENT:
+                # Se estivermos em um ambiente de teste, simplesmente logue a simulação e retorne.
+                _logger.info('Envio simulado para o Moodle. Nome do aluno: %s, CPF: %s', matricula.nome_do_aluno.name, cpf)
+                return {
+                    'message': 'Envio realizado (simulado)',
+                    'data': {
+                        "username": cpf,
+                        "firstname": firstname,
+                        "lastname": lastname,
+                        "auth": "auth_fgmed",
+                        "email": matricula.email
+                    }
                 }
-            }
 
-        # Primeiro, verifique se o usuário já existe
-        user_check_url = f"{base_url}/webservice/rest/server.php?wstoken={token}&wsfunction=core_user_get_users_by_field&field=username&values[0]={cpf}&moodlewsrestformat=json"
-        response = requests.get(user_check_url, headers=headers)
+            # Primeiro, verifique se o usuário já existe
+            user_check_url = f"{base_url}/webservice/rest/server.php?wstoken={token}&wsfunction=core_user_get_users_by_field&field=username&values[0]={cpf}&moodlewsrestformat=json"
+            response = requests.get(user_check_url, headers=headers)
+            
+            # Ajuste a maneira como você extrai a resposta
+            users = response.json()
+
+            if len(users) == 0:  # Se a lista estiver vazia, o usuário não existe
+                # Construir os dados para a criação do usuário
+                user_data = {
+                    "users[0][username]": cpf,
+                    "users[0][password]": cpfform,
+                    "users[0][firstname]": firstname,
+                    "users[0][lastname]": lastname,
+                    "users[0][email]": matricula.email,
+                    "users[0][idnumber]":matricula_id,
+                    "users[0][auth]": "auth_fgmed",
+                }
+            
+                # Se o usuário não existir, criamos um novo
+                signup_url = f"{base_url}webservice/rest/server.php?wstoken={token}&wsfunction=core_user_create_users&moodlewsrestformat=json"
+                for key, value in user_data.items():
+                    signup_url += f"&{key}={value}"
+
+                response = requests.get(signup_url, headers=headers)  # Usamos GET aqui
+                _logger.info('Resposta do Moodle ao criar usuário: %s', response.text)
+                if response.status_code != 200:
+                    _logger.error('Erro ao criar usuário no Moodle: %s', response.text)
+                    raise UserError(_('Erro ao criar usuário no Moodle! O usuário já existe ou houve algum problema na criação.'))
+            else:
+                _logger.info('No Moodle O usuário já existe.')
+                pass
         
-        # Ajuste a maneira como você extrai a resposta
-        users = response.json()
-
-        if len(users) == 0:  # Se a lista estiver vazia, o usuário não existe
-            # Construir os dados para a criação do usuário
-            user_data = {
-                "users[0][username]": cpf,
-                "users[0][password]": cpfform,
-                "users[0][firstname]": firstname,
-                "users[0][lastname]": lastname,
-                "users[0][email]": matricula.email,
-                "users[0][idnumber]":matricula_id,
-            }
-        
-            # Se o usuário não existir, criamos um novo
-            signup_url = f"{base_url}/webservice/rest/server.php?wstoken={token}&wsfunction=core_user_create_users&moodlewsrestformat=json"
-            for key, value in user_data.items():
-                signup_url += f"&{key}={value}"
-
-            response = requests.get(signup_url, headers=headers)  # Usamos GET aqui
-            _logger.info('Resposta do Moodle ao criar usuário: %s', response.text)
-            if response.status_code != 200:
-                _logger.error('Erro ao criar usuário no Moodle: %s', response.text)
-                raise UserError(_('Erro ao criar usuário no Moodle! O usuário já existe ou houve algum problema na criação.'))
-        else:
-            _logger.info('No Moodle O usuário já existe.')
-            pass
-    
     def compute_allowed_disciplinas(self, curso_id):
         # Buscar todas as disciplinas associadas aos grupos de disciplinas do curso selecionado
         disciplinas = self.env['informa.disciplina']

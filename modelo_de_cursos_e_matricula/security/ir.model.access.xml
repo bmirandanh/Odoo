@@ -5,7 +5,10 @@
       <field name="name">Grupo de Cursos e Matrículas</field>
       <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
     </record>
-
-
+    <record id="contatos_dos_alunos" model="res.groups">
+      <field name="name">Contatos dos alunos</field>
+      <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+    </record>
+    
   </data>
 </odoo>

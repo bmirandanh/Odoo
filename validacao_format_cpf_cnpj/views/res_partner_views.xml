@@ -1,0 +1,9 @@
+<odoo>
+    <data>
+        <template id="view_partner_form_custom" inherit_id="base.view_partner_form">
+            <xpath expr="//field[@name='l10n_br_cnpj_cpf']" position="replace">
+                <field name="l10n_br_cnpj_cpf_formatted" placeholder="{record.cpf_cnpj_placeholder}" nolabel="1" />
+            </xpath>
+        </template>
+    </data>
+</odoo>

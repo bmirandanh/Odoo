@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+	<data>
+		<record id="view_partner_form_inherit" model="ir.ui.view">
+			<field name="name">res.partner.form.inherit</field>
+			<field name="model">res.partner</field>
+			<field name="inherit_id" ref="base.view_partner_form"/>
+			<field name="arch" type="xml">
+				<xpath expr="//field[@name='category_id']" position="after">
+					<field name="birth_date" attrs="{'invisible': [('is_company', '=', True)]}"/>
+					<field name="country_origin_id" attrs="{'invisible': [('is_company', '=', True)]}"/>
+				</xpath>
+
+				<xpath expr="//field[@name='vat']" position="replace">
+					<div></div>
+					<group>
+						<field name="vat" placeholder="e.g. BE0477472701" attrs="{'readonly': [('parent_id','!=',False)]}"/>
+					</group>
+					<group>
+						<field name="profession" options="{'no_create':True}"  attrs="{'invisible': [('is_company', '=', True)]}"/>
+					</group>
+					<group>
+						<field name="personal_id" attrs="{'invisible': [('is_company', '=', True)]}"/>
+						<field name="id_regulator" options="{'no_create':True}"  attrs="{'invisible': [('is_company', '=', True)]}"/>
+					</group>
+					<group>
+						<field name="professional_id" attrs="{'invisible': [('is_company', '=', True)]}"/>
+						<field name="professional_regulator" options="{'no_create':True}"  attrs="{'invisible': [('is_company', '=', True)]}"/>
+					</group>
+				</xpath>
+
+			</field>
+		</record>
+	</data>
+</odoo>

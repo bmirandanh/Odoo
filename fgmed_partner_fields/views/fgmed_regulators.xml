@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+	<data>
+		<!-- Herde a visualização da ação do menu "Configurações" -->
+		<record id="fgmed_professional_regulators_action" model="ir.actions.act_window">
+			<field name="name">Conselhos de Classe</field>
+			<field name="type">ir.actions.act_window</field>
+			<field name="res_model">fgmed.professional.regulators</field>
+			<field name="view_mode">tree,form</field>
+		</record>
+
+		<record id="fgmed_id_regulators_action" model="ir.actions.act_window">
+			<field name="name">Órgãos Expedidores</field>
+			<field name="type">ir.actions.act_window</field>
+			<field name="res_model">fgmed.id.regulators</field>
+			<field name="view_mode">tree,form</field>
+		</record>
+
+		<!-- Defining Content tree view -->
+		<record id="fgmed_id_regulators_tree" model="ir.ui.view">
+			<field name="name">Órgãos Expedidores</field>
+			<field name="model">fgmed.id.regulators</field>
+			<field name="arch" type="xml">
+					<tree string="Órgãos Expedidores">
+							<field name="name" />
+							<field name="description" />
+					</tree>
+			</field>
+		</record>
+
+		<!-- Defining Content tree view -->
+		<record id="fgmed_professional_regulators_tree" model="ir.ui.view">
+			<field name="name">Conselhos de Classe</field>
+			<field name="model">fgmed.professional.regulators</field>
+			<field name="arch" type="xml">
+					<tree string="Conselhos de Classe">
+							<field name="name" />
+							<field name="description" />
+					</tree>
+			</field>
+		</record>
+
+
+		<record id="fgmed_id_regulators_form" model="ir.ui.view">
+			<field name="name">Órgãos Expedidores</field>
+			<field name="model">fgmed.id.regulators</field>
+			<field name="arch" type="xml">
+				<form string="Órgão Expedidor">
+					<group>
+						<field name="name"/>
+						<field name="description" />
+					</group>
+				</form>
+			</field>
+		</record>
+
+
+		<record id="fgmed_professional_regulators_forms" model="ir.ui.view">
+			<field name="name">Conselho de Classe</field>
+			<field name="model">fgmed.professional.regulators</field>
+			<field name="arch" type="xml">
+				<form string="Conselho de Classe">
+					<group>
+						<field name="name"/>
+						<field name="description" />
+					</group>
+				</form>
+			</field>
+		</record>
+
+		<!-- Adicione o submenu -->
+		
+		<menuitem id="menu_fgmed_configuracoes_menu_master" name="Configurações FGMED" sequence="1" />
+		<menuitem id="menu_fgmed_processional_regulators" name="Conselhos de Classe" parent="menu_fgmed_configuracoes_menu_master" sequence="10" action="fgmed_professional_regulators_action"/>
+		<menuitem id="menu_fgmed_id_regulators" name="Órgãos expedidores" parent="menu_fgmed_configuracoes_menu_master" sequence="10" action="fgmed_id_regulators_action"/>
+	</data>
+</odoo>

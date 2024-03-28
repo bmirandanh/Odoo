@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+	<data>
+		<record id="fgmed_profession_list_action" model="ir.actions.act_window">
+			<field name="name">Conselhos de Classe</field>
+			<field name="type">ir.actions.act_window</field>
+			<field name="res_model">fgmed.profession.list</field>
+			<field name="view_mode">tree,form</field>
+		</record>
+
+
+		<record id="fgmed_profession_list_tree" model="ir.ui.view">
+			<field name="name">Órgãos Expedidores</field>
+			<field name="model">fgmed.profession.list</field>
+			<field name="arch" type="xml">
+					<tree string="Órgãos Expedidores">
+							<field name="name" />
+							<field name="code"/>
+							<field name="type"/>
+					</tree>
+			</field>
+		</record>
+
+
+		<record id="fgmed_profession_list_form" model="ir.ui.view">
+			<field name="name">Órgãos Expedidores</field>
+			<field name="model">fgmed.profession.list</field>
+			<field name="arch" type="xml">
+				<form string="Órgão Expedidor">
+					<group>
+						<field name="name"/>
+						<field name="code"/>
+						<field name="type"/>
+					</group>
+				</form>
+			</field>
+		</record>
+
+		<record id="fgmed_profession_list_forms" model="ir.ui.view">
+			<field name="name">Conselho de Classe</field>
+			<field name="model">fgmed.profession.list</field>
+			<field name="arch" type="xml">
+				<form string="Conselho de Classe">
+					<group>
+						<field name="name"/>
+						<field name="code"/>
+						<field name="type"/>
+					</group>
+				</form>
+			</field>
+		</record>
+
+		<!-- Adicione o submenu -->
+		<menuitem id="menu_fgmed_profession_list" name="Lista de Profissões" parent="menu_fgmed_configuracoes_menu_master" sequence="10" action="fgmed_profession_list_action"/>
+
+	</data>
+</odoo>

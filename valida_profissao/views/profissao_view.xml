@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Form view for res.profession -->
+        <record id="view_profession_form" model="ir.ui.view">
+            <field name="name">view.profession.form</field>
+            <field name="model">res.profession</field>
+            <field name="arch" type="xml">
+                <form string="Profissão">
+                    <sheet>
+                        <group>
+                            <field name="name"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+        
+        <!-- Changes in res.partner view -->
+        <record id="view_partner_form_inherit" model="ir.ui.view">
+            <field name="name">contact.form.inherit</field>
+            <field name="model">res.partner</field>
+            <field name="inherit_id" ref="base.view_partner_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='function']" position="after">
+                    <field name="profession_id"/>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>

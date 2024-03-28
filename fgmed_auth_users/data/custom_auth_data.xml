@@ -1,0 +1,357 @@
+<odoo>
+    <data noupdate="1">
+
+        <template id="template_request_reset_password" name="Request Reset Password">
+            <t t-call="website.layout">
+                <div class="container mt-5">
+                    <h3>Solicitação de Redefinição de Senha</h3>
+                    <form action="/reset_password" method="post" class="mt-3">
+                        <div class="form-group">
+                            <label for="email">Seu E-mail:</label>
+                            <input type="email" id="email" name="email" class="form-control" placeholder="Digite seu e-mail" required="required"/>
+                        </div>
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-primary">Enviar Solicitação</button>
+                        </div>
+                    </form>
+                </div>
+            </t>
+        </template>
+
+        <template id="template_reset_password_sent" name="Password Reset Sent">
+            <t t-call="website.layout">
+                <div class="container mt-5">
+                    <h3>Redefinição de Senha Solicitada</h3>
+                    <div class="alert alert-info" role="alert">
+                        <p>Um e-mail de redefinição de senha foi enviado para o endereço de e-mail fornecido. Por favor, verifique sua caixa de entrada e siga as instruções para redefinir sua senha.</p>
+                        <p>Este link de redefinição de senha é válido apenas pelos próximos 20 minutos.</p>
+                    </div>
+                </div>
+            </t>
+        </template>
+
+        <template id="template_email_not_found" name="Email Not Found">
+            <t t-call="website.layout">
+                <div class="container mt-5">
+                    <h3>Erro na Solicitação</h3>
+                    <div class="alert alert-danger" role="alert">
+                        <t t-if="error">
+                            <t t-esc="error"/>
+                        </t>
+                    </div>
+                </div>
+            </t>
+        </template>
+        
+        <template id="template_reset_password" name="Reset Password">
+            <t t-call="website.layout">
+                <div class="container mt-5">
+                    <h3>Redefinição de Senha</h3>
+                    <form action="/update_password" method="post" class="mt-3">
+                        <input type="hidden" name="token" t-att-value="token"/>
+                        <div class="form-group">
+                            <label for="password">Nova Senha:</label>
+                            <input type="password" id="password" name="password" class="form-control" required="required"/>
+                        </div>
+                        <div class="form-group">
+                            <label for="confirm_password">Confirmar Nova Senha:</label>
+                            <input type="password" id="confirm_password" name="confirm_password" class="form-control" required="required"/>
+                        </div>
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-primary">Redefinir Senha</button>
+                            <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                        </div>
+                        <t t-if="error">
+                            <div class="alert alert-danger" role="alert">
+                                <t t-esc="error"/>
+                            </div>
+                        </t>
+                    </form>
+                </div>
+            </t>
+        </template>
+
+        <template id="template_password_updated" name="Password Updated">
+            <t t-call="website.layout">
+                <div class="container mt-5">
+                    <h3>Senha Atualizada com Sucesso</h3>
+                    <div class="alert alert-success" role="alert">
+                        <p>Sua senha foi atualizada com sucesso. Você pode agora fazer login com sua nova senha.</p>
+                    </div>
+                </div>
+            </t>
+        </template>        
+    
+        <template id="template_reset_password_expired" name="Reset Password Expired">
+            <t t-call="website.layout">
+                <div class="container mt-5">
+                    <h3>Link de Redefinição de Senha Expirado</h3>
+                    <div class="alert alert-warning" role="alert">
+                        <p>Seu link de redefinição de senha expirou. Por motivos de segurança, os links de redefinição de senha são válidos por um período limitado.</p>
+                        <p>Por favor, caso queira fazer a senha, realize um novo processo de redefinição de senha.</p>
+                    </div>
+                </div>
+            </t>
+        </template>
+
+
+        <!-- Template de e-mail para redefinição de senha -->
+        <record id="email_template_reset_password" model="mail.template">
+            <field name="name">Redefinição de Senha</field>
+            <field name="email_from">${object.company_id.email or ''}</field>
+            <field name="model_id" ref="model_custom_auth_user"/>
+            <field name="subject">Redefinição de Senha Solicitada</field>
+            <field name="body_html"><![CDATA[
+                <p>Olá ${object.username},</p>
+                <p>Você solicitou a redefinição de sua senha.</p>
+                <p>Para definir uma nova senha, por favor, clique abaixo:</p>
+                <p>.</p>
+                <p>.</p>
+                <p></p>
+                <p><a href="${ctx['reset_url']}" style="padding: 8px 12px; border: 1px solid #ccc; color: #fff; background-color: #007bff; border-radius: 5px; text-decoration: none;">Redefinir Senha</a></p>
+                <p></p>
+                <p>.</p>
+                <p>.</p>
+                <p>Este link é válido por 20 minutos. Se você não solicitou a redefinição de senha, por favor, ignore este e-mail.</p>
+            ]]></field>
+        </record>
+
+        <!-- Template de e-mail de boas-vindas -->
+        <record id="email_template_welcome" model="mail.template">
+            <field name="name">Boas Vindas ao Usuário</field>
+            <field name="model_id" ref="fgmed_auth_users.model_custom_auth_user"/>
+            <field name="subject">Bem-vindo(a) ao sistema ${object.name}</field>
+            <field name="body_html"><![CDATA[
+                <p>Olá,</p>
+                <p>Seja bem vindo ao portal da FGMED!</p>
+                <p></p>
+                <p>Abaixo estão suas informações de Login:</p>
+                <p></p>
+                <p>Usuário: ${object.username}</p>
+                <p>Senha: ${ctx.get('password')}</p>
+                <p></p>
+                <p>Por favor, altere sua senha após o primeiro login.</p>
+            ]]></field>
+        </record>
+        
+        <!-- Template de e-mail de notificação de alteração -->
+        <record id="email_template_data_change" model="mail.template">
+            <field name="name">Notificação de Alteração de Dados</field>
+            <field name="model_id" ref="fgmed_auth_users.model_custom_auth_user"/>
+            <field name="subject">Alterações no cadastro</field>
+            <field name="body_html"><![CDATA[
+                <p>Olá,</p>
+                <p>Seus dados foram atualizados com sucesso.</p>
+                <p><strong>Usuário: ${object.username}</strong></p>
+                <p><strong>Nova Senha: ${ctx.get('new_password')}</strong></p>
+                <p>Por favor, lembre-se de mudar sua senha após o login.</p>
+            ]]></field>
+        </record>
+
+        <template id="assets_frontend" inherit_id="web.assets_frontend" name="academic_record_assets">
+            <xpath expr="." position="inside">
+                <link rel="stylesheet" type="text/css" href="/fgmed_auth_users/static/src/css/style.css"/>
+            </xpath>
+        </template>
+
+
+        <template id="report_academic_record_template" name="Academic Record Page">
+            <t t-call="web.html_container">
+            
+                <style>
+
+                    .header2 {
+                        color: rgb(250, 203, 16); /* Title color */
+                        box-shadow: 9px -5px 36px 0px rgba(0,0,0,0.56);
+                        -webkit-box-shadow: 9px -5px 36px 0px rgba(0,0,0,0.56);
+                        -moz-box-shadow: 9px -5px 36px 0px rgba(0,0,0,0.56);
+                        background: #009688;
+                        margin: 0;
+                        padding: 0;
+                        font-family: sans;
+                        text-align: center;
+                    }
+
+                    .personal-data2{
+                        font-size: 1.5em; /* Title font size */
+                        color: black; /* Title color */
+                        margin-bottom: 10px; /* Spacing below the titles */
+                        background: #ffffff;
+                        border: 2px solid #ddd; /* Border around course records */
+                        margin: 0;
+                        padding: 0;
+                    }
+                    
+                    .mb-2{
+                      margin-top: 20px;
+                    }
+
+                    .course-record2 {
+                        border: 1px solid #ddd; /* Border around course records */
+                        text-align: center;
+                        font-family: sans;
+                        margin-top: 10px;
+                    }
+
+                    .course-record3 {
+                        border: 1px solid #ddd; /* Border around course records */
+                        text-align: center;
+                        text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;
+                        font-family: sans;
+                    }
+
+                    .ul2 {
+                        padding-left: 20px; /* Indentation for list items */
+                        page-break-inside: avoid;
+                    }
+
+                    .li2 {
+                        list-style-type: none; /* Remove default list item bullets */
+                        margin-bottom: 5px; /* Spacing below each list item */
+                        page-break-inside: avoid;
+
+                    }
+                    .border {
+                        border-right: 4px double #009688;
+                        border-left: 4px double #006944;
+                        margin-top: 0;
+                        margin-left: 0;
+                        margin-right: 0;
+                        margin: 0;
+                        padding: 0;
+                    }
+
+                    body {
+                        margin-top: 10px;
+                        margin-left: 0;
+                        margin-right: 0;
+                        margin: 0;
+                        padding: 0;
+                    }
+                    @media print {
+                        /* Remover margens padrão do PDF */
+                        body {
+                            margin: 0;
+                            padding: 0;
+                        }
+                    }
+
+                    /* Evitar quebras de página desnecessárias */
+                    h1, h2, h3, h4, h5, h6, .page-header, .page-break {
+                        page-break-after: avoid;
+                        margin-top: 0;
+                    }
+
+                    /* Evitar que os elementos comecem no final de uma página */
+                    .avoid-page-break {
+                        page-break-inside: avoid;
+                    }
+
+                    /* Forçar quebra de página antes de uma nova seção */
+                    .force-page-break-before {
+                        page-break-before: always;
+                    }
+
+                    /* Estilos específicos para elementos do relatório */
+                    .header2, .course-record2, .personal-data2 {
+                        margin-top: 0;
+                        padding-top: 0;
+                        margin: 0;
+                        padding: 0;
+                    }
+
+                    .page {
+                        page-break-inside: avoid;
+                    }
+          
+                </style>
+
+                <div class="border">
+                    <!-- Cabeçalho com título e logotipo da FGMED -->
+                    <div class="header2 text-center">
+                        <h1 class="course-record3">FGMED</h1>
+                    </div>
+                    
+                    <!-- Dados do aluno -->
+                    <div class="course-record2 mb-4">
+                        <h2 class="personal-data2">Dados do Aluno</h2>
+                        <div>
+                            <p><strong>Nome:</strong> <t t-esc="partner.name"/></p>
+                            <p><strong>CPF:</strong> <t t-esc="partner.l10n_br_cnpj_cpf"/></p>
+                            <p><strong>CRM:</strong> <t t-esc="partner.crm"/></p>
+                            <p><strong>Matrícula:</strong> <t t-esc="partner.matricula_aluno"/></p>
+                            <p><strong>Email:</strong> <t t-esc="partner.email"/></p>
+                            <p><strong>Telefone:</strong> <t t-esc="partner.phone"/></p>
+                        </div>
+                    </div>
+                    
+                    <!-- Histórico Acadêmico -->
+                    <div class="course-record2 ">
+                        <div class="card-header">
+                            <h2 class="personal-data2"> Histórico Acadêmico </h2>
+                        </div>
+                        <div class="course-record2 ">
+                            <div class="row">
+                                <!-- Loop das matrículas -->
+                                <t t-foreach="matriculas" t-as="matricula">
+                                    <div class="col-md-6 mb-3">
+                                        <div class="course-record2 avoid-page-break">
+                                            <h4 class="mb-2"><strong>Curso:</strong> <span t-esc="matricula.curso.name"/></h4>
+                                            <HR></HR>
+                                            <p><strong>Status do Certificado:</strong> <span t-esc="matricula.status_do_certificado"/></p>
+                                            <p><strong>Data de Ingresso:</strong> <span t-field="matricula.inscricao_ava"/></p>
+                                            <ul>
+                                                <!-- Loop pelos grupos de disciplinas associados ao curso -->
+                                                <t t-foreach="matricula.curso.grupo_disciplina_id" t-as="grupo_disciplina">
+                                                    <h4 class="mt-3"><strong>Disciplinas: </strong></h4>
+                                                    <ul class="ul2">
+                                                        <!-- Loop pelas disciplinas dentro de cada grupo de disciplina -->
+                                                        <t t-foreach="grupo_disciplina.disciplina_ids" t-as="disciplina">
+                                                            <!-- Busca pelo registro de disciplina do aluno específico e curso -->
+                                                            <t t-set="registro_disciplina" t-value="request.env['informa.registro_disciplina'].sudo().search([('aluno_id', '=', matricula.nome_do_aluno.id), ('disciplina_id', '=', disciplina.id), ('curso_id', '=', matricula.curso.id)], limit=1)"/>
+                                                            <li class="li2">
+                                                                Nome: <span t-esc="disciplina.name"/>
+                                                                | Média: <span t-esc="disciplina.media"/>
+                                                                <!-- Verifica se existe um registro para a disciplina -->
+                                                                <t t-if="registro_disciplina">
+                                                                    | Nota: <span t-esc="registro_disciplina.nota"/>
+                                                                    | Status: <span t-esc="registro_disciplina.status"/>
+                                                                </t>
+                                                                <!-- Se não houver registro, mostra mensagem padrão -->
+                                                                <t t-else="">
+                                                                    | Nota: Não disponível
+                                                                    | Status: Não disponível
+                                                                </t>
+                                                            </li>
+                                                        </t>
+                                                    </ul>
+                                                </t>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </t>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </t>
+        </template>
+        
+        <record id="academic_record_page" model="website.page">
+            <field name="name">Academic Record</field>
+            <field name="url">/academic_record</field>
+            <field name="view_id" ref="fgmed_auth_users.report_academic_record_template"/>
+            <field name="website_published">True</field>
+        </record>
+
+        <record id="action_report_academic_record" model="ir.actions.report">
+            <field name="name">Histórico Acadêmico</field>
+            <field name="model">custom.auth.user</field>
+            <field name="report_type">qweb-pdf</field>
+            <field name="report_name">fgmed_auth_users.report_academic_record_template</field>
+            <field name="report_file">fgmed_auth_users.report_academic_record_template</field>
+            <field name="binding_model_id" ref="model_custom_auth_user"/>
+        </record>
+
+    </data>    
+</odoo>

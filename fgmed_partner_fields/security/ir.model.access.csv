@@ -1,0 +1,7 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_fgmed_professional_regulators,access.fgmed.professional.regulators,model_fgmed_professional_regulators,base.group_user,1,1,0,0
+access_fgmed_professional_regulators_adm,access.fgmed.professional.regulators,model_fgmed_professional_regulators,base.group_erp_manager,1,1,1,1
+access_fgmed_id_regulators,access.fgmed.id.regulators,model_fgmed_id_regulators,base.group_user,1,1,0,0
+access_fgmed_id_regulators_adm,access.fgmed.id.regulators,model_fgmed_id_regulators,base.group_erp_manager,1,1,1,1
+access_fgmed_profession_list,access.fgmed.profession.list,model_fgmed_profession_list,base.group_user,1,1,0,0
+access_fgmed_profession_list_adm,access.fgmed.profession.list,model_fgmed_profession_list,base.group_erp_manager,1,1,1,1

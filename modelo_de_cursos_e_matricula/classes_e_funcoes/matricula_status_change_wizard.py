@@ -17,16 +17,28 @@ class MatriculaStatusChangeWizard(models.Model):
     _name = 'matricula.status.change.wizard'
     _description = 'Assistente para Alteração de Status da Matrícula'
 
-    matricula_id = fields.Many2one('informa.matricula', string="Matrícula", readonly=True)
+    matricula_id = fields.Many2one('informa.matricula', string="Matrícula", readonly=True, tracking=True)
     new_status = fields.Selection(
         [
             ('MATRÍCULA CANCELADA', 'MATRÍCULA CANCELADA'),
-        ], string="Status", required=True)
-    tipo_de_cancelamento = fields.Many2one('tipo.de.cancelamento', string="Tipo de Cancelamento")
-    justificativa = fields.Text(string="Justificativa", required=True)
+        ], string="Status", required=True, tracking=True)
+    tipo_de_cancelamento = fields.Many2one('tipo.de.cancelamento', string="Tipo de Cancelamento", tracking=True)
+    justificativa = fields.Text(string="Justificativa", required=True, tracking=True)
 
-    def get_moodle_course_id_int(self, course_id_value): 
-        url = "https://avadev.medflix.club/webservice/rest/server.php"
+    def get_moodle_course_id_int(self, course_id_value):
+        
+        # Obtendo acesso ao modelo de configurações do módulo fgmed_config_params
+        ParamObj = self.env['fgmed.config.params']
+        
+        # Buscando as configurações de base_url e token
+        base_url_param = ParamObj.search([('chave', '=', 'moodle_base_url')], limit=1)
+        token_param = ParamObj.search([('chave', '=', 'moodle_token')], limit=1)
+
+        # Atribuindo os valores encontrados ou definindo um valor padrão
+        base_url = base_url_param.valor
+        token = token_param.valor       
+                 
+        url = base_url+"webservice/rest/server.php"
         
         if course_id_value is None:
             _logger.error('ID do curso não fornecido')
@@ -35,7 +47,7 @@ class MatriculaStatusChangeWizard(models.Model):
         _logger.info('ID do curso: %s', course_id_value)
         
         params = {
-            "wstoken": "c502156af2c00a4b3e9e5d878922be46",
+            "wstoken": token,
             "wsfunction": "core_course_get_courses_by_field",
             "field": "idnumber",
             "value": course_id_value,
@@ -70,8 +82,20 @@ class MatriculaStatusChangeWizard(models.Model):
             return None
         
     def block_access_to_moodle(self, moodle_aluno_id, moodle_curso_id):
-        moodle_url = "https://avadev.medflix.club/webservice/rest/server.php"
-        token = "c502156af2c00a4b3e9e5d878922be46"
+        
+        # Obtendo acesso ao modelo de configurações do módulo fgmed_config_params
+        ParamObj = self.env['fgmed.config.params']
+        
+        # Buscando as configurações de base_url e token
+        base_url_param = ParamObj.search([('chave', '=', 'moodle_base_url')], limit=1)
+        token_param = ParamObj.search([('chave', '=', 'moodle_token')], limit=1)
+
+        # Atribuindo os valores encontrados ou definindo um valor padrão
+        base_url = base_url_param.valor
+        token_m = token_param.valor        
+        
+        moodle_url = base_url+"webservice/rest/server.php"
+        token = token_m
         user_id = moodle_aluno_id
         course_id = moodle_curso_id
         
@@ -138,3 +162,35 @@ class MatriculaStatusChangeWizard(models.Model):
                     
             # Registra a justificativa como uma mensagem de rastreamento na matrícula
             self.matricula_id.message_post(body=_("Justificativa para alteração de status: %s") % (self.justificativa,))
+
+    @api.model
+    def create(self, values):
+        # Chamar o método original de 'create'
+        record = super(MatriculaStatusChangeWizard, self).create(values)
+        # Log de auditoria
+        self.env['audit.log.report'].create_log(record, values, action='create')
+        return record
+
+    def write(self, values):
+        # Log de auditoria antes da alteração
+        for rec in self:
+            self.env['audit.log.report'].create_log(rec, values, action='write')
+        # Chamar o método original de 'write'
+        return super(MatriculaStatusChangeWizard, self).write(values)
+
+    def unlink(self):
+        # Preparar dados para o log de auditoria antes da exclusão
+        for record in self:
+            log_vals = {
+                'model_name': record._name,
+                'action': 'unlink',
+                'field_name': '',
+                'old_value': '',
+                'new_value': f'Registro Excluído com ID {record.id}',
+                'user_id': self.env.user.id,
+                'change_date': fields.Datetime.now(),
+            }
+            self.env['audit.log.report'].create(log_vals)
+
+        # Chamar o método original de 'unlink'
+        return super(MatriculaStatusChangeWizard, self).unlink()
