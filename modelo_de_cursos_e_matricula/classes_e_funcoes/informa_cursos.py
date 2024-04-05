@@ -9,6 +9,7 @@ from odoo.exceptions import ValidationError
 from odoo import http
 import requests
 from moodle import Moodle
+import math
 
 IS_TEST_ENVIRONMENT = False
 _logger = logging.getLogger(__name__)
@@ -29,11 +30,29 @@ class InformaCursos(models.Model):
     curriculo_id = fields.Many2one('informa.curriculo', string='Currículo', tracking=True)
     variant_curriculo_id = fields.Many2one('informa.curriculo.variant', string='Versão do Currículo', tracking=True)
     disciplina_ids = fields.Many2many('informa.disciplina', string='Disciplinas', tracking=True)
-    tempo_de_conclusao = fields.Selection([('03M/90D', '03M/90D'), ('06M', '06M'), ('12M', '12M'), ('24M', '24M'), ('36M', '36M'), ('48M', '48M')], string="Tempo de conclusão", required=True, tracking=True)
     formato_nota = fields.Selection([
     ('normal', '0-10'),
     ('porcentagem', '0-100 (%)')
     ], string='Formato da Nota', default='normal', tracking=True, required=True)
+
+    # Campo computado para calcular o tempo de conclusão em meses
+    tempo_de_conclusao = fields.Selection(
+        string="Tempo de Conclusão Estimado",
+        selection=[('03M/90D', '03M/90D'), ('06M', '06M'), ('12M', '12M'), 
+                   ('24M', '24M'), ('36M', '36M'), ('48M', '48M')],
+        store=True,
+    )
+    # Vamos considerar que você tem um campo Many2many para variant_curriculo_id
+    variant_curriculo_ids = fields.Many2many('informa.curriculo.variant', string='Variantes do Currículo', tracking=True)
+    
+    # Este campo que é a soma de todas as durações da variante
+    total_duracao_horas = fields.Float(
+        string='Total de Duração em Horas',
+        related='variant_curriculo_id.total_duracao_horas',
+        readonly=True,
+        tracking=True,
+        help="Total de horas da variante do currículo selecionada."
+    )
     
     def action_open_menu(self):
         view_id2 = self.env.ref('modelo_de_cursos_e_matricula.view_course_management_form').id
@@ -98,14 +117,15 @@ class InformaCursos(models.Model):
     def create(self, values):
         # Chamar o método original de 'create'
         record = super(InformaCursos, self).create(values)
-        # Log de auditoria
-        self.env['audit.log.report'].create_log(record, values, action='create')
+
         return record
 
     def write(self, values):
+        
         # Log de auditoria antes da alteração
         for rec in self:
             self.env['audit.log.report'].create_log(rec, values, action='write')
+        
         # Chamar o método original de 'write'
         return super(InformaCursos, self).write(values)
 

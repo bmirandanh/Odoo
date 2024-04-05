@@ -8,6 +8,7 @@ from odoo.exceptions import UserError
 from odoo.exceptions import ValidationError
 from odoo import http
 import requests
+from odoo.exceptions import UserError
 from moodle import Moodle
 
 IS_TEST_ENVIRONMENT = False
@@ -30,6 +31,9 @@ class InformaMatricula(models.Model):
         ('MATRICULA SUSPENSA','MATRICULA SUSPENSA'),
         ], default="CURSANDO", store=True, tracking=True
     )
+    matricula_line_ids = fields.One2many(
+        'informa.matricula.line', 'matricula_id', string='Disciplinas', readonly=True
+    )
     regiao = fields.Selection([
         ('AVA','AVA'),
         ('PRESENCIAL','PRESENCIAL'),
@@ -42,6 +46,7 @@ class InformaMatricula(models.Model):
     curso = fields.Many2one('informa.cursos', string="Curso", required=True, tracking=True)
     prazo_exp_certf_dias = fields.Char(compute='_compute_prazo_exp_certf_dias', string='Prazo exp. Certf. Em dias', tracking=True)
     numero_de_modulo = fields.Char(compute='_compute_numero_de_modulo', tracking=True, string='Nº de Módulo', store=True)
+    data_certificacao = fields.Date(string='Data de Certificação')
     data_provavel_certificacao = fields.Date(compute='_compute_data_provavel_certificacao', tracking=True, string='Data provável de certificação', store=True)
     data_original_certificacao = fields.Date(string='Data limite de Certificação', tracking=True, store=True)
     prorrogacao = fields.Boolean(string="Prorrogação", tracking=True)
@@ -66,8 +71,23 @@ class InformaMatricula(models.Model):
     overlapping_matricula_descriptions = fields.Char(compute='_compute_overlapping_matriculas', string='Matrículas Sobrepostas', readonly=True)
     allow_grade_editing = fields.Boolean( string="Permitir Edição")
     variant_curriculo_id = fields.Many2one('informa.curriculo.variant', string='Variante do Currículo', domain="[('id', 'in', available_variants)]", store=True)
+    total_duracao_horas_id = fields.Float(related='curso.total_duracao_horas', string='Duração(H): ', readonly=True)
     available_variants = fields.Many2many('informa.curriculo.variant', compute='_compute_available_variants')
     moodle = fields.Boolean( string="Moodle?")
+    
+    @api.onchange('curso')
+    def _onchange_curso(self):
+        # Se um curso for selecionado, carregue as disciplinas associadas a este curso
+        for rec in self:
+            if rec.curso and rec.curso.variant_curriculo_id:
+                rec.variant_curriculo_id = rec.curso.variant_curriculo_id.id
+                disciplinas = rec.curso.variant_curriculo_id.disciplina_ids
+                # Apagar linhas de matrícula existentes
+                rec.matricula_line_ids = [(5, _, _)]
+                # Criar novas linhas de matrícula para as disciplinas associadas
+                rec.matricula_line_ids = [(0, 0, {
+                    'disciplina_id': disciplina.id,
+                }) for disciplina in disciplinas]  
 
     def action_open_menu(self):
         view_id2 = self.env.ref('modelo_de_cursos_e_matricula.view_course_management_form').id
@@ -222,6 +242,14 @@ class InformaMatricula(models.Model):
         if 'status_do_certificado' in vals and vals['status_do_certificado'] in ['TRANCADO', 'MATRÍCULA CANCELADA'] and status_antigo not in ['TRANCADO', 'MATRÍCULA CANCELADA']:
             # Bloquear o acesso do aluno ao Moodle
             self.block_access_to_moodle()
+
+        # Verifique se o status_do_certificado está sendo alterado para 'FINALIZADO'
+        if 'status_do_certificado' in vals and vals['status_do_certificado'] == 'FINALIZADO':
+            for record in self:
+                # Se o status atual não é 'FINALIZADO', atualize a data_certificacao
+                if record.status_do_certificado != 'FINALIZADO':
+                    # Defina data_certificacao para a data atual
+                    vals['data_certificacao'] = fields.Date.context_today(record)
         return res
     
     def get_moodle_course_id(self, d_data):
@@ -661,15 +689,20 @@ class InformaMatricula(models.Model):
     
     @api.model
     def create(self, vals):
-        # Primeiro, verifique se o aluno já tem uma matrícula no curso especificado.
+        # Verificações iniciais e preparações de dados
         aluno_id = vals.get('nome_do_aluno')
         curso_id = vals.get('curso')
-        existing_matricula = self.search([('nome_do_aluno', '=', aluno_id), ('curso', '=', curso_id)], limit=1)
-        
-        if existing_matricula:
+
+        # Checa se já existe matrícula para o aluno no curso
+        if self.search([('nome_do_aluno', '=', aluno_id), ('curso', '=', curso_id)]):
             raise UserError(_('O aluno já possui uma matrícula neste curso!'))
-            
-        # Se não houver matrícula existente, crie a nova matrícula.
+
+        # Prepara as disciplinas para a linha de matrícula baseada na variante do currículo selecionado
+        disciplina_ids = vals.pop('disciplina_ids', False)
+        if disciplina_ids and disciplina_ids[0][0] == 6:
+            vals['matricula_line_ids'] = [(0, 0, {'disciplina_id': d_id}) for d_id in disciplina_ids[0][2]]
+
+        # Cria o registro da matrícula
         matricula_record = super(InformaMatricula, self).create(vals)
         
         # Lógica para registrar a criação na auditoria
@@ -716,10 +749,22 @@ class InformaMatricula(models.Model):
         if self.moodle:
             self._register_student_in_moodle(matricula_record)
 
-        # Se data_provavel_certificacao estiver no dicionário vals e data_original_certificacao não estiver, repassa o valor
+    # Ajusta datas se necessário
         if 'data_provavel_certificacao' in vals and 'data_original_certificacao' not in vals:
             matricula_record.data_original_certificacao = vals['data_provavel_certificacao']
-
+            
+        if vals.get('status_do_certificado') == 'FINALIZADO':
+            matricula_record.data_certificacao = fields.Date.context_today(self)
+            
+        # Verifica se o curso associado tem um curriculo e disciplinas associadas
+        if matricula_record.curso and matricula_record.curso.variant_curriculo_id:
+            disciplinas = matricula_record.curso.variant_curriculo_id.disciplina_ids
+            # Criar novas linhas de matrícula para as disciplinas associadas
+            linhas_disciplina = [(0, 0, {
+                'disciplina_id': disciplina.id,
+            }) for disciplina in disciplinas]
+            matricula_record.write({'matricula_line_ids': linhas_disciplina})
+            
         return matricula_record
 
     def write(self, vals):
@@ -737,7 +782,11 @@ class InformaMatricula(models.Model):
 
         if not self._context.get('skip_status_update'):
             self.with_context(skip_status_update=True).atualizar_status_matricula()
-
+        
+        for record in self.filtered(lambda r: r.status_do_certificado == 'FINALIZADO' and not r.data_certificacao):
+            record.data_certificacao = fields.Date.context_today(record)
+            super(InformaMatricula, record).write({'data_certificacao': record.data_certificacao})
+                    
         return result
 
     def unlink(self):

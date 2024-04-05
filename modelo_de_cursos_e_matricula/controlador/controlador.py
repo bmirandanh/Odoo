@@ -105,9 +105,8 @@ class CertificateController(http.Controller):
         styles = getSampleStyleSheet()
         aluno_nome = matricula.nome_do_aluno.name if matricula.nome_do_aluno else 'Nome não encontrado'
         curso_nome = matricula.curso.name if matricula.curso else 'Curso não encontrado'
-        tempo_de_conclusao = matricula.curso.tempo_de_conclusao if matricula.curso else 'Tempo não encontrado'
-        data_conclusao = matricula.data_certificacao.strftime('%d/%m/%Y') if matricula.data_certificacao else 'Data não encontrada'
-
+        tempo_de_conclusao = matricula.total_duracao_horas_id
+        data_conclusao = matricula.data_certificacao.strftime('%d/%m/%Y')
         
         # Estilos dos parágrafos
         title_style = ParagraphStyle('TitleStyle', parent=styles['Title'], fontSize=50, alignment=TA_CENTER, spaceAfter=30)
@@ -124,7 +123,7 @@ class CertificateController(http.Controller):
             Paragraph(f"Concluiu com total aproveitamento o curso:", body_style),
             Paragraph(f"<b>{curso_nome}</b>", body_style),
             Spacer(1, 0.40 * inch),
-            Paragraph(f"Com carga horária de {tempo_de_conclusao}", detail_style),
+            Paragraph(f"Com carga horária de {tempo_de_conclusao} horas", detail_style),
             Paragraph(f"Data de conclusão: {data_conclusao}", detail_style)
         ]
         
@@ -141,14 +140,14 @@ class CertificateController(http.Controller):
         p.showPage()
 
         # Obtenha registros de disciplina para esta matrícula
-        disciplina_records = request.env['informa.registro_disciplina'].sudo().search([('matricula_id', '=', matricula.id)])
+        disciplina_records = request.env['informa.matricula.line'].sudo().search([('matricula_id', '=', matricula.id)])
 
         # Defina o título para a segunda página
         title = "Detalhes das Disciplinas Cursadas"
         max_font_size = 18
         min_font_size = 8
         current_font_size = max_font_size
-        max_lines_per_page = 50  # Estimativa de linhas que cabem em uma página
+        max_lines_per_page = 200  # Estimativa de linhas que cabem em uma página
 
         # Ajusta o tamanho da fonte de acordo com a quantidade de disciplinas
         if len(disciplina_records) > max_lines_per_page:
@@ -170,7 +169,7 @@ class CertificateController(http.Controller):
             if current_height < inch * 2:
                 break
             
-            discipline_text = f" º {record.disciplina_id.name} - Nota: {record.nota}"
+            discipline_text = f" º {record.disciplina_id.name} - Média: {record.media_necessaria} - Nota: {record.nota}"
             p.drawString(inch, current_height, discipline_text)
             current_height -= line_height  # Move para a próxima linha
 

@@ -42,6 +42,7 @@
                 <tree string="Notas dos Alunos">               
                     <field name="name" string="Nome da Disciplina"/>
                     <field name="media" string="Média da Disciplina" widget="related_field" options="{'field': 'media'}"/>
+                    <field name="duracao_horas" widget='float_time'/>
                     <field name="cod_disciplina" string="código único da Disciplina"/>
                 </tree>
             </field>
@@ -95,6 +96,24 @@
                     <field name="curriculo_id"/>
                     <field name="days_to_release"/>
                     <field name="sequence"/>
+                </tree>
+            </field>
+        </record>
+
+        <!-- MATRÍCULAS Line -->
+
+        <record id="view_informa_matricula_line_tree" model="ir.ui.view">
+            <field name="name">informa.matricula.line.tree</field>
+            <field name="model">informa.matricula.line</field>
+            <field name="arch" type="xml">
+                <tree string="Disciplinas">
+                    <field name="line_ref"/>
+                    <field name="numero_matricula"/>
+                    <field name="nome_disciplina"/>
+                    <field name="cod_disciplina"/>
+                    <field name="professor_id" />
+                    <field name="nome_disciplina"/>
+                    <field name="media_necessaria"/>
                 </tree>
             </field>
         </record>
@@ -192,6 +211,7 @@
                             <field name="curriculo_id" context="{'default_curso_ids': active_id}" options="{'no_create': True}" required="1"/>
                             <field name="variant_curriculo_id" domain="[('curriculo_id', '=', curriculo_id)]"/>
                             <field name="tempo_de_conclusao"/>
+                            <field name="total_duracao_horas"/>
                         </group>
                         <notebook>
                         <!-- Detalhes do Curso (Alunos, Disciplinas, etc.) -->
@@ -259,6 +279,9 @@
                         <group>
                             <field name="name"/>
                             <field name="media"/>
+                            <field name="duracao_horas" widget='float_time'/>
+                            <field name="professor"/>
+
                             <field name="cod_disciplina" string="código único da disciplina"/>
                         </group>
                     </sheet>
@@ -284,7 +307,7 @@
                     </header>                 
                     <group>
                         <field name="name"/>
-                        <field name="professor"/>
+                        <field name="professor" string="Cordenador"/>
                         <field name="cod_curriculo" string="Código Único do Currículo"/>
                     </group>
                     <!-- Chatter de mensagens de log -->
@@ -315,6 +338,7 @@
                         <field name="curriculo_id"/>
                         <field name="days_to_release"/>
                         <field name="sequence"/>
+                        <field name="total_duracao_horas"/>
                         <field name="cod_variante"/>
                     </group>
                     <!-- Chatter de mensagens de log -->
@@ -347,16 +371,17 @@
                             </group>
                             <group col="26">
                                 <field name="tipo_de_ingresso" options="{'no_create': True}"/>
-                             </group>
+                            </group>
                             <group>
                                 <field name="inscricao_ava" widget='date' options="{'date_format': 'DD/MM/YYYY'}"/>
+                                <field name="data_certificacao" widget='date' options="{'date_format': 'DD/MM/YYYY'}" attrs="{'invisible': [('status_do_certificado', '!=', 'FINALIZADO')]}"/>
+                                <field name="data_provavel_certificacao" widget='date' options="{'date_format': 'DD/MM/YYYY'}"/>
                             </group>
                             <group>
                                 <field name="regiao"/>
                             </group>
                             <group>
                                 <field name="data_prorrogacao" attrs="{'invisible': [('prorrogacao', '=', False)]}" widget='date' options="{'date_format': 'DD/MM/YYYY'}"/>
-                                <field name="prazo_exp_certf_dias"/>
                             </group>
                             <group>
                                 <field name="moodle"/>
@@ -364,13 +389,11 @@
                             </group>
                             <group col="26">
                                 <field name="email" options="{'no_create': True}"/>
-                            </group>
-                            <group>
                                 <field name="telefone" options="{'no_create': True}"/>
                             </group>
                             <group col="26">
                                 <field name="numero_de_modulo"/>
-                                <field name="data_provavel_certificacao" widget='date' options="{'date_format': 'DD/MM/YYYY'}"/>
+                                <field name="total_duracao_horas_id" widget='float_time' readonly="1"/>                                
                             </group>
                             <group>
                                 <field name="prorrogacao"/>
@@ -386,12 +409,13 @@
                             <group>                        
                                 <field name="justificativa_cancelamento" attrs="{'invisible': ['|', ('status_do_certificado', '!=', 'MATRÍCULA CANCELADA'), ('status_do_certificado', '!=', 'TRANCADO')]}"/>
                             </group>
-                            <group>                            
-                                <!-- Disciplinas Sobrepostas -->
-                                <field name="overlapping_disciplines_ids" widget="many2many_tags" options="{'no_create': True}" readonly="1"/>
-                                <!-- Matrículas Sobrepostas -->
-                                <field name="overlapping_matricula_descriptions"  options="{'no_create': True}" readonly="1"/>
-                            </group>
+                        </group>
+                        <field name="matricula_line_ids" readonly="1"/>
+                        <group>                            
+                            <!-- Disciplinas Sobrepostas -->
+                            <field name="overlapping_disciplines_ids" widget="many2many_tags" options="{'no_create': True}" readonly="1"/>
+                            <!-- Matrículas Sobrepostas -->
+                            <field name="overlapping_matricula_descriptions"  options="{'no_create': True}" readonly="1"/>
                         </group>                            
                     </sheet>
                     <header>

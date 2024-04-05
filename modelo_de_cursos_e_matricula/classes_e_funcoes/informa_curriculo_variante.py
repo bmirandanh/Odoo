@@ -23,10 +23,48 @@ class InformaCurriculoVariant(models.Model):
     variation_number = fields.Integer(string='Número da Variação', readonly=True, compute='_compute_variation_number', tracking=True)
     disciplina_ids = fields.Many2many('informa.disciplina', string='Disciplinas', tracking=True)
     sequence = fields.Integer(string='Sequência', help="Determina a ordem de exibição dos grupos.", tracking=True)
-    days_to_release = fields.Integer(string="Dias para Liberação", default=7, help="Número de dias para liberar as disciplinas deste grupo.", tracking=True)
-    default_days_to_release = fields.Integer(string="Dias para Liberação", default=7, help="Número de dias para liberar as disciplinas do próximo grupo.", tracking=True)
+    days_to_release = fields.Integer(string="Dias para Liberação", default=0, help="Número de dias para liberar as disciplinas deste grupo.", tracking=True)
+    default_days_to_release = fields.Integer(string="Dias para Liberação padrão", default=0, help="Número de dias para liberar as disciplinas do próximo grupo.", tracking=True)
     curriculo_id = fields.Many2one('informa.curriculo', string='Currículo', tracking=True)
     cod_variante = fields.Char(string='Código da variente', tracking=True)
+    total_duracao_horas = fields.Float(
+        string='Total de Horas',
+        compute='_compute_total_duracao_horas',
+        store=True,  # se você precisa armazenar o valor e ter ele disponível para busca
+        help="Tempo total de duração em horas das disciplinas desta variante do currículo."
+    )
+
+    @api.depends('disciplina_ids.duracao_horas')
+    def _compute_total_duracao_horas(self):
+        for variante in self:
+            total_horas = sum(disciplina.duracao_horas for disciplina in variante.disciplina_ids)
+            variante.total_duracao_horas = total_horas
+        
+    @api.model
+    def create_variant_for_disciplina(self, disciplina):
+        # Verifique se uma variante com a mesma configuração já existe
+        existing_variants = self.search([
+            ('disciplina_ids', '=', disciplina.id),
+            ('curriculo_id', '=', disciplina.grupo_disciplina_id.id),
+        ])
+        if existing_variants:
+            # Atualize a variante existente se necessário
+            existing_variants.write({
+                'sequence': existing_variants.sequence + 1,  # Ou qualquer outra lógica de atualização necessária
+            })
+        else:
+            # Crie uma nova variante se não houver uma correspondente
+            self.create({
+                'name': disciplina.name + " Variant",
+                'disciplina_ids': [(6, 0, [disciplina.id])],
+                'curriculo_id': disciplina.grupo_disciplina_id.id,
+                # Adicione outros campos necessários
+            })
+
+    def significant_changes(self, vals):
+        # se as alterações são significativas
+        return 'disciplina_ids' in vals 
+ 
     
     def action_open_menu(self):
         view_id2 = self.env.ref('modelo_de_cursos_e_matricula.view_course_management_form').id

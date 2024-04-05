@@ -6,8 +6,8 @@ odooserver_url = "http://odooserver:8069"
 login_url = f"{odooserver_url}/web/session/authenticate"
 
 # Substitua com os valores corretos
-numero_matricula = "qwqw4013159"
-cod_disciplina = "tess"
+numero_matricula = "21d24017569"
+cod_disciplina = "23423ffffffffff"
 nova_nota = "7"  # nota como string, ajuste conforme o esperado pela API, ou seja seu ID no Odoo
 
 # Dados de autenticação

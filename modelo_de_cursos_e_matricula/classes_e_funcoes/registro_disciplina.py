@@ -372,36 +372,46 @@ class RegistroDisciplina(models.Model):
     def write(self, values):
         # Capturar os valores antigos antes da atualização para todos os registros afetados
         old_values = {record.id: {field: getattr(record, field) for field in values} for record in self}
-        result = super(RegistroDisciplina, self).write(values)
-        status_antigo = self.status
-        
-        if 'status' in values and values['status'] != 'aprovado' and status_antigo == 'aprovado':
-            # Seu código para obter o Moodle user_id e course_id
-            moodle_curso_id = self.env['informa.matricula'].get_moodle_course_id(self.curso_id.id)
-            moodle_aluno_id = self.env['informa.matricula'].get_moodle_user_id(self.aluno_id.id)
 
-            if moodle_curso_id and moodle_aluno_id:
-                # Re-inscrever o aluno no curso
-                self.env['informa.matricula'].enrol_user_to_course(moodle_aluno_id, moodle_curso_id)
-                
-        # Se 'nota' está entre os valores a serem atualizados e 'allow_grade_editing' é verdadeiro
+        # Realizar a operação de escrita padrão para atualizar o registro de disciplina
+        result = super(RegistroDisciplina, self).write(values)
+
+        # Se 'nota' está entre os valores a serem atualizados
         if 'nota' in values:
             for record in self:
-                # Se houver disciplinas sobrepostas e a edição da nota é permitida
-                if record.matricula_id.overlapping_disciplines_ids:
-                    # Verifica se a disciplina atual está na lista de disciplinas sobrepostas
-                    if record.disciplina_id.id not in record.matricula_id.overlapping_disciplines_ids.ids:
-                        continue
-    
-        # Se o registro de disciplina for atualizado, atualize o status da matrícula associada
+                # Se houver disciplinas sobrepostas
+                if record.matricula_id.overlapping_disciplines_ids and record.disciplina_id.id not in record.matricula_id.overlapping_disciplines_ids.ids:
+                    continue
+
+                # Verifica se a matrícula associada está com o status 'FINALIZADO'
+                if record.matricula_id.status_do_certificado == 'FINALIZADO':
+                    raise UserError("Não é possível atualizar a nota para matrículas com status 'FINALIZADO'.")
+
+                # Construa o line_ref para identificar a linha de matrícula correspondente
+                line_ref = f'{record.matricula_id.numero_matricula}/{record.disciplina_id.cod_disciplina}'
+
+                # Encontre e atualize a linha de matrícula correspondente
+                matricula_lines = self.env['informa.matricula.line'].search([('line_ref', '=', line_ref)])
+                for matricula_line in matricula_lines:
+                    matricula_line.nota = values['nota']
+
+        # Atualiza o status da matrícula associada, se necessário
         for record in self:
-            if record.matricula_id:
-                record.matricula_id.atualizar_status_matricula()
-            # Registrar as alterações na auditoria para cada registro
+            status_antigo = old_values[record.id].get('status', record.status)
+            if 'status' in values and values['status'] != 'aprovado' and status_antigo == 'aprovado':
+                # Seu código para atualização no Moodle
+                moodle_curso_id = self.env['informa.matricula'].get_moodle_course_id(record.curso_id.id)
+                moodle_aluno_id = self.env['informa.matricula'].get_moodle_user_id(record.aluno_id.id)
+                if moodle_curso_id and moodle_aluno_id:
+                    # Re-inscrever o aluno no curso no Moodle
+                    self.env['informa.matricula'].enrol_user_to_course(moodle_aluno_id, moodle_curso_id)
+
+        # Registrar as alterações na auditoria para cada registro
         for record in self:
             changed_values = {k: v for k, v in values.items() if old_values[record.id].get(k) != v}
             if changed_values:
                 self.env['audit.log.report'].create_log(record, changed_values, action='write')
+
         return result
 
     def unlink(self):

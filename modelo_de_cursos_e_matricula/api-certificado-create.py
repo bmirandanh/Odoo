@@ -5,10 +5,9 @@ odooserver_url = "http://odooserver:8069"
 login_url = f"{odooserver_url}/web/session/authenticate"
 
 # Substitua pelo número de matrícula real que deseja usar para gerar o certificado
-numero_matricula = "wwwww4014937"
+numero_matricula = "we2e1111114015872"
 
 generate_certificate_url = f"{odooserver_url}/api/generate_certificate/{numero_matricula}"  # Ajuste para o endpoint correto
-
 
 
 # Dados de autenticação

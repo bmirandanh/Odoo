@@ -21,7 +21,10 @@ class Disciplina(models.Model):
     name = fields.Char(string='Nome da Disciplina', required=True, tracking=True)
     media = fields.Float(string='Média para Aprovação', tracking=True)
     grupo_disciplina_id = fields.Many2one('informa.curriculo', string='Grupo de Disciplinas', tracking=True)
+    professor = fields.Many2one('res.partner', string="Professor", required=True, tracking=True, domain=[('professor', '=', True)])
+    duracao_horas = fields.Float(string='Duração em Horas', help="Tempo total da disciplina em horas.")
     cod_disciplina = fields.Char(string='Código único de disciplina: ', required=True, tracking=True)
+    
 
     def action_open_menu(self):
         view_id2 = self.env.ref('modelo_de_cursos_e_matricula.view_course_management_form').id
@@ -99,13 +102,18 @@ class Disciplina(models.Model):
         self._send_to_moodle(disciplina)
 
         _logger.info(f"Disciplina {name} (código: {cod_disciplina}) criada com sucesso no Odoo com ID {disciplina.id}.")
-        
+                
         return disciplina
     
     def write(self, values):
         # Log de auditoria antes da alteração
         for rec in self:
             self.env['audit.log.report'].create_log(rec, values, action='write')
+            
+        if 'name' in values or 'media' in values or 'professor' in values:  # ou outras condições relevantes
+            for disciplina in self:
+                self.env['informa.curriculo.variant'].create_variant_for_disciplina(disciplina)            
+            
         # Chamar o método original de 'write'
         return super(Disciplina, self).write(values)  
 

@@ -14,3 +14,23 @@ access_informa_matricula2,Access to informa.matricula,modelo_de_cursos_e_matricu
 access_informa_log,Access to informa.log,modelo_de_cursos_e_matricula.model_audit_log_report,modelo_de_cursos_e_matricula.contatos_dos_alunos,1,1,1,0
 access_informa_log2,Access to informa.log,modelo_de_cursos_e_matricula.model_audit_log_report,modelo_de_cursos_e_matricula.group_cursos_e_matriculas,1,1,1,0
 access_cliente,Access to informa.log,modelo_de_cursos_e_matricula.model_informa_cliente,modelo_de_cursos_e_matricula.group_cursos_e_matriculas,1,1,1,0
+access_informa_matricula_line,Access to informa_matricula_line,modelo_de_cursos_e_matricula.model_informa_matricula_line,modelo_de_cursos_e_matricula.group_cursos_e_matriculas,1,1,1,1
+access_informa_menus,Access to informa_menus,modelo_de_cursos_e_matricula.model_course_creation_wizard,modelo_de_cursos_e_matricula.group_cursos_e_matriculas,1,1,1,1
+
+access_informa_cursos2,Access to informa.cursos,modelo_de_cursos_e_matricula.model_informa_cursos,base.group_system,1,1,1,1
+access_informa_curriculo2,Access to informa_curriculo,modelo_de_cursos_e_matricula.model_informa_curriculo,base.group_system,1,1,1,1
+access_informa_curriculo_variante2,Access to informa_curriculo_variante,modelo_de_cursos_e_matricula.model_informa_curriculo_variant,base.group_system,1,1,1,1
+access_informa_disciplina2,Access to informa.disciplina,modelo_de_cursos_e_matricula.model_informa_disciplina,base.group_system,1,1,1,1
+access_informa_registro_disciplina2,Access to informa.registro_disciplina,modelo_de_cursos_e_matricula.model_informa_registro_disciplina,base.group_system,1,1,1,1
+access_informa_matricula2,Access to informa.matricula,modelo_de_cursos_e_matricula.model_informa_matricula,base.group_system,1,1,1,0
+access_tipo_ingresso2,Access to tipo.de.ingresso,modelo_de_cursos_e_matricula.model_tipo_de_ingresso,base.group_system,1,1,1,1
+access_tipo_cancelamento2,Access to tipo.de.cancelamento,modelo_de_cursos_e_matricula.model_tipo_de_cancelamento,base.group_system,1,1,1,1
+access_matricula_status_change2,Access to matricula.status.change.wizard,modelo_de_cursos_e_matricula.model_matricula_status_change_wizard,base.group_system,1,1,1,1
+access_matricula_reingresso2,Access to matricula.reingresso.wizard,modelo_de_cursos_e_matricula.model_matricula_reingresso_wizard,base.group_system,1,1,1,1
+access_res_partner2,res.partner,modelo_de_cursos_e_matricula.model_res_partner,base.group_system,1,1,1,0
+access_informa_matricula3,Access to informa.matricula,modelo_de_cursos_e_matricula.model_informa_matricula,base.group_system,1,0,0,0
+access_informa_log3,Access to informa.log,modelo_de_cursos_e_matricula.model_audit_log_report,base.group_system,1,1,1,0
+access_informa_log4,Access to informa.log,modelo_de_cursos_e_matricula.model_audit_log_report,base.group_system,1,1,1,0
+access_cliente2,Access to informa.log,modelo_de_cursos_e_matricula.model_informa_cliente,base.group_system,1,1,1,0
+access_informa_matricula_line2,Access to informa_matricula_line,modelo_de_cursos_e_matricula.model_informa_matricula_line,base.group_system,1,1,1,1
+access_informa_menus,Access to informa_menus,modelo_de_cursos_e_matricula.model_course_creation_wizard,base.group_system,1,1,1,1
