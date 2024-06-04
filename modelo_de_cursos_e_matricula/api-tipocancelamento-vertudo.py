@@ -4,7 +4,6 @@ import requests
 odooserver_url = "http://odooserver:8069"
 login_url = f"{odooserver_url}/web/session/authenticate"
 get_all_tipocancelamento_url = f"{odooserver_url}/api/tipocancelamento/all"
-
 # Dados de autenticação
 login_data = {
     "jsonrpc": "2.0",
@@ -14,13 +13,10 @@ login_data = {
         "db": "devpostgresql001"
     }
 }
-
 # Iniciar sessão
 session = requests.Session()
-
 # Tentativa de login
 response_login = session.post(login_url, json=login_data)
-
 if response_login.status_code == 200 and response_login.json().get("result"):
     print("Login bem-sucedido!")
 
@@ -30,7 +26,6 @@ if response_login.status_code == 200 and response_login.json().get("result"):
     headers = {
         "Token": token_personalizado
     }
-
     # Realizando a requisição GET para buscar todos os tipos de cancelamento
     response_tipocancelamento = session.get(get_all_tipocancelamento_url, headers=headers)
 

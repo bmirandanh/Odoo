@@ -18,8 +18,8 @@ class ResPartner(models.Model):
     
     aluno = fields.Boolean(string="Aluno ?", default=False, tracking=True)
     professor = fields.Boolean(string="Professor ?", default=False, tracking=True)
-    matricula_aluno = fields.Char(string="Matrícula do Aluno", readonly=True, tracking=True)
-    cod_professor = fields.Char(string="Matrícula do Aluno", readonly=True, tracking=True)
+    matricula_aluno = fields.Char(string="Registro de aluno", readonly=True, tracking=True)
+    cod_professor = fields.Char(string="Registro do professor", readonly=True, tracking=True)
     curso_id = fields.Many2one('informa.cursos', string='Curso Atual', tracking=True)
     matriculas_ids = fields.One2many('informa.matricula', 'nome_do_aluno', string="Matrículas do Aluno", tracking=True)
     

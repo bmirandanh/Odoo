@@ -360,6 +360,7 @@
                 <form string="Matrícula">
                     <header>
                         <button string="Menu" type="object" class="oe_stat_button4" name="action_open_menu"/>
+                        <button string="Gerar Certificado" type="object" class="oe_stat_button4" name="generate_certificate_button" attrs="{'invisible': [('status_do_certificado', '!=', 'FINALIZADO')]}"/>
                     </header>                 
                     <sheet>
                         <group>

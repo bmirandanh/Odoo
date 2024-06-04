@@ -10,10 +10,11 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.colors import HexColor
 from reportlab.platypus import Frame, Paragraph
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.enums import TA_CENTER, TA_LEFT
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image
+from reportlab.lib.enums import TA_CENTER
+from reportlab.platypus import Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
+from datetime import datetime, timedelta
 
 class CertificateController(http.Controller):
         
@@ -89,7 +90,7 @@ class CertificateController(http.Controller):
             for y in range(0, height, int(border_size + space)):  # Conversão para int aqui
                 canvas_obj.line(x, y, x + border_size, y + border_size)
 
-    @http.route('/api/generate_certificate/<string:numero_matricula>', auth='user', type='http', methods=['GET'])
+    @http.route('/api/generate_certificate/<string:numero_matricula>', auth='none', type='http', methods=['GET'])
     def generate_certificate(self, numero_matricula, **kw):
         # Encontre a matrícula pelo número fornecido
         matricula = request.env['informa.matricula'].sudo().search([('numero_matricula', '=', numero_matricula)], limit=1)
@@ -204,7 +205,7 @@ class DisciplinaController(http.Controller):
             return False
         return True
 
-    @http.route('/api/disciplina/all', auth='user', type='http', methods=['GET', 'OPTIONS'], csrf=False, cors='*')
+    @http.route('/api/disciplina/all', auth='none', type='http', methods=['GET', 'OPTIONS'], csrf=False, cors='*')
     def get_all_disciplinas(self, **kw):
         headers = {
             'Access-Control-Allow-Origin': '*', 
@@ -231,7 +232,7 @@ class DisciplinaController(http.Controller):
             return response
 
 
-    @http.route('/api/disciplina/<string:cod_disciplina>', auth='user', type='http', methods=['GET', 'OPTIONS'], cors='*')
+    @http.route('/api/disciplina/<string:cod_disciplina>', auth='none', type='http', methods=['GET', 'OPTIONS'], cors='*')
     def get_disciplina_by_cod(self, cod_disciplina, **kw):
         headers = {
             'Access-Control-Allow-Origin': '*',
@@ -268,7 +269,7 @@ class DisciplinaController(http.Controller):
             response.status_code = 500
             return response
         
-    @http.route('/api/disciplina/create', auth='user', type='json', methods=['POST', 'OPTIONS'], cors='*')
+    @http.route('/api/disciplina/create', auth='none', type='json', methods=['POST', 'OPTIONS'], cors='*')
     def create_disciplina(self, **kw):
 
         headers = {
@@ -289,13 +290,15 @@ class DisciplinaController(http.Controller):
             new_disciplina = request.env['informa.disciplina'].create({
                 'name': data.get('name'),
                 'media': data.get('media'),
+                'professor': data.get('professor'),
+                'duracao_horas': data.get('duracao_horas'),
                 'cod_disciplina': data.get('cod_disciplina'),
             })
             return {'success': True, 'id': new_disciplina.id}
         except Exception as e:
             return {'error': str(e)}
 
-    @http.route('/api/disciplina/delete/<string:cod_disciplina>', auth='user', type='http', methods=['DELETE', 'OPTIONS'], csrf=False, cors='*')
+    @http.route('/api/disciplina/delete/<string:cod_disciplina>', auth='none', type='http', methods=['DELETE', 'OPTIONS'], csrf=False, cors='*')
     def delete_disciplina(self, cod_disciplina, **kw):
         headers = {
             'Access-Control-Allow-Origin': '*',
@@ -325,7 +328,7 @@ class DisciplinaController(http.Controller):
             response.status_code = 500
             return response
 
-    @http.route(['/api/disciplina/update/<string:cod_disciplina>', '/api/disciplina/update/<string:cod_disciplina>/<attribute>'], auth='user', type='json', methods=['PUT', 'OPTIONS'], csrf=False, cors='*')
+    @http.route(['/api/disciplina/update/<string:cod_disciplina>', '/api/disciplina/update/<string:cod_disciplina>/<attribute>'], auth='none', type='json', methods=['PUT', 'OPTIONS'], csrf=False, cors='*')
     def update_disciplina(self, cod_disciplina, attribute=None, **kw):
         headers = {
             'Access-Control-Allow-Origin': '*',
@@ -380,7 +383,7 @@ class TipoIngressoController(http.Controller):
             return False
         return True
     
-    @http.route('/api/tipoingresso/all', auth='user', type='http', methods=['GET', 'OPTIONS'], cors='*')
+    @http.route('/api/tipoingresso/all', auth='none', type='http', methods=['GET', 'OPTIONS'], cors='*')
     def get_all_tipoingresso(self, **kw):
         headers = {
             'Access-Control-Allow-Origin': '*',
@@ -407,7 +410,7 @@ class TipoIngressoController(http.Controller):
             response.status_code = 500
             return response
 
-    @http.route('/api/tipoingresso/<string:cod_ingresso>', auth='user', type='http', methods=['GET', 'OPTIONS'], cors='*')
+    @http.route('/api/tipoingresso/<string:cod_ingresso>', auth='none', type='http', methods=['GET', 'OPTIONS'], cors='*')
     def get_tipoingresso_by_cod(self, cod_ingresso, **kw):
         headers = {
             'Access-Control-Allow-Origin': '*',
@@ -439,7 +442,7 @@ class TipoIngressoController(http.Controller):
         response.status_code = 200
         return response
 
-    @http.route('/api/tipoingresso/create', auth='user', type='json', methods=['POST', 'OPTIONS'], cors='*')
+    @http.route('/api/tipoingresso/create', auth='none', type='json', methods=['POST', 'OPTIONS'], cors='*')
     def create_tipoingresso(self, **kw):
 
         headers = {
@@ -467,7 +470,7 @@ class TipoIngressoController(http.Controller):
         except Exception as e:
             return {'error': str(e)}
 
-    @http.route('/api/tipoingresso/delete/<string:cod_ingresso>', auth='user', type='http', methods=['DELETE', 'OPTIONS'], csrf=False, cors='*')
+    @http.route('/api/tipoingresso/delete/<string:cod_ingresso>', auth='none', type='http', methods=['DELETE', 'OPTIONS'], csrf=False, cors='*')
     def delete_tipoingresso(self, cod_ingresso, **kw):
         headers = {
             'Access-Control-Allow-Origin': '*',
@@ -500,7 +503,7 @@ class TipoIngressoController(http.Controller):
             response.status_code = 500
             return response
 
-    @http.route(['/api/tipoingresso/update/<string:cod_ingresso>', '/api/tipoingresso/update/<string:cod_ingresso>/<attribute>'], auth='user', type='http', methods=['PUT', 'OPTIONS'], csrf=False, cors='*')
+    @http.route(['/api/tipoingresso/update/<string:cod_ingresso>', '/api/tipoingresso/update/<string:cod_ingresso>/<attribute>'], auth='none', type='http', methods=['PUT', 'OPTIONS'], csrf=False, cors='*')
     def update_tipoingresso(self, cod_ingresso, attribute=None, **kw):
         headers = {
             'Access-Control-Allow-Origin': '*',
@@ -555,7 +558,7 @@ class TipoCancelamentoController(http.Controller):
             return False
         return True
     
-    @http.route('/api/tipocancelamento/all', auth='user', type='http', methods=['GET', 'OPTIONS'], cors='*')
+    @http.route('/api/tipocancelamento/all', auth='none', type='http', methods=['GET', 'OPTIONS'], cors='*')
     def get_all_tipocancelamento(self, **kw):
         headers = {
             'Access-Control-Allow-Origin': '*',
@@ -580,7 +583,7 @@ class TipoCancelamentoController(http.Controller):
             response.status_code = 500
             return response
 
-    @http.route('/api/tipocancelamento/<string:cod_cancelamento>', auth='user', type='http', methods=['GET', 'OPTIONS'], cors='*')
+    @http.route('/api/tipocancelamento/<string:cod_cancelamento>', auth='none', type='http', methods=['GET', 'OPTIONS'], cors='*')
     def get_tipocancelamento_by_cod(self, cod_cancelamento, **kw):
         headers = {
             'Access-Control-Allow-Origin': '*',
@@ -610,7 +613,7 @@ class TipoCancelamentoController(http.Controller):
         response.status_code = 200
         return response
 
-    @http.route('/api/tipocancelamento/create', auth='user', type='json', methods=['POST', 'OPTIONS'], cors='*')
+    @http.route('/api/tipocancelamento/create', auth='none', type='json', methods=['POST', 'OPTIONS'], cors='*')
     def create_tipocancelamento(self, **kw):
         headers = {
             'Access-Control-Allow-Origin': '*',
@@ -637,7 +640,7 @@ class TipoCancelamentoController(http.Controller):
         except Exception as e:
             return {'error': str(e)}
         
-    @http.route('/api/tipocancelamento/delete/<string:cod_cancelamento>', auth='user', type='http', methods=['DELETE', 'OPTIONS'], csrf=False, cors='*')
+    @http.route('/api/tipocancelamento/delete/<string:cod_cancelamento>', auth='none', type='http', methods=['DELETE', 'OPTIONS'], csrf=False, cors='*')
     def delete_tipocancelamento(self, cod_cancelamento, **kw):
         headers = {
             'Access-Control-Allow-Origin': '*',
@@ -668,7 +671,7 @@ class TipoCancelamentoController(http.Controller):
             response.status_code = 500
             return response
 
-    @http.route(['/api/tipocancelamento/update/<string:cod_cancelamento>', '/api/tipocancelamento/update/<string:cod_cancelamento>/<attribute>'], auth='user', type='http', methods=['PUT', 'OPTIONS'], csrf=False, cors='*')
+    @http.route(['/api/tipocancelamento/update/<string:cod_cancelamento>', '/api/tipocancelamento/update/<string:cod_cancelamento>/<attribute>'], auth='none', type='http', methods=['PUT', 'OPTIONS'], csrf=False, cors='*')
     def update_tipocancelamento(self, cod_cancelamento, attribute=None, **kw):
         headers = {
             'Access-Control-Allow-Origin': '*',
@@ -730,7 +733,7 @@ class InformaCurriculoController(http.Controller):
             return None
         return professor.id
     
-    @http.route('/api/curriculo/all', auth='user', type='http', methods=['GET', 'OPTIONS'], cors='*')
+    @http.route('/api/curriculo/all', auth='none', type='http', methods=['GET', 'OPTIONS'], cors='*')
     def get_all_curriculo(self, **kw):
         headers = {
             'Access-Control-Allow-Origin': '*',
@@ -756,7 +759,7 @@ class InformaCurriculoController(http.Controller):
             response.status_code = 500
             return response
 
-    @http.route('/api/curriculo/<string:cod_curriculo>', auth='user', type='http', methods=['GET', 'OPTIONS'], cors='*')
+    @http.route('/api/curriculo/<string:cod_curriculo>', auth='none', type='http', methods=['GET', 'OPTIONS'], cors='*')
     def get_curriculo_by_cod(self, cod_curriculo, **kw):
         headers = {
             'Access-Control-Allow-Origin': '*',
@@ -786,7 +789,7 @@ class InformaCurriculoController(http.Controller):
         response.status_code = 200
         return response
 
-    @http.route('/api/curriculo/create', auth='user', type='json', methods=['POST', 'OPTIONS'], cors='*')
+    @http.route('/api/curriculo/create', auth='none', type='json', methods=['POST', 'OPTIONS'], cors='*')
     def create_curriculo(self, **kw):
         # Verifica o token de autenticação do cliente
         token = request.httprequest.headers.get('Token')
@@ -808,7 +811,7 @@ class InformaCurriculoController(http.Controller):
         except Exception as e:
             return {'error': str(e)}
         
-    @http.route('/api/curriculo/delete/<string:cod_curriculo>', auth='user', type='http', methods=['DELETE', 'OPTIONS'], csrf=False, cors='*')
+    @http.route('/api/curriculo/delete/<string:cod_curriculo>', auth='none', type='http', methods=['DELETE', 'OPTIONS'], csrf=False, cors='*')
     def delete_curriculo(self, cod_curriculo, **kw):
         headers = {
             'Access-Control-Allow-Origin': '*',
@@ -842,7 +845,7 @@ class InformaCurriculoController(http.Controller):
             return response
 
 
-    @http.route(['/api/curriculo/update/<string:cod_curriculo>', '/api/curriculo/update/<string:cod_curriculo>/<attribute>'], auth='user', type='http', methods=['PUT', 'OPTIONS'], csrf=False, cors='*')
+    @http.route(['/api/curriculo/update/<string:cod_curriculo>', '/api/curriculo/update/<string:cod_curriculo>/<attribute>'], auth='none', type='http', methods=['PUT', 'OPTIONS'], csrf=False, cors='*')
     def update_curriculo(self, cod_curriculo, attribute=None, **kw):
         headers = {
             'Access-Control-Allow-Origin': '*',
@@ -905,7 +908,7 @@ class InformaCurriculoVariantController(http.Controller):
         return True
     
         
-    @http.route('/api/curriculovariant/all', auth='user', type='http', methods=['GET', 'OPTIONS'], cors='*')
+    @http.route('/api/curriculovariant/all', auth='none', type='http', methods=['GET', 'OPTIONS'], cors='*')
     def get_all_curriculovariant(self, **kw):
         headers = {
             'Access-Control-Allow-Origin': '*',
@@ -933,7 +936,7 @@ class InformaCurriculoVariantController(http.Controller):
             response.status_code = 500
             return response
         
-    @http.route('/api/curriculovariant/<string:cod_variante>', auth='user', type='http', methods=['GET', 'OPTIONS'], cors='*')
+    @http.route('/api/curriculovariant/<string:cod_variante>', auth='none', type='http', methods=['GET', 'OPTIONS'], cors='*')
     def get_curriculo_var_by_cod(self, cod_variante, **kw):
         headers = {
             'Access-Control-Allow-Origin': '*',
@@ -975,7 +978,7 @@ class InformaCurriculoVariantController(http.Controller):
             response = request.make_response(json.dumps({'error': str(e)}), headers=headers)
             return response
 
-    @http.route('/api/curriculovariant/create', auth='user', type='json', methods=['POST', 'OPTIONS'], cors='*')
+    @http.route('/api/curriculovariant/create', auth='none', type='json', methods=['POST', 'OPTIONS'], cors='*')
     def create_curriculovariant(self, **kw):
         headers = {
             'Access-Control-Allow-Origin': '*',
@@ -1016,7 +1019,7 @@ class InformaCurriculoVariantController(http.Controller):
         except Exception as e:
             return {'error': str(e)}
 
-    @http.route('/api/curriculovariant/delete/<string:cod_variante>', auth='user', type='http', methods=['DELETE', 'OPTIONS'], csrf=False, cors='*')
+    @http.route('/api/curriculovariant/delete/<string:cod_variante>', auth='none', type='http', methods=['DELETE', 'OPTIONS'], csrf=False, cors='*')
     def delete_curriculovariant(self, cod_variante, **kw):
         headers = {
             'Access-Control-Allow-Origin': '*',
@@ -1045,7 +1048,7 @@ class InformaCurriculoVariantController(http.Controller):
             response = {'error': str(e)}
             return response
 
-    @http.route(['/api/curriculovariant/update/<string:cod_variante>'], auth='user', type='http', methods=['PUT', 'OPTIONS'], cors='*', csrf=False)
+    @http.route(['/api/curriculovariant/update/<string:cod_variante>'], auth='none', type='http', methods=['PUT', 'OPTIONS'], cors='*', csrf=False)
     def update_curriculovariant(self, cod_variante, **kw):
         headers = {
             'Access-Control-Allow-Origin': '*',
@@ -1103,7 +1106,7 @@ class InformaCursosController(http.Controller):
             return None
         return variant.id
         
-    @http.route('/api/cursos/all', auth='user', type='http', methods=['GET', 'OPTIONS'], cors='*')
+    @http.route('/api/cursos/all', auth='none', type='http', methods=['GET', 'OPTIONS'], cors='*')
     def get_all_curso(self, **kw):
         headers = {
             'Access-Control-Allow-Origin': '*',
@@ -1133,7 +1136,7 @@ class InformaCursosController(http.Controller):
             response.status_code = 500
             return response
 
-    @http.route('/api/cursos/<string:cod_curso>', auth='user', type='http', methods=['GET', 'OPTIONS'], cors='*')
+    @http.route('/api/cursos/<string:cod_curso>', auth='none', type='http', methods=['GET', 'OPTIONS'], cors='*')
     def get_curso_by_cod(self, cod_curso, **kw):
         headers = {
             'Content-Type': 'application/json',
@@ -1170,7 +1173,7 @@ class InformaCursosController(http.Controller):
             error_response = json.dumps({'error': str(e)})
             return request.make_response(error_response, headers=headers, status=500)
 
-    @http.route('/api/cursos/create', auth='user', type='json', methods=['POST', 'OPTIONS'], cors='*')
+    @http.route('/api/cursos/create', auth='none', type='json', methods=['POST', 'OPTIONS'], cors='*')
     def create_curso(self, **kw):
 
         headers = {
@@ -1209,7 +1212,7 @@ class InformaCursosController(http.Controller):
         except Exception as e:
             return {'error': str(e)}        
 
-    @http.route('/api/cursos/update/<string:cod_curso>', auth='user', type='http', methods=['PUT', 'OPTIONS'], cors='*', csrf=False)
+    @http.route('/api/cursos/update/<string:cod_curso>', auth='none', type='http', methods=['PUT', 'OPTIONS'], cors='*', csrf=False)
     def update_curso(self, cod_curso, **kw):
         headers = {'Content-Type': 'application/json'}
 
@@ -1238,7 +1241,7 @@ class InformaCursosController(http.Controller):
             return request.make_response(error_response, headers=headers)  
         
 
-    @http.route('/api/cursos/delete/<string:cod_curso>', auth='user', type='http', methods=['DELETE', 'OPTIONS'], csrf=False, cors='*')
+    @http.route('/api/cursos/delete/<string:cod_curso>', auth='none', type='http', methods=['DELETE', 'OPTIONS'], csrf=False, cors='*')
     def delete_curso(self, cod_curso, **kw):
         headers = {'Content-Type': 'application/json'}
 
@@ -1286,13 +1289,13 @@ class InformaMatriculaController(http.Controller):
         ], limit=1)
         return variant.id if variant else None
     
-    @http.route('/api/matricula/all', auth='user', type='http', methods=['GET', 'OPTIONS'], cors='*')
+    @http.route('/api/matricula/all', auth='none', type='http', methods=['GET', 'OPTIONS'], cors='*')
     def get_all_matricula(self, **kw):
         headers = {
             'Content-Type': 'application/json',
             'Access-Control-Allow-Origin': '*',
             'Access-Control-Allow-Methods': 'GET, OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+            'Access-Control-Allow-Headers': 'Content-Type, Authorization', 
         }
 
         if request.httprequest.method == 'OPTIONS':
@@ -1325,7 +1328,7 @@ class InformaMatriculaController(http.Controller):
             error_response = json.dumps({'error': str(e)})
             return request.make_response(error_response, headers=headers, status=500)
 
-    @http.route('/api/matricula/<string:numero_matricula>', auth='user', type='http', methods=['GET', 'OPTIONS'], cors='*')
+    @http.route('/api/matricula/<string:numero_matricula>', auth='none', type='http', methods=['GET', 'OPTIONS'], cors='*')
     def get_matricula_by_cod(self, numero_matricula, **kw):
         
         headers = {
@@ -1374,7 +1377,7 @@ class InformaMatriculaController(http.Controller):
         return request.make_response(success_response, headers=headers) 
 
     # Endpoint para criar matrícula
-    @http.route('/api/matricula/create', auth='user', type='json', methods=['POST', 'OPTIONS'], cors='*')
+    @http.route('/api/matricula/create', auth='none', type='json', methods=['POST', 'OPTIONS'], cors='*')
     def create_matricula(self, **kw):
         
         headers = {
@@ -1425,7 +1428,7 @@ class InformaMatriculaController(http.Controller):
         except Exception as e:
             return {'error': str(e)}        
 
-    @http.route('/api/matricula/update/<string:numero_matricula>', auth='user', type='http', methods=['PUT', 'OPTIONS'], cors='*', csrf=False)
+    @http.route('/api/matricula/update/<string:numero_matricula>', auth='none', type='http', methods=['PUT', 'OPTIONS'], cors='*', csrf=False)
     def update_matricula(self, numero_matricula, **kw):
         headers = {
             'Content-Type': 'application/json',
@@ -1467,7 +1470,7 @@ class InformaMatriculaController(http.Controller):
             response.status_code = 500
             return response
 
-    @http.route('/api/matricula/<string:numero_matricula>', auth='user', type='http', methods=['DELETE', 'OPTIONS'], csrf=False, cors='*')
+    @http.route('/api/matricula/<string:numero_matricula>', auth='none', type='http', methods=['DELETE', 'OPTIONS'], csrf=False, cors='*')
     def delete_matricula(self, numero_matricula, **kw):
 
         headers = {
@@ -1508,7 +1511,7 @@ class InformaRegistroAluno(http.Controller):
         return True
         
     # Mostrar todas as informações de registro de uma matricula    
-    @http.route('/api/registrodisciplina/<string:numero_matricula>', auth='user', type='http', methods=['GET', 'OPTIONS'], cors='*')
+    @http.route('/api/registrodisciplina/<string:numero_matricula>', auth='none', type='http', methods=['GET', 'OPTIONS'], cors='*')
     def get_registro_disciplina_by_matricula(self, numero_matricula, **kw):
         
         headers = {
@@ -1542,7 +1545,7 @@ class InformaRegistroAluno(http.Controller):
             error_response = json.dumps({'error': str(e)})
             return request.make_response(error_response, headers=headers, status=500)
         
-    @http.route('/api/matricula/update/<string:numero_matricula>', auth='user', type='http', methods=['PUT', 'OPTIONS'], cors='*', csrf=False)
+    @http.route('/api/matricula/update/<string:numero_matricula>', auth='none', type='http', methods=['PUT', 'OPTIONS'], cors='*', csrf=False)
     def update_matricula(self, numero_matricula, **kw):
         headers = {
             'Content-Type': 'application/json',
@@ -1585,7 +1588,7 @@ class InformaRegistroAluno(http.Controller):
             return response
     
     # Endpoint para Editar a Nota de um Registro de Disciplina
-    @http.route('/api/registrodisciplina/editnota/<string:numero_matricula>/<string:cod_disciplina>/<string:nova_nota>', auth='user', type='json', methods=['PUT', 'OPTIONS'], cors='*', csrf=False)
+    @http.route('/api/registrodisciplina/editnota/<string:numero_matricula>/<string:cod_disciplina>/<string:nova_nota>', auth='none', type='json', methods=['PUT', 'OPTIONS'], cors='*', csrf=False)
     def edit_nota_registro_disciplina(self, numero_matricula, cod_disciplina, nova_nota, **kw):
         
         if request.httprequest.method == 'OPTIONS':
@@ -1623,7 +1626,7 @@ class RespartnerAPI(http.Controller):
 
     #faz a criação do aluno, considerando  'l10n_br_cnpj_cpf', 'aluno', 'professor', 'name', 'email' como obrigatório
     #o contato criado deve ter aluno ou professor com a informação como True
-    @http.route('/api/res_partner/create', auth='user', type='json', methods=['POST', 'OPTIONS'], cors='*')
+    @http.route('/api/res_partner/create', auth='none', type='json', methods=['POST', 'OPTIONS'], cors='*')
     def create_res_partner(self, **post):
         
         headers = {
@@ -1689,8 +1692,8 @@ class RespartnerAPI(http.Controller):
         return f"{faculdade}{current_year}{last_digits}"
         
     #edição de contatos pelo codigo de matricula e do professor
-    @http.route(['/api/res_partner/edit_by_matricula/<string:matricula>',
-                '/api/res_partner/edit_by_cod_professor/<string:cod_professor>'], auth='user', type='json', methods=['PUT', 'OPTIONS'], cors='*')
+    @http.route(['/api/res_partner/edit_by_registro/<string:matricula>',
+                '/api/res_partner/edit_by_cod_professor/<string:cod_professor>'], auth='none', type='json', methods=['PUT', 'OPTIONS'], cors='*')
     def edit_res_partner_by_identification(self, matricula=None, cod_professor=None, **post):
         
         headers = {
@@ -1726,35 +1729,187 @@ class RespartnerAPI(http.Controller):
     #Delete de contatos pelo codigo de matricula e do professor
     @http.route(['/api/res_partner/delete_by_matricula/<string:matricula>',
                  '/api/res_partner/delete_by_cod_professor/<string:cod_professor>'],
-                auth='user', type='http', methods=['DELETE', 'OPTIONS'], csrf=False, cors='*')
-    
-    def delete_partner(self, matricula=None, cod_professor=None, **kwargs):
-        
+                auth='none', type='http', methods=['DELETE', 'OPTIONS'], csrf=False, cors='*')    
+    def delete_partner(self, matricula=None, cod_professor=None, **kwargs):        
         headers = {
             'Access-Control-Allow-Origin': '*',
             'Access-Control-Allow-Methods': 'DELETE, OPTIONS',
             'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-        }
-        
+        }        
         # Handle preflight "OPTIONS" request
         if request.httprequest.method == 'OPTIONS':
-            return request.make_response('', headers=headers)        
-        
+            return request.make_response('', headers=headers)                
         # Verifica se o token de cliente é válido
         if not self.verify_client_token(request.httprequest.headers.get('Token')):
             return Response(json.dumps({'error': 'invalid token'}), status=401, mimetype='application/json')
-
         # Define o domínio de busca baseado nos parâmetros fornecidos
         domain = [('matricula_aluno', '=', matricula)] if matricula else [('cod_professor', '=', cod_professor)]
         partner = request.env['res.partner'].sudo().search(domain, limit=1)
-
         # Verifica se o parceiro foi encontrado
         if not partner:
             return Response(json.dumps({'error': 'Partner not found'}), status=404, mimetype='application/json')
-
         # Tenta excluir o parceiro e retorna a resposta apropriada
         try:
             partner.sudo().unlink()
             return Response(json.dumps({'success': 'Partner deleted successfully'}), status=200, mimetype='application/json')
         except Exception as e:
             return Response(json.dumps({'error': str(e)}), status=500, mimetype='application/json')
+        
+class PartnerAPI(http.Controller):
+    
+    def verify_client_token(self, token):
+        client = request.env['informa.cliente'].sudo().search([('token', '=', token)], limit=1)
+        if not client:
+            return False
+        return True    
+    
+    @http.route('/api/professors/all', auth='none', type='http', methods=['GET', 'OPTIONS'], cors='*')
+    def get_all_professors(self, **kw):
+        if request.httprequest.method == 'OPTIONS':
+            return request.make_response('', headers=self.get_headers())
+
+        if not self.verify_client_token(request.httprequest.headers.get('Token')):
+            return self.error_response('invalid token', 401)
+
+        try:
+            professors = request.env['res.partner'].sudo().search_read(
+                [('professor', '=', True)],
+                ['name', 'email', 'phone', 'cod_professor']
+            )
+            return self.success_response({'professors': professors})
+        except Exception as e:
+            return self.error_response(str(e), 500)
+        
+    @http.route('/api/students/all', auth='none', type='http', methods=['GET', 'OPTIONS'], cors='*')
+    def get_all_students(self, **kw):
+        if request.httprequest.method == 'OPTIONS':
+            return request.make_response('', headers=self.get_headers())
+
+        if not self.verify_client_token(request.httprequest.headers.get('Token')):
+            return self.error_response('invalid token', 401)
+
+        try:
+            students = request.env['res.partner'].sudo().search_read(
+                [('aluno', '=', True)],
+                ['name', 'email', 'phone', 'matricula_aluno']
+            )
+            return self.success_response({'students': students})
+        except Exception as e:
+            return self.error_response(str(e), 500)
+    
+    @http.route('/api/professor/<string:rp>', auth='none', type='http', methods=['GET', 'OPTIONS'], cors='*')
+    def get_professor_by_rp(self, rp, **kw):
+        if request.httprequest.method == 'OPTIONS':
+            return request.make_response('', headers=self.get_headers())
+
+        if not self.verify_client_token(request.httprequest.headers.get('Token')):
+            return self.error_response('invalid token', 401)
+
+        try:
+            professor = request.env['res.partner'].sudo().search_read(
+                [('cod_professor', '=', rp), ('professor', '=', True)],
+                ['name', 'email', 'phone', 'cod_professor']
+            )
+            if not professor:
+                return self.error_response('Professor not found', 404)
+            return self.success_response({'professor': professor[0]})
+        except Exception as e:
+            return self.error_response(str(e), 500)
+
+    @http.route('/api/student/<string:ra>', auth='none', type='http', methods=['GET', 'OPTIONS'], cors='*')
+    def get_student_by_ra(self, ra, **kw):
+        if request.httprequest.method == 'OPTIONS':
+            return request.make_response('', headers=self.get_headers())
+
+        if not self.verify_client_token(request.httprequest.headers.get('Token')):
+            return self.error_response('invalid token', 401)
+
+        try:
+            student = request.env['res.partner'].sudo().search_read(
+                [('matricula_aluno', '=', ra), ('aluno', '=', True)],
+                ['name', 'email', 'phone', 'matricula_aluno', 'curso_id']
+            )
+            if not student:
+                return self.error_response('Student not found', 404)
+            for s in student:
+                s['curso_id'] = s['curso_id'][1] if s['curso_id'] else None
+            return self.success_response({'student': student[0]})
+        except Exception as e:
+            return self.error_response(str(e), 500)
+
+    def get_headers(self):
+        return {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        }
+
+    def success_response(self, data):
+        return request.make_response(json.dumps({'success': True, **data}), headers=self.get_headers())
+
+    def error_response(self, error, status):
+        response = request.make_response(json.dumps({'error': error}), headers=self.get_headers())
+        response.status = status
+        return response
+
+class AuditLogReportAPI(http.Controller):
+    
+    def verify_client_token(self, token):
+        client = request.env['informa.cliente'].sudo().search([('token', '=', token)], limit=1)
+        if not client:
+            return False
+        return True
+    
+    @http.route('/api/audit_logs', auth='none', type='http', methods=['GET'], cors='*')
+    def get_audit_logs(self, date_from=None, date_to=None, model_code=None, **kw):
+        # Preparar cabeçalhos da resposta
+        headers = {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        }
+        
+        # Verificar token de autenticação
+        if not self.verify_client_token(request.httprequest.headers.get('Token')):
+            return request.make_response(json.dumps({'error': 'Invalid token'}), headers=headers, status=401)
+        
+        domain = []  # Domínio base vazio para buscar todos os registros se nenhum filtro for fornecido
+        
+        # Filtrar registros por intervalo de datas
+        if date_from:
+            date_from_dt = datetime.strptime(date_from, "%d-%m-%Y")
+            if date_to:
+                date_to_dt = datetime.strptime(date_to, "%d-%m-%Y") + timedelta(days=1)  # Incluir o dia inteiro
+                domain.append(('change_date', '>=', date_from_dt.strftime("%d-%m-%Y 00:00:00")))
+                domain.append(('change_date', '<', date_to_dt.strftime("%d-%m-%Y 00:00:00")))
+            else:
+                # Apenas um dia específico
+                domain.append(('change_date', '>=', date_from_dt.strftime("%d-%m-%Y 00:00:00")))
+                domain.append(('change_date', '<', (date_from_dt + timedelta(days=1)).strftime("%d-%m-%Y 00:00:00")))
+
+        # Filtrar registros por código de modelo
+        if model_code:
+            domain.append(('model_code', '=', model_code))
+
+        # Realizar a busca no banco de dados
+        logs = request.env['audit.log.report'].sudo().search_read(domain, [
+            'model_name', 'action', 'field_name', 'old_value', 'new_value', 'user_id', 'change_date', 'model_code'
+        ])
+
+        # Preparar dados para a resposta
+        result = []
+        for log in logs:
+            result.append({
+                'model_name': log['model_name'],
+                'action': log['action'],
+                'field_name': log['field_name'],
+                'old_value': log['old_value'],
+                'new_value': log['new_value'],
+                'user_id': log['user_id'][1] if log['user_id'] else '',
+                'change_date': log['change_date'].strftime("%d-%m-%Y %H:%M:%S") if log['change_date'] else '',
+                'model_code': log['model_code']
+            })
+        
+        return request.make_response(json.dumps({'success': True, 'audit_logs': result}), headers=headers)

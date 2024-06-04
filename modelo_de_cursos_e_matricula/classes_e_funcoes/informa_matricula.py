@@ -10,6 +10,15 @@ from odoo import http
 import requests
 from odoo.exceptions import UserError
 from moodle import Moodle
+from reportlab.lib.pagesizes import letter, landscape
+from reportlab.pdfgen import canvas
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.platypus import Paragraph, Spacer, Frame
+from reportlab.lib.enums import TA_CENTER
+from reportlab.lib.units import inch
+from reportlab.lib.colors import HexColor
+from io import BytesIO
+import base64
 
 IS_TEST_ENVIRONMENT = False
 _logger = logging.getLogger(__name__)
@@ -74,6 +83,195 @@ class InformaMatricula(models.Model):
     total_duracao_horas_id = fields.Float(related='curso.total_duracao_horas', string='Duração(H): ', readonly=True)
     available_variants = fields.Many2many('informa.curriculo.variant', compute='_compute_available_variants')
     moodle = fields.Boolean( string="Moodle?")
+    
+    @staticmethod
+    def create_entwined_borders(canvas_obj, width, height):
+        # Convertendo width e height para inteiros se eles não forem
+        width = int(width)
+        height = int(height)
+
+        # Definindo a cor e a largura da linha
+        canvas_obj.setStrokeColor(HexColor(0x0000ff))  # Exemplo de cor verde
+        canvas_obj.setLineWidth(3)
+
+        # Definindo o tamanho e o espaço entre as bordas
+        border_size = 3
+        space = 2
+
+        # Desenhando as bordas horizontais superiores e inferiores
+        for y in [0, height - border_size]:
+            for x in range(0, width, int(border_size + space)):  # Conversão para int aqui
+                canvas_obj.line(x, y, x + border_size, y + border_size)
+        
+        # Desenhando as bordas verticais esquerda e direita
+        for x in [0, width - border_size]:
+            for y in range(0, height, int(border_size + space)):  # Conversão para int aqui
+                canvas_obj.line(x, y, x + border_size, y + border_size)
+                
+    @staticmethod
+    def create_entwined_borders3(canvas_obj, width, height):
+        # Convertendo width e height para inteiros se eles não forem
+        width = int(width)
+        height = int(height)
+
+        # Definindo a cor e a largura da linha
+        canvas_obj.setStrokeColor(HexColor(0x0000aa))  # Exemplo de cor azul
+        canvas_obj.setLineWidth(3)
+
+        # Definindo o tamanho e o espaço entre as bordas
+        border_size = 3
+        space = 2
+
+        # Desenhando as bordas horizontais superiores e inferiores
+        for y in [0, height - border_size]:
+            for x in range(0, width, int(border_size + space)):  # Conversão para int aqui
+                canvas_obj.line(x, y, x + border_size, y + border_size)
+        
+        # Desenhando as bordas verticais esquerda e direita
+        for x in [0, width - border_size]:
+            for y in range(0, height, int(border_size + space)):  # Conversão para int aqui
+                canvas_obj.line(x, y, x + border_size, y + border_size)
+                
+    @staticmethod
+    def create_entwined_borders2(canvas_obj, width, height):
+        # Convertendo width e height para inteiros se eles não forem
+        width = int(width)
+        height = int(height)
+
+        # Definindo a cor e a largura da linha
+        canvas_obj.setStrokeColor(HexColor(0x00aa00))  # Exemplo de cor azul
+        canvas_obj.setLineWidth(3)
+
+        # Definindo o tamanho e o espaço entre as bordas
+        border_size = 3
+        space = 2
+
+        # Desenhando as bordas horizontais superiores e inferiores
+        for y in [0, height - border_size]:
+            for x in range(0, width, int(border_size + space)):  # Conversão para int aqui
+                canvas_obj.line(x, y, x + border_size, y + border_size)
+        
+        # Desenhando as bordas verticais esquerda e direita
+        for x in [0, width - border_size]:
+            for y in range(0, height, int(border_size + space)):  # Conversão para int aqui
+                canvas_obj.line(x, y, x + border_size, y + border_size)    
+    
+    @api.model
+    def generate_certificate(self, numero_matricula):
+        # Encontre a matrícula pelo número fornecido
+        matricula = self.search([('numero_matricula', '=', numero_matricula)], limit=1)
+        if not matricula:
+            return {'error': 'Matrícula não encontrada'}
+
+        buffer = BytesIO()
+        p = canvas.Canvas(buffer, pagesize=landscape(letter))
+        width, height = landscape(letter)
+        
+        # Estilos
+        styles = getSampleStyleSheet()
+        aluno_nome = matricula.nome_do_aluno.name
+        curso_nome = matricula.curso.name
+        tempo_de_conclusao = matricula.total_duracao_horas_id
+        data_conclusao = fields.Date.to_string(matricula.data_certificacao)
+        
+        # Estilos dos parágrafos
+        title_style = ParagraphStyle('TitleStyle', parent=styles['Title'], fontSize=50, alignment=TA_CENTER, spaceAfter=30)
+        body_style = ParagraphStyle('BodyStyle', parent=styles['BodyText'], fontSize=25, alignment=TA_CENTER, spaceAfter=12, spaceBefore=20)
+        detail_style = ParagraphStyle('DetailStyle', parent=styles['BodyText'], fontSize=16, alignment=TA_CENTER, spaceAfter=12, spaceBefore=20)
+
+        # Adição dos elementos
+        elements = [
+            Paragraph("CERTIFICADO", title_style),
+            Spacer(1, 0.8 * inch),
+            Paragraph("Certificamos que", body_style),
+            Paragraph(f"<b>{aluno_nome}</b>", body_style),
+            Spacer(1, 0.8 * inch),
+            Paragraph("Concluiu com total aproveitamento o curso:", body_style),
+            Paragraph(f"<b>{curso_nome}</b>", body_style),
+            Spacer(1, 0.40 * inch),
+            Paragraph(f"Com carga horária de {tempo_de_conclusao} horas", detail_style),
+            Paragraph(f"Data de conclusão: {data_conclusao}", detail_style)
+        ]
+
+        frame = Frame(inch, inch, width - 2 * inch, height - 2 * inch, showBoundary=0)
+        frame.addFromList(elements, p)
+
+        # Desenha as bordas entrelaçadas
+        self.create_entwined_borders(p, width, height)
+        self.create_entwined_borders2(p, width - inch/10, height - inch/10)
+        self.create_entwined_borders3(p, width - inch/30, height - inch/30)
+
+        p.showPage()
+
+        # Obtenha registros de disciplina para esta matrícula
+        disciplina_records = self.env['informa.matricula.line'].search([('matricula_id', '=', matricula.id)])
+        
+        title = "Detalhes das Disciplinas Cursadas"
+        max_font_size = 18
+        min_font_size = 8
+        current_font_size = max_font_size
+        max_lines_per_page = 200  # Estimativa de linhas que cabem em uma página
+
+        # Ajusta o tamanho da fonte de acordo com a quantidade de disciplinas
+        if len(disciplina_records) > max_lines_per_page:
+            lines_per_discipline = 2  # Se há muitas disciplinas, cada uma pode ocupar mais de uma linha
+            current_font_size = max(min_font_size, int((max_lines_per_page / len(disciplina_records)) * max_font_size))
+
+        # Configuração do título
+        p.setFont("Helvetica-Bold", current_font_size)
+        p.drawCentredString(width / 2.0, height - inch, title)
+
+        # Configurações iniciais para a lista de disciplinas
+        p.setFont("Helvetica", current_font_size)
+        current_height = height - 2 * inch  # Começa um pouco abaixo do título
+        line_height = 1.2 * current_font_size  # Espaçamento baseado no tamanho da fonte atual
+
+        # Lista as disciplinas na página
+        for record in disciplina_records:
+            # Se a altura atual for menor que a margem inferior, interrompe o loop
+            if current_height < inch * 2:
+                break
+            
+            discipline_text = f" º {record.disciplina_id.name} - Média: {record.media_necessaria} - Nota: {record.nota}"
+            p.drawString(inch, current_height, discipline_text)
+            current_height -= line_height  # Move para a próxima linha
+
+        # Se não couber na página, informe que as disciplinas adicionais não foram exibidas
+        if len(disciplina_records) * line_height > (height - 3 * inch):
+            p.drawString(inch, current_height, "Algumas disciplinas não puderam ser exibidas.")
+        
+        # Criar borda para a segunda página
+        self.create_entwined_borders(p, width, height)
+            
+        p.showPage()
+        p.save()
+        pdf = buffer.getvalue()
+        buffer.close()
+
+        return pdf
+
+    def generate_certificate_button(self):
+        """ Função chamada pelo botão para gerar o certificado """
+        pdf_data = self.generate_certificate(self.numero_matricula)
+        if isinstance(pdf_data, dict) and 'error' in pdf_data:
+            raise UserError(pdf_data['error'])
+        else:
+            # Aqui você pode salvar o PDF em um campo binário ou diretamente enviar para download
+            file_name = f"{self.nome_do_aluno.name}_certificado.pdf"
+            attachment = self.env['ir.attachment'].create({
+                'name': file_name,
+                'type': 'binary',
+                'datas': base64.b64encode(pdf_data),
+                'res_model': self._name,
+                'res_id': self.id,
+                'mimetype': 'application/pdf'
+            })
+            # Você deve usar a URL do anexo para o download
+            return {
+                'type': 'ir.actions.act_url',
+                'url': f'/web/content/{attachment.id}?download=true',
+                'target': 'new',
+            }   
     
     @api.onchange('curso')
     def _onchange_curso(self):

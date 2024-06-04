@@ -1,52 +1,29 @@
 import requests
-import json
-
 # Configuração inicial
 odooserver_url = "http://odooserver:8069"
-login_url = f"{odooserver_url}/web/session/authenticate"
-create_curriculo_url = f"{odooserver_url}/api/curriculo/create"
+# URLs para a operação de DELETE
+delete_by_matricula_url_template = f"{odooserver_url}/api/res_partner/delete_by_matricula/{{matricula}}"
+delete_by_cod_professor_url_template = f"{odooserver_url}/api/res_partner/delete_by_cod_professor/{{cod_professor}}"
+# Token da sessão (assumindo que você tenha uma forma de obter esse token)
 token = "token"
-
-# Dados de autenticação
-login_data = {
-    "jsonrpc": "2.0",
-    "params": {
-        "login": "admin",
-        "password": "admin",
-        "db": "devpostgresql001"
-    }
-}
-
 # Iniciar sessão
 session = requests.Session()
-
-# Tentativa de login
-response_login = session.post(login_url, headers={"Content-Type": "application/json"}, json=login_data)
-
-# Verifica se o login foi bem-sucedido
-if response_login.status_code == 200 and response_login.json().get("result"):
-    print("Login bem-sucedido!")
-    
-    # Dados do currículo a serem criados
-    curriculo_data = {
-        "name": "Nome do Currículo",
-        "cod_professor": "FG202491583",  # Substitua pelo código real do professor
-        "cod_curriculo": "CURR001"
-    }
-
-    # Cabeçalhos para a requisição POST, incluindo o token de autenticação
-    headers = {
-        "Content-Type": "application/json",
-        "Token": token  # Token da sessão após login bem-sucedido
-    }
-
-    # Realizando a requisição POST para criar um novo currículo
-    response = session.post(create_curriculo_url, headers=headers, json=curriculo_data)
-
-    # Avaliando a resposta
-    if response.status_code == 200:
-        print("Criação do currículo bem-sucedida:", response.json())
-    else:
-        print(f"Erro na criação do currículo: {response.status_code}", response.text)
+# Defina um dos seguintes valores, dependendo do que deseja deletar
+matricula_aluno = "2024012446"  # Substitua pelo código de matrícula real
+cod_professor = None  # Substitua pelo código do professor real
+# Seleciona a URL apropriada
+if matricula_aluno:
+    delete_url = delete_by_matricula_url_template.format(matricula=matricula_aluno)
+elif cod_professor:
+    delete_url = delete_by_cod_professor_url_template.format(cod_professor=cod_professor)
 else:
-    print("Falha no login:", response_login.text)
+    print("Nenhum parâmetro de identificação fornecido.")
+    exit()
+# Cabeçalhos para a requisição DELETE, incluindo o token de autenticação
+headers = {
+    "Token": token
+}
+# Realizando a requisição DELETE
+response_delete = session.delete(delete_url, headers=headers)
+result = response_delete.json()
+print("Parceiro deletado com sucesso:", result)

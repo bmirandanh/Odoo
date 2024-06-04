@@ -23,7 +23,7 @@ class AuditLogReport(models.Model):
             'informa.curriculo.variant': 'cod_variante',
             'informa.cursos' : 'cod_curso',
             'informa.matricula' : 'numero_matricula',
-            'registro_disciplina':'numero_matricula',
+            'registro_disciplina':'matriculas_ids.numero_matricula',
             'res.partner' : 'matriculas_ids',
         }
         return code_fields.get(model_name, '')
