@@ -3,7 +3,6 @@ import json
 
 # Configuração inicial
 odooserver_url = "http://odooserver:8069"
-login_url = f"{odooserver_url}/web/session/authenticate"
 # Substitua 'token' pelo valor real do token
 token_personalizado = "token"
 # Substitua pelo número real da matrícula que deseja deletar

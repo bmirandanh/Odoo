@@ -3,14 +3,13 @@ import json
 
 # Configuração inicial
 odooserver_url = "http://odooserver:8069"
-login_url = f"{odooserver_url}/web/session/authenticate"
 # Substitua com os valores corretos
 numero_matricula = "21d24017569"
 cod_disciplina = "23423ffffffffff"
 nova_nota = "7"  # nota como string, ajuste conforme o esperado pela API, ou seja seu ID no Odoo
 # Iniciar sessão
 session = requests.Session()
-# Substitua 'seu_token_aqui' pelo valor real do token
+# Substitua 'token' pelo valor real do token
 token_personalizado = "token"
 # Montando a URL da API para atualização da nota do registro de disciplina
 edit_nota_url = f"{odooserver_url}/api/registrodisciplina/editnota/{numero_matricula}/{cod_disciplina}/{nova_nota}"

@@ -5,7 +5,6 @@ odooserver_url = "http://odooserver:8069"
 # Substitua pelo número de matrícula real que deseja usar para gerar o certificado
 numero_matricula = "we2e1111114015872"
 generate_certificate_url = f"{odooserver_url}/api/generate_certificate/{numero_matricula}"  # Ajuste para o endpoint correto
-# Dados de autenticação
 # Iniciar sessão
 session = requests.Session()
  # Substitua 'token_personalizado' pelo token real obtido após autenticação

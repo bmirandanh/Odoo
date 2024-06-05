@@ -2,7 +2,6 @@ import requests
 
 # Configuração inicial
 odooserver_url = "http://odooserver:8069"
-login_url = f"{odooserver_url}/web/session/authenticate"
 # Atualize o URL para o correto, conforme definido na rota da API para buscar registros de disciplina por matrícula
 numero_matricula = "qqwwwwwwwwwwww4012710"  # Substitua pelo número real da matrícula desejada
 get_registro_disciplina_url = f"{odooserver_url}/api/registrodisciplina/{numero_matricula}"

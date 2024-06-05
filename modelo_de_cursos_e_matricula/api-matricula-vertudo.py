@@ -2,8 +2,8 @@ import requests
 
 # Configuração inicial
 odooserver_url = "http://odooserver:8069"
-login_url = f"{odooserver_url}/web/session/authenticate"
-get_all_matricula_url = f"{odooserver_url}/api/matricula/all"  # Certifique-se de que este é o URL correto para o método GET
+get_all_matricula_url = f"{odooserver_url}/api/matricula/all"  # Certifique-se de que este é o URL correto
+# para o método GET
 # Iniciar sessão
 session = requests.Session()
 # Substitua 'token' pelo token real obtido após autenticação

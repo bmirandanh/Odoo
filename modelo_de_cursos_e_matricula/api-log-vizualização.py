@@ -2,7 +2,6 @@ import requests
 
 # Configuração inicial
 odooserver_url = "http://odooserver:8069"
-login_url = f"{odooserver_url}/web/session/authenticate"
 # URL da API para buscar logs de auditoria
 url_audit_logs = f"{odooserver_url}/api/audit_logs"
 # Iniciar sessão

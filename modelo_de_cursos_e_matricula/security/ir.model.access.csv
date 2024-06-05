@@ -34,3 +34,21 @@ access_informa_log4,Access to informa.log,modelo_de_cursos_e_matricula.model_aud
 access_cliente2,Access to informa.log,modelo_de_cursos_e_matricula.model_informa_cliente,base.group_system,1,1,1,0
 access_informa_matricula_line2,Access to informa_matricula_line,modelo_de_cursos_e_matricula.model_informa_matricula_line,base.group_system,1,1,1,1
 access_informa_menus,Access to informa_menus,modelo_de_cursos_e_matricula.model_course_creation_wizard,base.group_system,1,1,1,1
+
+access_informa_cursos3,Access to informa.cursos,modelo_de_cursos_e_matricula.model_informa_cursos,base.group_public,1,1,1,1
+access_informa_curriculo3,Access to informa_curriculo,modelo_de_cursos_e_matricula.model_informa_curriculo,base.group_public,1,1,1,1
+access_informa_curriculo_variante3,Access to informa_curriculo_variante,modelo_de_cursos_e_matricula.model_informa_curriculo_variant,base.group_public,1,1,1,1
+access_informa_disciplina3,Access to informa.disciplina,modelo_de_cursos_e_matricula.model_informa_disciplina,base.group_public,1,1,1,1
+access_informa_registro_disciplina3,Access to informa.registro_disciplina,modelo_de_cursos_e_matricula.model_informa_registro_disciplina,base.group_public,1,1,1,1
+access_informa_matricula3,Access to informa.matricula,modelo_de_cursos_e_matricula.model_informa_matricula,base.group_public,1,1,1,1
+access_tipo_ingresso3,Access to tipo.de.ingresso,modelo_de_cursos_e_matricula.model_tipo_de_ingresso,base.group_public,1,1,1,1
+access_tipo_cancelamento3,Access to tipo.de.cancelamento,modelo_de_cursos_e_matricula.model_tipo_de_cancelamento,base.group_public,1,1,1,1
+access_matricula_status_change3,Access to matricula.status.change.wizard,modelo_de_cursos_e_matricula.model_matricula_status_change_wizard,base.group_public,1,1,1,1
+access_matricula_reingresso3,Access to matricula.reingresso.wizard,modelo_de_cursos_e_matricula.model_matricula_reingresso_wizard,base.group_public,1,1,1,1
+access_res_partner3,res.partner,modelo_de_cursos_e_matricula.model_res_partner,base.group_public,1,1,1,1
+access_informa_matricula4,Access to informa.matricula,modelo_de_cursos_e_matricula.model_informa_matricula,base.group_public,1,1,1,1
+access_informa_log4,Access to informa.log,modelo_de_cursos_e_matricula.model_audit_log_report,base.group_public,1,1,1,1
+access_informa_log5,Access to informa.log,modelo_de_cursos_e_matricula.model_audit_log_report,base.group_public,1,1,1,1
+access_cliente3,Access to informa.log,modelo_de_cursos_e_matricula.model_informa_cliente,base.group_public,1,1,1,1
+access_informa_matricula_line3,Access to informa_matricula_line,modelo_de_cursos_e_matricula.model_informa_matricula_line,base.group_public,1,1,1,1
+access_informa_menus2,Access to informa_menus,modelo_de_cursos_e_matricula.model_course_creation_wizard,base.group_public,1,1,1,1

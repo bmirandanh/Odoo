@@ -287,7 +287,7 @@ class DisciplinaController(http.Controller):
 
         data = request.jsonrequest
         try:
-            new_disciplina = request.env['informa.disciplina'].create({
+            new_disciplina = request.env['informa.disciplina'].sudo().create({
                 'name': data.get('name'),
                 'media': data.get('media'),
                 'professor': data.get('professor'),
@@ -460,7 +460,7 @@ class TipoIngressoController(http.Controller):
 
         data = request.jsonrequest
         try:
-            new_tipo_ingresso = request.env['tipo.de.ingresso'].create({
+            new_tipo_ingresso = request.env['tipo.de.ingresso'].sudo().create({
                 'nome': data.get('nome'),
                 'descricao': data.get('descricao'),
                 'color': data.get('color'),
@@ -630,7 +630,7 @@ class TipoCancelamentoController(http.Controller):
 
         data = request.jsonrequest
         try:
-            new_tipo_cancelamento = request.env['tipo.de.cancelamento'].create({
+            new_tipo_cancelamento = request.env['tipo.de.cancelamento'].sudo().create({
                 'nome': data.get('nome'),
                 'descricao': data.get('descricao'),
                 'color': data.get('color'),
@@ -802,7 +802,7 @@ class InformaCurriculoController(http.Controller):
             return {'error': 'Professor not found'}
 
         try:
-            new_curriculo = request.env['informa.curriculo'].create({
+            new_curriculo = request.env['informa.curriculo'].sudo().create({
                 'name': data.get('name'),
                 'professor': professor,  # Ajuste conforme o nome correto do campo
                 'cod_curriculo': data.get('cod_curriculo'),
@@ -1006,7 +1006,7 @@ class InformaCurriculoVariantController(http.Controller):
             return {'error': 'Curriculo not found'}
 
         try:
-            new_variant = request.env['informa.curriculo.variant'].create({
+            new_variant = request.env['informa.curriculo.variant'].sudo().create({
                 'name': data.get('name'),
                 'disciplina_ids': disciplina_ids_relation,
                 'sequence': data.get('sequence'),
@@ -1199,7 +1199,7 @@ class InformaCursosController(http.Controller):
             return {'error': 'Variant Curriculo not found or not matching the Curriculo'}
 
         try:
-            new_curso = request.env['informa.cursos'].create({
+            new_curso = request.env['informa.cursos'].sudo().create({
                 'name': data.get('name'),
                 'cod_curso': data.get('cod_curso'),
                 'curriculo_id': curriculo_id,
@@ -1410,7 +1410,7 @@ class InformaMatriculaController(http.Controller):
             return {'error': 'Variant Curriculo not found or not matching the Curriculo'}
 
         try:
-            new_matricula = request.env['informa.matricula'].create({
+            new_matricula = request.env['informa.matricula'].sudo().create({
                 'tipo_de_ingresso': tipo_ingresso_id,
                 'grupo_disciplina_id': grupo_disciplina_id,
                 'variant_curriculo_id': variant_curriculo_id,
