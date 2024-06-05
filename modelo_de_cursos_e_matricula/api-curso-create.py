@@ -13,7 +13,8 @@ curso_data = {
     "cod_curso": "CRS123",  # Código do curso
     "cod_curriculo": "CURR001",  # Código do currículo relacionado
     "cod_variante": "VAR001",  #Código da variante do currículo
-    "tempo_de_conclusao": "06M", # ou ('03M/90D', '03M/90D'), ('06M', '06M'), ('12M', '12M'), ('24M', '24M'), ('36M', '36M'), ('48M', '48M')
+    "tempo_de_conclusao": "06M", # ou ('03M/90D', '03M/90D'), ('06M', '06M'), 
+     # ou ('12M', '12M'), ('24M', '24M'), ('36M', '36M'), ('48M', '48M')
     "formato_nota": "normal" # ou porcentagem
 }
 # Cabeçalhos para a requisição POST, incluindo o token de autenticação

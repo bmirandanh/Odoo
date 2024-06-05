@@ -7,7 +7,6 @@ def datetime_to_iso(dt):
     return dt.isoformat() if isinstance(dt, datetime) else dt
 # Configuração inicial
 odooserver_url = "http://odooserver:8069"
-login_url = f"{odooserver_url}/web/session/authenticate"
 create_matricula_url = f"{odooserver_url}/api/matricula/create"
 token = "token"  # Substitua pelo seu token real após o login
 # Iniciar sessão
@@ -31,12 +30,8 @@ headers = {
 # Realizando a requisição POST para criar uma nova matrícula
 response = session.post(create_matricula_url, headers=headers, json=matricula_data)
 # Avaliando a resposta
-if response.status_code == 200:
-    try:
-        result = response.json()
-        print("Criação da matrícula bem-sucedida:", result)
+try:
+    result = response.json()
+    print("Resultado da Matrícula:", result)
     except ValueError as e:
         print("Resposta recebida não é JSON válido:", response.text)
-        print("Erro detalhado:", e)
-else:
-    print(f"Erro na criação da matrícula: {response.status_code}", response.text)

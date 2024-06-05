@@ -3,15 +3,6 @@ import requests
 # Configuração inicial
 odooserver_url = "http://odooserver:8069"
 get_all_curso_url = f"{odooserver_url}/api/cursos/all"
-# Dados de autenticação
-login_data = {
-    "jsonrpc": "2.0",
-    "params": {
-        "login": "admin",
-        "password": "admin",
-        "db": "devpostgresql001"
-    }
-}
 # Iniciar sessão
 session = requests.Session()
 # Certifique-se de que 'token_personalizado' é o token

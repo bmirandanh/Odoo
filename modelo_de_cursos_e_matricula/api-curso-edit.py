@@ -21,6 +21,6 @@ headers = {
     "Token": token_personalizado,  # Enviando o token personalizado para autenticação
 }
 # Realizando a requisição PUT para atualizar o tipo de cancelamento
-response_update = session.put(update_cursos_url, headers=headers, data=json.dumps(update_data))  # Usando data= ao invés de json
+response_update = session.put(update_cursos_url, headers=headers, data=json.dumps(update_data))
 print("Atualização do tipo de cancelamento bem-sucedida:", response_update.json())
 
