@@ -15,188 +15,57 @@ from reportlab.platypus import Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
 from datetime import datetime, timedelta
+from odoo import http
+from odoo.http import request
+import json
+from PyPDF2 import PdfFileReader, PdfFileWriter
+from io import BytesIO
 
 class CertificateController(http.Controller):
+
+    @http.route('/api/generate_certificate/<int:matricula_id>/<string:template_page1_xml_id>/<string:template_page2_xml_id>', auth='none', type='http', methods=['GET'], csrf=False)
+    def generate_certificate(self, matricula_id, template_page1_xml_id, template_page2_xml_id):
+        _logger.info(f'Received matricula_id: {matricula_id}, template_page1_xml_id: {template_page1_xml_id}, template_page2_xml_id: {template_page2_xml_id}')
         
-    @staticmethod
-    def create_entwined_borders(canvas_obj, width, height):
-        # Convertendo width e height para inteiros se eles não forem
-        width = int(width)
-        height = int(height)
+        matricula = request.env['informa.matricula'].sudo().browse(matricula_id)
+        if not matricula.exists():
+            return request.make_response(json.dumps({'error': 'Matrícula não encontrada'}), headers={'Content-Type': 'application/json'}, status=404)
 
-        # Definindo a cor e a largura da linha
-        canvas_obj.setStrokeColor(HexColor(0x0000ff))  # Exemplo de cor verde
-        canvas_obj.setLineWidth(3)
+        if matricula.status_do_certificado not in ['FINALIZADO', 'EXPEDIDO', 'EXPEDIDO SEGUNDA VIA']:
+            return request.make_response(json.dumps({'error': 'Certificados só podem ser gerados para matrículas com status FINALIZADO, EXPEDIDO ou EXPEDIDO SEGUNDA VIA'}), headers={'Content-Type': 'application/json'}, status=400)
 
-        # Definindo o tamanho e o espaço entre as bordas
-        border_size = 3
-        space = 2
-
-        # Desenhando as bordas horizontais superiores e inferiores
-        for y in [0, height - border_size]:
-            for x in range(0, width, int(border_size + space)):  # Conversão para int aqui
-                canvas_obj.line(x, y, x + border_size, y + border_size)
+        template_page1 = request.env['ir.ui.view'].sudo().search([('xml_id', '=', template_page1_xml_id)], limit=1)
+        template_page2 = request.env['ir.ui.view'].sudo().search([('xml_id', '=', template_page2_xml_id)], limit=1)
         
-        # Desenhando as bordas verticais esquerda e direita
-        for x in [0, width - border_size]:
-            for y in range(0, height, int(border_size + space)):  # Conversão para int aqui
-                canvas_obj.line(x, y, x + border_size, y + border_size)
-                
-    @staticmethod
-    def create_entwined_borders3(canvas_obj, width, height):
-        # Convertendo width e height para inteiros se eles não forem
-        width = int(width)
-        height = int(height)
+        if not template_page1.exists():
+            return request.make_response(json.dumps({'error': f'Template {template_page1_xml_id} não encontrado'}), headers={'Content-Type': 'application/json'}, status=404)
+        if not template_page2.exists():
+            return request.make_response(json.dumps({'error': f'Template {template_page2_xml_id} não encontrado'}), headers={'Content-Type': 'application/json'}, status=404)
 
-        # Definindo a cor e a largura da linha
-        canvas_obj.setStrokeColor(HexColor(0x0000aa))  # Exemplo de cor azul
-        canvas_obj.setLineWidth(3)
+        try:
+            Report = request.env['ir.actions.report']
+            pdf_page1_content, _ = Report._render_qweb_pdf(template_page1.id, [matricula.id])
+            pdf_page2_content, _ = Report._render_qweb_pdf(template_page2.id, [matricula.id])
 
-        # Definindo o tamanho e o espaço entre as bordas
-        border_size = 3
-        space = 2
+            output_pdf = PdfFileWriter()
+            input_pdf_1st_page = PdfFileReader(BytesIO(pdf_page1_content))
+            input_pdf_2nd_page = PdfFileReader(BytesIO(pdf_page2_content))
 
-        # Desenhando as bordas horizontais superiores e inferiores
-        for y in [0, height - border_size]:
-            for x in range(0, width, int(border_size + space)):  # Conversão para int aqui
-                canvas_obj.line(x, y, x + border_size, y + border_size)
+            output_pdf.addPage(input_pdf_1st_page.getPage(0))
+            output_pdf.addPage(input_pdf_2nd_page.getPage(0))
+
+            final_output = BytesIO()
+            output_pdf.write(final_output)
+            final_output.seek(0)
+
+            headers = [
+                ('Content-Type', 'application/pdf'),
+                ('Content-Disposition', f'attachment; filename="{matricula.nome_do_aluno.name}_certificado.pdf"')
+            ]
+            return request.make_response(final_output.read(), headers=headers)
+        except Exception as e:
+            return request.make_response(json.dumps({'error': str(e)}), headers={'Content-Type': 'application/json'}, status=500)        
         
-        # Desenhando as bordas verticais esquerda e direita
-        for x in [0, width - border_size]:
-            for y in range(0, height, int(border_size + space)):  # Conversão para int aqui
-                canvas_obj.line(x, y, x + border_size, y + border_size)
-                
-    @staticmethod
-    def create_entwined_borders2(canvas_obj, width, height):
-        # Convertendo width e height para inteiros se eles não forem
-        width = int(width)
-        height = int(height)
-
-        # Definindo a cor e a largura da linha
-        canvas_obj.setStrokeColor(HexColor(0x00aa00))  # Exemplo de cor azul
-        canvas_obj.setLineWidth(3)
-
-        # Definindo o tamanho e o espaço entre as bordas
-        border_size = 3
-        space = 2
-
-        # Desenhando as bordas horizontais superiores e inferiores
-        for y in [0, height - border_size]:
-            for x in range(0, width, int(border_size + space)):  # Conversão para int aqui
-                canvas_obj.line(x, y, x + border_size, y + border_size)
-        
-        # Desenhando as bordas verticais esquerda e direita
-        for x in [0, width - border_size]:
-            for y in range(0, height, int(border_size + space)):  # Conversão para int aqui
-                canvas_obj.line(x, y, x + border_size, y + border_size)
-
-    @http.route('/api/generate_certificate/<string:numero_matricula>', auth='none', type='http', methods=['GET'])
-    def generate_certificate(self, numero_matricula, **kw):
-        # Encontre a matrícula pelo número fornecido
-        matricula = request.env['informa.matricula'].sudo().search([('numero_matricula', '=', numero_matricula)], limit=1)
-        if not matricula:
-            return json.dumps({'error': 'Matrícula não encontrada'})
-
-        buffer = BytesIO()
-        # Aqui mudamos para landscape para alterar a orientação da página
-        p = canvas.Canvas(buffer, pagesize=landscape(letter))
-        width, height = landscape(letter)
-        
-        # Estilos
-        styles = getSampleStyleSheet()
-        aluno_nome = matricula.nome_do_aluno.name if matricula.nome_do_aluno else 'Nome não encontrado'
-        curso_nome = matricula.curso.name if matricula.curso else 'Curso não encontrado'
-        tempo_de_conclusao = matricula.total_duracao_horas_id
-        data_conclusao = matricula.data_certificacao.strftime('%d/%m/%Y')
-        
-        # Estilos dos parágrafos
-        title_style = ParagraphStyle('TitleStyle', parent=styles['Title'], fontSize=50, alignment=TA_CENTER, spaceAfter=30)
-        body_style = ParagraphStyle('BodyStyle', parent=styles['BodyText'], fontSize=25, alignment=TA_CENTER, spaceAfter=12, spaceBefore=20)
-        detail_style = ParagraphStyle('DetailStyle', parent=styles['BodyText'], fontSize=16, alignment=TA_CENTER, spaceAfter=12, spaceBefore=20)
-
-        # Adição dos elementos
-        elements = [
-            Paragraph("CERTIFICADO", title_style),
-            Spacer(1, 0.8 * inch),
-            Paragraph(f"Certificamos que", body_style),
-            Paragraph(f"<b>{aluno_nome}</b>", body_style),
-            Spacer(1, 0.8 * inch),
-            Paragraph(f"Concluiu com total aproveitamento o curso:", body_style),
-            Paragraph(f"<b>{curso_nome}</b>", body_style),
-            Spacer(1, 0.40 * inch),
-            Paragraph(f"Com carga horária de {tempo_de_conclusao} horas", detail_style),
-            Paragraph(f"Data de conclusão: {data_conclusao}", detail_style)
-        ]
-        
-        # Desenha as bordas entrelaçadas           
-        CertificateController.create_entwined_borders(p, width, height)
-        CertificateController.create_entwined_borders2(p, width - inch/10, height - inch/10)
-        CertificateController.create_entwined_borders3(p, width - inch/30, height - inch/30)
-
-        # Centralização vertical dos elementos
-        frame = Frame(inch, inch, width - 2 * inch, height - 2 * inch, showBoundary=0)
-        frame.addFromList(elements, p)
-        
-        # Finaliza a primeira página e inicia a segunda página
-        p.showPage()
-
-        # Obtenha registros de disciplina para esta matrícula
-        disciplina_records = request.env['informa.matricula.line'].sudo().search([('matricula_id', '=', matricula.id)])
-
-        # Defina o título para a segunda página
-        title = "Detalhes das Disciplinas Cursadas"
-        max_font_size = 18
-        min_font_size = 8
-        current_font_size = max_font_size
-        max_lines_per_page = 200  # Estimativa de linhas que cabem em uma página
-
-        # Ajusta o tamanho da fonte de acordo com a quantidade de disciplinas
-        if len(disciplina_records) > max_lines_per_page:
-            lines_per_discipline = 2  # Se há muitas disciplinas, cada uma pode ocupar mais de uma linha
-            current_font_size = max(min_font_size, int((max_lines_per_page / len(disciplina_records)) * max_font_size))
-
-        # Configuração do título
-        p.setFont("Helvetica-Bold", current_font_size)
-        p.drawCentredString(width / 2.0, height - inch, title)
-
-        # Configurações iniciais para a lista de disciplinas
-        p.setFont("Helvetica", current_font_size)
-        current_height = height - 2 * inch  # Começa um pouco abaixo do título
-        line_height = 1.2 * current_font_size  # Espaçamento baseado no tamanho da fonte atual
-
-        # Lista as disciplinas na página
-        for record in disciplina_records:
-            # Se a altura atual for menor que a margem inferior, interrompe o loop
-            if current_height < inch * 2:
-                break
-            
-            discipline_text = f" º {record.disciplina_id.name} - Média: {record.media_necessaria} - Nota: {record.nota}"
-            p.drawString(inch, current_height, discipline_text)
-            current_height -= line_height  # Move para a próxima linha
-
-        # Se não couber na página, informe que as disciplinas adicionais não foram exibidas
-        if len(disciplina_records) * line_height > (height - 3 * inch):
-            p.drawString(inch, current_height, "Algumas disciplinas não puderam ser exibidas.")
-        
-        # Criar borda para a segunda página
-        CertificateController.create_entwined_borders(p, width, height)
-            
-        # Finaliza a segunda página
-        p.showPage()
-        
-        # Finaliza o PDF e obtém os dados
-        p.save()
-        pdf = buffer.getvalue()
-        buffer.close()
-
-        # Configura os cabeçalhos da resposta e retorna o PDF
-        headers = [
-            ('Content-Type', 'application/pdf'),
-            ('Content-Disposition', f'attachment; filename="{matricula.nome_do_aluno.name}_certificado.pdf"')
-        ]
-        return request.make_response(pdf, headers=headers)        
-    
-    
 class DisciplinaController(http.Controller):
 
     def verify_client_token(self, token):

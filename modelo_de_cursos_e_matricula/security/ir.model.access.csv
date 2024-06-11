@@ -16,6 +16,7 @@ access_informa_log2,Access to informa.log,modelo_de_cursos_e_matricula.model_aud
 access_cliente,Access to informa.log,modelo_de_cursos_e_matricula.model_informa_cliente,modelo_de_cursos_e_matricula.group_cursos_e_matriculas,1,1,1,0
 access_informa_matricula_line,Access to informa_matricula_line,modelo_de_cursos_e_matricula.model_informa_matricula_line,modelo_de_cursos_e_matricula.group_cursos_e_matriculas,1,1,1,1
 access_informa_menus,Access to informa_menus,modelo_de_cursos_e_matricula.model_course_creation_wizard,modelo_de_cursos_e_matricula.group_cursos_e_matriculas,1,1,1,1
+access_informa_certificado,Access to informa_certificado,modelo_de_cursos_e_matricula.model_informa_certificado,modelo_de_cursos_e_matricula.group_cursos_e_matriculas,1,1,1,1
 
 access_informa_cursos2,Access to informa.cursos,modelo_de_cursos_e_matricula.model_informa_cursos,base.group_system,1,1,1,1
 access_informa_curriculo2,Access to informa_curriculo,modelo_de_cursos_e_matricula.model_informa_curriculo,base.group_system,1,1,1,1
@@ -34,6 +35,8 @@ access_informa_log4,Access to informa.log,modelo_de_cursos_e_matricula.model_aud
 access_cliente2,Access to informa.log,modelo_de_cursos_e_matricula.model_informa_cliente,base.group_system,1,1,1,0
 access_informa_matricula_line2,Access to informa_matricula_line,modelo_de_cursos_e_matricula.model_informa_matricula_line,base.group_system,1,1,1,1
 access_informa_menus,Access to informa_menus,modelo_de_cursos_e_matricula.model_course_creation_wizard,base.group_system,1,1,1,1
+access_informa_certificado2,Access to informa_certificado,modelo_de_cursos_e_matricula.model_informa_certificado,base.group_system,1,1,1,1
+
 
 access_informa_cursos3,Access to informa.cursos,modelo_de_cursos_e_matricula.model_informa_cursos,base.group_public,1,1,1,1
 access_informa_curriculo3,Access to informa_curriculo,modelo_de_cursos_e_matricula.model_informa_curriculo,base.group_public,1,1,1,1
@@ -52,3 +55,4 @@ access_informa_log5,Access to informa.log,modelo_de_cursos_e_matricula.model_aud
 access_cliente3,Access to informa.log,modelo_de_cursos_e_matricula.model_informa_cliente,base.group_public,1,1,1,1
 access_informa_matricula_line3,Access to informa_matricula_line,modelo_de_cursos_e_matricula.model_informa_matricula_line,base.group_public,1,1,1,1
 access_informa_menus2,Access to informa_menus,modelo_de_cursos_e_matricula.model_course_creation_wizard,base.group_public,1,1,1,1
+access_informa_certificado3,Access to informa_certificado,modelo_de_cursos_e_matricula.model_informa_certificado,base.group_public,1,1,1,1

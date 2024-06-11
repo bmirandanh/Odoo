@@ -37,6 +37,7 @@ class InformaMatricula(models.Model):
         ('FINALIZADO','FINALIZADO'),
         ('EM PRAZO EXCEDIDO','EM PRAZO EXCEDIDO'),
         ('EXPEDIDO','EXPEDIDO'),
+        ('EXPEDIDO SEGUNDA VIA', 'EXPEDIDO SEGUNDA VIA'),
         ('MATRICULA SUSPENSA','MATRICULA SUSPENSA'),
         ], default="CURSANDO", store=True, tracking=True
     )

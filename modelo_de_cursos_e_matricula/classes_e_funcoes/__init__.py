@@ -14,3 +14,4 @@ from . import matricula_reingresso_wizard
 from . import matricula_confirmation_wizard
 from . import informa_log
 from . import informa_matricula_line
+from . import informa_certificado

@@ -193,6 +193,27 @@
 
         <!-- Form das View -->
 
+        <!-- Certificado -->
+
+        <record id="view_certificate_wizard_form" model="ir.ui.view">
+            <field name="name">informa.certificado.form</field>
+            <field name="model">informa.certificado</field>
+            <field name="arch" type="xml">
+                <form string="Gerar Certificado">
+                    <group>
+                        <field name="student_id"/>
+                        <field name="enrollment_id"/>
+                        <field name="template_page1_id"/>
+                        <field name="template_page2_id"/>
+                    </group>
+                    <footer>
+                        <button name="generate_certificate" string="Gerar Certificado" type="object" class="btn-primary"/>
+                        <button string="Cancelar" class="btn-secondary" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
         <!-- CURSOS -->
 
         <record id="view_informa_cursos_form" model="ir.ui.view">
@@ -825,6 +846,15 @@
 
         <!-- Action das Views -->
 
+        <!-- CERTIFICADO -->
+        
+        <record id="action_informa_certificado" model="ir.actions.act_window">
+            <field name="name">Gerar Certificado</field>
+            <field name="res_model">informa.certificado</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+        </record>
+
         <!-- CURSOS -->
 
         <record id="action_informa_cursos" model="ir.actions.act_window">
@@ -991,5 +1021,7 @@
         <menuitem id="fgmed_versao_curriculo" parent="fgmed_cursos_e_matriculas" name="Versão de Currículos" action="action_variacao_curriculo" groups="modelo_de_cursos_e_matricula.group_cursos_e_matriculas" />    
         <menuitem id="menu_audit_log_report" parent="fgmed_cursos_e_matriculas" name="Relatório de Auditoria" action="action_audit_log_report" groups="modelo_de_cursos_e_matricula.group_cursos_e_matriculas"/>        
         <menuitem id="fgmed_cliente" name="Cliente" action="action_fgmed_cliente_report" parent="fgmed_cursos_e_matriculas" groups="modelo_de_cursos_e_matricula.group_cursos_e_matriculas"/>                 
+       <menuitem id="fgmed_informa_curriculo" name="Gerar Certificado" parent="fgmed_cursos_e_matriculas" action="action_informa_certificado" groups="modelo_de_cursos_e_matricula.group_cursos_e_matriculas"/>
+
     </data>
 </odoo>

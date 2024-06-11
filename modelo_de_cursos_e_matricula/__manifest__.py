@@ -14,7 +14,8 @@
     ],
     'data': [
         'views/auto_cron.xml',
-
+        'views/certificado_pg1.xml',
+        'views/certificado_pg2.xml',
         'views/wizards.xml',
         'security/ir.model.access.xml',
         'security/ir.model.access.csv',

@@ -1,0 +1,20 @@
+<odoo>
+    <record id="view_certificate_wizard_form" model="ir.ui.view">
+        <field name="name">informa.certificado.form</field>
+        <field name="model">informa.certificado</field>
+        <field name="arch" type="xml">
+            <form string="Gerar Certificado">
+                <group>
+                    <field name="student_id"/>
+                    <field name="enrollment_id"/>
+                    <field name="template_page1"/>
+                    <field name="template_page2"/>
+                </group>
+                <footer>
+                    <button name="generate_certificate" string="Gerar Certificado" type="object" class="btn-primary"/>
+                    <button string="Cancelar" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

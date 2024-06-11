@@ -1,0 +1,16 @@
+<odoo>
+    <template id="certificate_template_page1">
+        <t t-call="web.external_layout">
+            <div class="page">
+                <div class="oe_structure"/>
+                <h1 style="text-align: center; font-size: 50px;">CERTIFICADO</h1>
+                <p style="text-align: center; font-size: 25px;">Certificamos que</p>
+                <p style="text-align: center; font-size: 25px; font-weight: bold;"><t t-esc="aluno_nome"/></p>
+                <p style="text-align: center; font-size: 25px;">Concluiu com total aproveitamento o curso:</p>
+                <p style="text-align: center; font-size: 25px; font-weight: bold;"><t t-esc="curso_nome"/></p>
+                <p style="text-align: center; font-size: 16px;">Com carga horária de <t t-esc="tempo_de_conclusao"/> horas</p>
+                <p style="text-align: center; font-size: 16px;">Data de conclusão: <t t-esc="data_conclusao"/></p>
+            </div>
+        </t>
+    </template>
+</odoo>
