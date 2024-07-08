@@ -202,9 +202,9 @@
                 <form string="Gerar Certificado">
                     <group>
                         <field name="student_id"/>
-                        <field name="enrollment_id"/>
-                        <field name="template_page1_id"/>
-                        <field name="template_page2_id"/>
+                        <field name="enrollment_id" string="Matrícula do Aluno"/>
+                        <field name="curso" string="Curso"/>
+                        <field name="template_id" widget="selection"/>
                     </group>
                     <footer>
                         <button name="generate_certificate" string="Gerar Certificado" type="object" class="btn-primary"/>
@@ -213,6 +213,7 @@
                 </form>
             </field>
         </record>
+
 
         <!-- CURSOS -->
 
@@ -848,6 +849,7 @@
 
         <!-- CERTIFICADO -->
         
+        
         <record id="action_informa_certificado" model="ir.actions.act_window">
             <field name="name">Gerar Certificado</field>
             <field name="res_model">informa.certificado</field>
@@ -1006,6 +1008,23 @@
             <field name="name">Cliente</field>
             <field name="res_model">informa.cliente</field>
             <field name="view_mode">tree,form</field>        
+        </record>
+
+        <!-- Certificado -->
+        <record id="action_report_certificate_template_1" model="ir.actions.report">
+            <field name="name">Certificado Template 1</field>
+            <field name="model">informa.certificado</field>
+            <field name="report_name">modelo_de_cursos_e_matricula.certificate_template_1</field>
+            <field name="report_type">qweb-pdf</field>
+            <field name="binding_model_id" ref="modelo_de_cursos_e_matricula.model_informa_certificado"/>
+        </record>
+
+        <record id="action_report_certificate_template_2" model="ir.actions.report">
+            <field name="name">Certificado Template 2</field>
+            <field name="model">informa.certificado</field>
+            <field name="report_name">modelo_de_cursos_e_matricula.certificate_template_2</field>
+            <field name="report_type">qweb-pdf</field>
+            <field name="binding_model_id" ref="modelo_de_cursos_e_matricula.model_informa_certificado"/>
         </record>
 
         <!-- Itens de menu das views -->

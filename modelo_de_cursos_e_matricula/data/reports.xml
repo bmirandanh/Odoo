@@ -1,0 +1,20 @@
+<odoo>
+    <report
+        id="action_report_certificate_template_1"
+        string="Certificate"
+        model="informa.certificado"
+        report_type="qweb-pdf"
+        name="modelo_de_cursos_e_matricula.certificate_template_1"
+        file="modelo_de_cursos_e_matricula.certificate_template_1"
+        attachment_use="False"
+    />
+    <report
+        id="action_report_certificate_template_2"
+        string="Certificate 2"
+        model="informa.certificado"
+        report_type="qweb-pdf"
+        name="modelo_de_cursos_e_matricula.certificate_template_2"
+        file="modelo_de_cursos_e_matricula.certificate_template_2"
+        attachment_use="False"
+    />
+</odoo>

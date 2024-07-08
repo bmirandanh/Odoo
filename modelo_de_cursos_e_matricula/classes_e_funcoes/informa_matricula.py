@@ -30,6 +30,7 @@ class InformaMatricula(models.Model):
     _name = 'informa.matricula'
     _inherit = ["mail.thread", "mail.activity.mixin"]
     _description = 'Matriculas'
+    _rec_name = 'numero_matricula' 
     
     status_do_certificado = fields.Selection(
         [('CURSANDO','CURSANDO'),
@@ -84,6 +85,21 @@ class InformaMatricula(models.Model):
     total_duracao_horas_id = fields.Float(related='curso.total_duracao_horas', string='Duração(H): ', readonly=True)
     available_variants = fields.Many2many('informa.curriculo.variant', compute='_compute_available_variants')
     moodle = fields.Boolean( string="Moodle?")
+    display_name = fields.Char(string='Matrícula (Aluno)', compute='_compute_display_name', store=True)
+    disciplina_lines = fields.One2many('informa.registro_disciplina', 'matricula_id', string='Disciplinas')
+
+    @api.depends('nome_do_aluno', 'matricula_aluno')
+    def _compute_display_name(self):
+        for record in self:
+            record.display_name = f"{record.matricula_aluno} ({record.nome_do_aluno.name})"
+
+    @api.model
+    def name_get(self):
+        result = []
+        for record in self:
+            name = f"{record.matricula_aluno} ({record.nome_do_aluno.name})"
+            result.append((record.id, name))
+        return result
     
     @staticmethod
     def create_entwined_borders(canvas_obj, width, height):

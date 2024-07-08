@@ -6,9 +6,8 @@
             <form string="Gerar Certificado">
                 <group>
                     <field name="student_id"/>
-                    <field name="enrollment_id"/>
-                    <field name="template_page1"/>
-                    <field name="template_page2"/>
+                    <field name="enrollment_id" string="Matrícula do Aluno"/>
+                    <field name="template_id" widget="selection"/>
                 </group>
                 <footer>
                     <button name="generate_certificate" string="Gerar Certificado" type="object" class="btn-primary"/>
@@ -17,4 +16,6 @@
             </form>
         </field>
     </record>
+
+    
 </odoo>
