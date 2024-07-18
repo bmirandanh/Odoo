@@ -38,43 +38,14 @@
         </t>
     </template>
 
-    <template id="certificate_template_2">
-        <t t-name="modelo_de_cursos_e_matricula.certificate_template_2">
-            <t t-foreach="docs" t-as="doc">
-                <main>            
-                    <div class="page" style="text-align: center; border: 3px solid #0d6efd; padding: 20px; border-radius: 10px;">
-                        <h2 style="margin-top: 48px;">CERTIFICADO</h2>
-                        <p style="font-size: 16px; margin-top: 40px;">Certificamos que</p>
-                        <p><strong><t t-esc="doc.nome_do_aluno.name or ''"/></strong></p>
-                        <p style="font-size: 16px; margin-top: 40px;">Concluiu com total aproveitamento o curso:</p>
-                        <p style="font-size: 36px;"><strong><t t-esc="doc.curso.name or ''"/></strong></p>
-                        <p style="font-size: 16px; margin-top: 40px;">Com carga horária de <strong><t t-esc="doc.total_duracao_horas_id or 0"/> horas</strong></p>
-                        <p style="font-size: 16px;">Data de conclusão: <strong><t t-esc="doc.data_certificacao or ''"/></strong></p>
-                    </div>
-                    <div class="page" style="page-break-before: always; text-align: center; border: 3px solid #0d6efd; padding: 20px; border-radius: 10px;">
-                        <h2>Detalhes das Disciplinas Cursadas</h2>
-                        <table style="border-collapse: collapse; width: 100%;">
-                            <thead>
-                                <tr>
-                                    <th style="border: 1px solid black; padding: 8px;">Disciplina</th>
-                                    <th style="border: 1px solid black; padding: 8px;">Média</th>
-                                    <th style="border: 1px solid black; padding: 8px;">Nota</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <t t-foreach="doc.matricula_line_ids" t-as="line">
-                                    <tr>
-                                        <td style="border: 1px solid black; padding: 8px;"><t t-esc="line.nome_disciplina or ''"/></td>
-                                        <td style="border: 1px solid black; padding: 8px;"><t t-esc="line.media_necessaria or 0"/></td>
-                                        <td style="border: 1px solid black; padding: 8px;"><t t-esc="line.nota or 0"/></td>
-                                    </tr>
-                                </t>
-                            </tbody>
-                        </table>
-                    </div>
-                </main>    
-            </t>
-        </t>
-    </template>
+    <report 
+        id="action_report_certificate_template_1"
+        model="informa.certificado"
+        string="Certificate Template 1"
+        report_type="qweb-pdf"
+        name="modelo_de_cursos_e_matricula.certificate_template_1"
+        file="modelo_de_cursos_e_matricula.certificate_template_1"
+        print_report_name="'Certificate - %s' % (object.student_id.name)"
+    />
 
 </odoo>
