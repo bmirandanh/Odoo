@@ -150,8 +150,7 @@
             <field name="arch" type="xml">
                 <tree string="WhatsApp Event Type">
                     <field name="name"/>
-                    <field name="contact_id"/>
-                    <field name="send_date"/>
+                    <field name="description"/>
                 </tree>
             </field>
         </record>
@@ -164,8 +163,7 @@
                     <sheet>
                         <group>
                             <field name="name"/>
-                            <field name="contact_id"/>
-                            <field name="send_date"/>
+                            <field name="description"/>
                         </group>
                     </sheet>
                 </form>
