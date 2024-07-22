@@ -41,7 +41,6 @@
                         <field name="tag_ids" widget="many2many_tags"/>
                         <field name="contact_ids" widget="many2many_tags" readonly="1"/>
                         <field name="template_id"/>
-                        <field name="message_content" readonly="1"/>
                     </group>
                     <footer>
                         <button string="Send Messages" type="object" name="send_messages" class="btn-primary"/>

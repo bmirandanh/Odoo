@@ -5,6 +5,6 @@ class whatsapp_contact(models.Model):
     _description = 'WhatsApp Contact'
 
     name = fields.Char(string='Name', required=True)
-    waid = fields.Char(string='WA ID')
+    waid = fields.Char(string='waid')
     active = fields.Boolean(string='Active', default=True)
     tag_ids = fields.Many2many('whatsapp_tag', string='Tags')
