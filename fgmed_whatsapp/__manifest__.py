@@ -4,10 +4,14 @@
     'summary': 'Módulo para cadastramento e disparo de WhatsApp',
     'category': 'Tools',
     'author': 'Bruno Miranda',
-    'depends': ['base'],
+    
+    'depends': ['base', 'web', 'crm'],
+    
     'data': [
         'views/whatsviews.xml',
+        'views/data.xml',
     ],
+            
     'license': 'AGPL-3',
     'installable': True,
     'application': True,

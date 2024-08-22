@@ -1,0 +1,60 @@
+<odoo>
+    <data noupdate="1">
+        <!-- Registros de Tags de WhatsApp com Nível de Importância de 0 a 10 -->
+        <record id="whatsapp_tag_common" model="whatsapp_tag">
+            <field name="name">Comum</field>
+            <field name="importance_level">0</field>
+            <field name="tag_color">0</field>
+        </record>
+        <record id="whatsapp_tag_low_importance" model="whatsapp_tag">
+            <field name="name">Baixa Importância</field>
+            <field name="importance_level">1</field>
+            <field name="tag_color">1</field>
+        </record>
+        <record id="whatsapp_tag_moderate_importance" model="whatsapp_tag">
+            <field name="name">Importância Moderada</field>
+            <field name="importance_level">2</field>
+            <field name="tag_color">2</field>
+        </record>
+        <record id="whatsapp_tag_relevant_importance" model="whatsapp_tag">
+            <field name="name">Importância Relevante</field>
+            <field name="importance_level">3</field>
+            <field name="tag_color">3</field>
+        </record>
+        <record id="whatsapp_tag_considerable_importance" model="whatsapp_tag">
+            <field name="name">Importância Considerável</field>
+            <field name="importance_level">4</field>
+            <field name="tag_color">4</field>
+        </record>
+        <record id="whatsapp_tag_important" model="whatsapp_tag">
+            <field name="name">Importante</field>
+            <field name="importance_level">5</field>
+            <field name="tag_color">5</field>
+        </record>
+        <record id="whatsapp_tag_high_importance" model="whatsapp_tag">
+            <field name="name">Alta Importância</field>
+            <field name="importance_level">6</field>
+            <field name="tag_color">6</field>
+        </record>
+        <record id="whatsapp_tag_urgent" model="whatsapp_tag">
+            <field name="name">Urgente</field>
+            <field name="importance_level">7</field>
+            <field name="tag_color">7</field>
+        </record>
+        <record id="whatsapp_tag_very_urgent" model="whatsapp_tag">
+            <field name="name">Muito Urgente</field>
+            <field name="importance_level">8</field>
+            <field name="tag_color">8</field>
+        </record>
+        <record id="whatsapp_tag_critical" model="whatsapp_tag">
+            <field name="name">Crítica</field>
+            <field name="importance_level">9</field>
+            <field name="tag_color">9</field>
+        </record>
+        <record id="whatsapp_tag_maximum_emergency" model="whatsapp_tag">
+            <field name="name">Emergência Máxima</field>
+            <field name="importance_level">10</field>
+            <field name="tag_color">10</field>
+        </record>
+    </data>
+</odoo>

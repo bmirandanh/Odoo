@@ -8,9 +8,9 @@
             <field name="name">whatsapp.tag.tree</field>
             <field name="model">whatsapp_tag</field>
             <field name="arch" type="xml">
-                <tree string="WhatsApp Tag">
-                    <field name="name"/>
-                    <field name="color"/>
+                <tree string="WhatsApp Tag" create="false">
+                    <field name="importance_level"/>
+                    <field name="tag_color" widget="color_picker"/>
                 </tree>
             </field>
         </record>
@@ -19,64 +19,37 @@
             <field name="name">whatsapp.tag.form</field>
             <field name="model">whatsapp_tag</field>
             <field name="arch" type="xml">
-                <form string="WhatsApp Tag">
+                <form string="WhatsApp Tag" create="false">
                     <sheet>
                         <group>
-                            <field name="name"/>
-                            <field name="color"/>
+                            <field name="importance_level"/>
+                            <field name="tag_color" widget="color_picker"/>
                         </group>
                     </sheet>
                 </form>
             </field>
         </record>
 
-        <!-- WhatsApp Send Mensage Views-->
-
+        <!-- WhatsApp Send Message Views -->
         <record id="view_whatsapp_send_message_wizard_form" model="ir.ui.view">
             <field name="name">whatsapp.send.message.wizard.form</field>
             <field name="model">whatsapp.send.message.wizard</field>
             <field name="arch" type="xml">
                 <form string="Send WhatsApp Messages">
                     <group>
-                        <field name="tag_ids" widget="many2many_tags"/>
+                        <!-- nome da campanha -->
+                        <field name="campaign_name"/>  
+                        <!-- tag -->
+                        <field name="tag_id" widget="selection"/>
+                        <!-- Contatos selecionados (somente leitura) -->
                         <field name="contact_ids" widget="many2many_tags" readonly="1"/>
+                        <!-- Template da mensagem -->
                         <field name="template_id"/>
                     </group>
                     <footer>
                         <button string="Send Messages" type="object" name="send_messages" class="btn-primary"/>
                         <button string="Cancel" class="btn-secondary" special="cancel"/>
                     </footer>
-                </form>
-            </field>
-        </record>
-
-        <!-- WhatsApp Contact Views -->
-
-        <record id="view_whatsapp_contact_tree" model="ir.ui.view">
-            <field name="name">whatsapp.contact.tree</field>
-            <field name="model">whatsapp_contact</field>
-            <field name="arch" type="xml">
-                <tree string="WhatsApp Contact">
-                    <field name="name"/>
-                    <field name="waid"/>
-                    <field name="active"/>
-                </tree>
-            </field>
-        </record>
-        
-        <record model="ir.ui.view" id="view_whatsapp_contact_form">
-            <field name="name">whatsapp.contact.form</field>
-            <field name="model">whatsapp_contact</field>
-            <field name="arch" type="xml">
-                <form string="WhatsApp Contact">
-                    <sheet>
-                        <group>
-                            <field name="name"/>
-                            <field name="waid"/>
-                            <field name="active"/>
-                            <field name="tag_ids" widget="many2many_tags"/>
-                        </group>
-                    </sheet>
                 </form>
             </field>
         </record>
@@ -92,16 +65,31 @@
                 </tree>
             </field>
         </record>
-        
-        <record model="ir.ui.view" id="view_whatsapp_message_layout_form">
-            <field name="name">whatsapp.message_layout.form</field>
+
+        <!-- Form View -->
+        <record id="view_whatsapp_message_layout_form" model="ir.ui.view">
+            <field name="name">whatsapp.message.layout.form</field>
             <field name="model">whatsapp_message_layout</field>
             <field name="arch" type="xml">
                 <form string="WhatsApp Message Layout">
                     <sheet>
                         <group>
                             <field name="name"/>
-                            <field name="content"/>
+                            <field name="content" placeholder="Adicione o conteúdo aqui..."/>
+                            <div>
+                                <button type="object" class="btn btn-secondary" name="add_newline">Nova Linha</button>
+                                <button type="object" class="btn btn-secondary" name="add_contact_name">Adicionar Nome do Contato</button>
+                                <button type="object" class="btn btn-secondary" name="add_text">Adicionar Texto Simples</button>
+                                <button type="object" class="btn btn-secondary" name="add_image">Adicionar Imagem</button>
+                                <button type="object" class="btn btn-secondary" name="add_video">Adicionar Vídeo</button>
+                                <button type="object" class="btn btn-secondary" name="add_audio">Adicionar Áudio</button>
+                                <button type="object" class="btn btn-secondary" name="add_document">Adicionar Documento</button>
+                                <button type="object" class="btn btn-secondary" name="add_buttons">Adicionar Botões Interativos</button>
+                                <button type="object" class="btn btn-secondary" name="add_quick_replies">Adicionar Respostas Rápidas</button>
+                                <button type="object" class="btn btn-secondary" name="add_full_message">Adicionar Mensagem Completa</button>
+                            </div>
+                        </group>
+                        <group>
                             <field name="active"/>
                         </group>
                     </sheet>
@@ -114,7 +102,7 @@
             <field name="name">whatsapp.message.tree</field>
             <field name="model">whatsapp_message</field>
             <field name="arch" type="xml">
-                <tree string="WhatsApp Message">
+                <tree string="WhatsApp Message" create="false">
                     <field name="mensage"/>
                     <field name="contact_id"/>
                     <field name="mensage_type"/>
@@ -128,9 +116,10 @@
             <field name="name">whatsapp.message.form</field>
             <field name="model">whatsapp_message</field>
             <field name="arch" type="xml">
-                <form string="WhatsApp Message">
+                <form string="WhatsApp Message" create="false">
                     <sheet>
                         <group>
+                            <field name="tag_ids"/>
                             <field name="mensage"/>
                             <field name="contact_id"/>
                             <field name="mensage_type"/>
@@ -174,11 +163,12 @@
             <field name="name">whatsapp.event.tree</field>
             <field name="model">whatsapp_event</field>
             <field name="arch" type="xml">
-                <tree string="WhatsApp Event">
+                <tree string="WhatsApp Event" create="false">
                     <field name="contact_id"/>
                     <field name="type_id"/>
                     <field name="send_date"/>
                     <field name="status"/>
+                    <field name="message_id"/>
                 </tree>
             </field>
         </record>
@@ -187,13 +177,14 @@
             <field name="name">whatsapp.event.form</field>
             <field name="model">whatsapp_event</field>
             <field name="arch" type="xml">
-                <form string="WhatsApp Event">
+                <form string="WhatsApp Event" create="false">
                     <sheet>
                         <group>
                             <field name="contact_id"/>
                             <field name="type_id"/>
                             <field name="send_date"/>
                             <field name="status"/>
+                            <field name="message_id"/>
                         </group>
                     </sheet>
                 </form>
@@ -227,6 +218,116 @@
             </field>
         </record>
 
+        <!-- Whatsapp deactivation history-->
+
+        <record id="view_deactivation_history_tree" model="ir.ui.view">
+            <field name="name">deactivation.history.tree</field>
+            <field name="model">whatsapp_deactivation_history</field>
+            <field name="arch" type="xml">
+                <tree string="Deactivation History">
+                    <field name="model_name"/>
+                    <field name="record_name"/>
+                    <field name="state"/>
+                    <field name="deactivated_by"/>
+                    <field name="deactivation_date" string="Data/Hora"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="action_deactivation_history" model="ir.actions.act_window">
+            <field name="name">Deactivation History</field>
+            <field name="res_model">whatsapp_deactivation_history</field>
+            <field name="view_mode">tree</field>
+        </record>
+
+        <!-- CRM Lead Button -->
+
+        <!-- Add action entry in the Action Menu for Leads -->
+        <record id="crm_lead_act_window_whatsapp_composer_single" model="ir.actions.act_window">
+            <field name="name">Send WhatsApp Message</field>
+            <field name="res_model">whatsapp.send.message.wizard</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+            <field name="context">{
+                'default_contact_ids': active_ids
+            }</field>
+            <field name="binding_model_id" ref="model_crm_lead"/>
+            <field name="binding_view_types">list</field>
+        </record>
+        <record id="crm_lead_act_window_whatsapp_composer_multi" model="ir.actions.act_window">
+            <field name="name">Send WhatsApp Message</field>
+            <field name="res_model">whatsapp.send.message.wizard</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+            <field name="context">{
+                'default_contact_ids': active_id,
+            }</field>
+            <field name="binding_model_id" ref="model_crm_lead"/>
+            <field name="binding_view_types">form</field>
+        </record>
+
+        <record id="crm_lead_view_list_activities_inherit_whatsapp" model="ir.ui.view">
+            <field name="name">crm.lead.view.list.activities.inherit.whatsapp</field>
+            <field name="model">crm.lead</field>
+            <field name="inherit_id" ref="crm.crm_lead_view_list_activities"/>
+            <field name="arch" type="xml">
+                <xpath expr="//header" position="inside">
+                    <button name="%(crm_lead_act_window_whatsapp_composer_single)d" type="action" string="WhatsApp" />
+                </xpath>
+                <xpath expr="//button[@name='%(crm.crm_lead_act_window_compose)d']" position="after">
+                    <button name="%(crm_lead_act_window_whatsapp_composer_multi)d" type="action" string="WhatsApp" icon="fa-whatsapp" />
+                </xpath>
+            </field>
+        </record>
+
+        <!-- View para o modelo whatsapp.duplicate.contact.choice -->
+        <record id="view_whatsapp_duplicate_contact_choice_tree" model="ir.ui.view">
+            <field name="name">whatsapp.duplicate.contact.choice.tree</field>
+            <field name="model">whatsapp.duplicate.contact.choice</field>
+            <field name="arch" type="xml">
+                <tree string="Duplicated Contacts">
+                    <field name="phone_number"/>
+                    <field name="contact_ids" widget="many2many_tags"/>
+                </tree>
+            </field>
+        </record>
+
+        <!-- Form view para whatsapp.duplicate.contact.choice -->
+        <record id="view_whatsapp_duplicate_contact_choice_form" model="ir.ui.view">
+            <field name="name">whatsapp.duplicate.contact.choice.form</field>
+            <field name="model">whatsapp.duplicate.contact.choice</field>
+            <field name="arch" type="xml">
+                <form string="Duplicated Contact Choice">
+                    <group>
+                        <field name="phone_number"/>
+                        <field name="contact_ids" widget="many2many_tags"/>
+                    </group>
+                </form>
+            </field>
+        </record>
+
+        <!-- View para o wizard whatsapp.duplicate.contact.wizard -->
+        <record id="view_whatsapp_duplicate_contact_wizard_form" model="ir.ui.view">
+            <field name="name">whatsapp.duplicate.contact.wizard.form</field>
+            <field name="model">whatsapp.duplicate.contact.wizard</field>
+            <field name="arch" type="xml">
+                <form string="Resolve Duplicated Contacts">
+                    <group>
+                        <field name="contact_choices" nolabel="1">
+                            <tree editable="bottom">
+                                <field name="phone_number"/>
+                                <field name="contact_ids" widget="many2many_tags"/>
+                            </tree>
+                        </field>
+                    </group>
+                    <footer>
+                        <button string="Confirm" type="object" name="action_confirm" class="btn-primary"/>
+                        <button string="Cancel" class="btn-secondary" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
         <!-- Actions -->
         <record id="action_whatsapp_tag" model="ir.actions.act_window">
             <field name="name">WhatsApp Tag</field>
@@ -234,10 +335,12 @@
             <field name="view_mode">tree,form</field>
         </record>
 
-        <record id="action_whatsapp_contact" model="ir.actions.act_window">
-            <field name="name">WhatsApp Contact</field>
-            <field name="res_model">whatsapp_contact</field>
-            <field name="view_mode">tree,form</field>
+        <record id="action_send_whatsapp_from_lead" model="ir.actions.act_window">
+            <field name="name">Send WhatsApp Message</field>
+            <field name="res_model">whatsapp.send.message.wizard</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+            <field name="context">{'default_contact_ids': active_ids}</field>
         </record>
 
         <record id="action_whatsapp_message_layout" model="ir.actions.act_window">
@@ -280,9 +383,9 @@
         <!-- Menu Items -->
         <menuitem id="menu_whatsapp_root" name="WhatsApp" sequence="1"/>
         <menuitem id="menu_whatsapp_tags" name="Tags" parent="menu_whatsapp_root" action="action_whatsapp_tag"/>
-        <menuitem id="menu_whatsapp_contacts" name="Contacts" parent="menu_whatsapp_root" action="action_whatsapp_contact"/>
         <menuitem id="menu_whatsapp_message_layouts" name="Message Layouts" parent="menu_whatsapp_root" action="action_whatsapp_message_layout"/>
         <menuitem id="menu_whatsapp_messages" name="Messages" parent="menu_whatsapp_root" action="action_whatsapp_message"/>
+        <menuitem id="menu_deactivation_history" name="Deactivation History" parent="menu_whatsapp_root" action="action_deactivation_history"/>        
         <menuitem id="menu_whatsapp_event_types" name="Event Types" parent="menu_whatsapp_root" action="action_whatsapp_event_type"/>
         <menuitem id="menu_whatsapp_events" name="Events" parent="menu_whatsapp_root" action="action_whatsapp_event"/>
         <menuitem id="menu_whatsapp_type_messages" name="Type Messages" parent="menu_whatsapp_root" action="action_whatsapp_type_message"/>
